@@ -1,0 +1,29 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export default function DropdownCell({ value, column, onUpdate }) {
+  const choices = column?.options?.choices || [];
+
+  return (
+    <Select value={value || ""} onValueChange={(v) => onUpdate(v)}>
+      <SelectTrigger className="h-8 border-0 bg-transparent focus:ring-0 text-sm">
+        <SelectValue placeholder="Pilih..." />
+      </SelectTrigger>
+      <SelectContent>
+        {choices.map((choice) => (
+          <SelectItem key={choice.value} value={choice.value}>
+            {choice.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
