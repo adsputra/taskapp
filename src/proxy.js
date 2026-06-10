@@ -16,16 +16,16 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
+  // Default response — akan dipakai kalau tidak redirect
+  let response = NextResponse.next({ request });
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
   let session = null;
 
-  // Hanya coba auth kalau env vars ada
+  // Coba dapatkan session hanya kalau env vars tersedia
   if (url && key) {
     try {
-      let response = NextResponse.next({ request });
-
       const supabase = createServerClient(url, key, {
         cookies: {
           getAll() {
@@ -43,10 +43,18 @@ export async function proxy(request) {
         },
       });
 
-      const { data } = await supabase.auth.getSession();
+      // Timeout 5 detik — cegah hanging request ke Supabase
+      const timeout = new Promise((resolve) =>
+        setTimeout(() => resolve({ data: { session: null } }), 5000)
+      );
+
+      const { data } = await Promise.race([
+        supabase.auth.getSession(),
+        timeout,
+      ]);
       session = data?.session ?? null;
-    } catch (e) {
-      // Kalau auth gagal (misal env vars salah), treat sebagai tidak login
+    } catch {
+      // Auth gagal — treat sebagai tidak login, tetap lanjut
       session = null;
     }
   }
