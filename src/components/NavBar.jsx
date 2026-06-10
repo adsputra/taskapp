@@ -72,7 +72,7 @@ export default function NavBar() {
     "U";
 
   const userName =
-    user?.full_name || user?.email?.split("@")[0] || "User";
+    user?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const userEmail = user?.email || "";
 
@@ -169,7 +169,14 @@ export default function NavBar() {
               <HelpCircle className="w-5 h-5 text-[#676879]" />
             </Button>
 
-            {/* Avatar + Dropdown */}
+            {/* Avatar + Dropdown — hanya tampil kalau ada user */}
+            {!loading && !user ? (
+              <Link href="/auth/login">
+                <Button className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-9 px-4 text-sm font-medium">
+                  Sign In
+                </Button>
+              </Link>
+            ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -213,6 +220,7 @@ export default function NavBar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
           </div>
 
           {/* Mobile menu button */}

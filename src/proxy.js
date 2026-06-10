@@ -19,32 +19,37 @@ export async function proxy(request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
-    return NextResponse.next();
+  let session = null;
+
+  // Hanya coba auth kalau env vars ada
+  if (url && key) {
+    try {
+      let response = NextResponse.next({ request });
+
+      const supabase = createServerClient(url, key, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      });
+
+      const { data } = await supabase.auth.getSession();
+      session = data?.session ?? null;
+    } catch (e) {
+      // Kalau auth gagal (misal env vars salah), treat sebagai tidak login
+      session = null;
+    }
   }
-
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  // PAKAI getSession() — baca JWT dari cookie secara LOKAL, tanpa network call.
-  // Ini CEPAT karena tidak ada permintaan ke Supabase server.
-  const { data: { session } } = await supabase.auth.getSession();
 
   const isProtected = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
