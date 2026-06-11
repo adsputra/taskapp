@@ -77,8 +77,12 @@ export default function NavBar() {
     user?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const userEmail = user?.email || "";
+  const [signingOut, setSigningOut] = useState(false);
 
   const handleSignOut = async () => {
+    setSigningOut(true);
+    // Delay biar user lihat animasi dulu
+    await new Promise((r) => setTimeout(r, 600));
     try {
       await signOut();
     } catch {
@@ -89,6 +93,28 @@ export default function NavBar() {
     router.push("/auth/login");
     router.refresh();
   };
+
+  // Overlay sign out
+  if (signingOut) {
+    return (
+      <>
+        <div className="fixed inset-0 z-[100] backdrop-blur-sm bg-black/20 flex items-center justify-center transition-all duration-500">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 flex flex-col items-center gap-4 animate-in zoom-in-95 fade-in duration-300">
+            <div className="relative">
+              <div className="w-14 h-14 border-[3px] border-[#E1E5F3] border-t-[#0073EA] rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-6 h-6 bg-gradient-to-r from-[#0073EA] to-[#00C875] rounded-full" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-[#323338] font-semibold text-sm">Signing Out</p>
+              <p className="text-[#676879] text-xs mt-0.5">See you next time!</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   const isActive = (href) => {
     if (href === "/") return pathname === "/";
