@@ -49,7 +49,7 @@ export default function JoinContent() {
   };
 
   const handleLoginAndAccept = () => {
-    router.push(`/auth/login?redirect=/app/join?token=${token}`);
+    router.push(`/auth/login?redirect=/join?token=${token}`);
   };
 
   const goToBoard = () => {

@@ -166,7 +166,7 @@ export const boardsApi = {
 
     // Generate share link
     const origin = window.location.origin;
-    const shareLink = `${origin}/app/join?token=${token}`;
+    const shareLink = `${origin}/join?token=${token}`;
 
     return { ...data, shareLink };
   },
