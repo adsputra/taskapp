@@ -38,7 +38,7 @@ export default function Dashboard() {
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: () => userApi.me(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Selalu fetch fresh — hindari stale data setelah login/signup
   });
 
   const isLoading = boardsLoading || itemsLoading;

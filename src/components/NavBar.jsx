@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { userApi } from "@/lib/api/user";
 import { signOut } from "@/app/actions/auth";
 import {
@@ -38,6 +39,7 @@ const navigationItems = [
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,8 @@ export default function NavBar() {
     } catch {
       // Fallback: tidak bisa sign out server-side
     }
+    // Invalidate semua cache sebelum redirect ke login
+    queryClient.invalidateQueries();
     router.push("/auth/login");
     router.refresh();
   };

@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { login, signOut } from "@/app/actions/auth";
 import { Briefcase, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const redirectTo = searchParams.get("redirect") || "/";
 
   const [email, setEmail] = useState("");
@@ -56,7 +58,8 @@ function LoginForm() {
         return;
       }
 
-      // Login berhasil — refresh halaman tujuan
+      // Login berhasil — invalidate cache & refresh halaman tujuan
+      queryClient.invalidateQueries();
       router.push(redirectTo);
       router.refresh();
     } catch (err) {

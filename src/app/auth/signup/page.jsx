@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { signup, signOut } from "@/app/actions/auth";
 import { Briefcase, MailCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 
 export default function SignupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +61,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Langsung login (email confirmation disabled)
+      // Langsung login (email confirmation disabled) — invalidate cache
+      queryClient.invalidateQueries();
       router.push("/");
       router.refresh();
     } catch (err) {
