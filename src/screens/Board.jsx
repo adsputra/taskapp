@@ -351,7 +351,7 @@ export default function BoardPage({ boardId }) {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-[#E1E5F3] overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm border border-[#E1E5F3]">
                 {(board.groups || []).map((group) => (
                   <GroupSection key={group.id} group={group}
                     items={groupedItems[group.id] || []} columns={visibleColumns}
