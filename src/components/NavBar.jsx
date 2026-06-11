@@ -101,10 +101,18 @@ export default function NavBar() {
         <div className="fixed inset-0 z-[100] backdrop-blur-sm bg-black/20 flex items-center justify-center transition-all duration-500">
           <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 flex flex-col items-center gap-4 animate-in zoom-in-95 fade-in duration-300">
             <div className="relative">
-              <div className="w-14 h-14 border-[3px] border-[#E1E5F3] border-t-[#0073EA] rounded-full animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 bg-gradient-to-r from-[#0073EA] to-[#00C875] rounded-full" />
-              </div>
+              <svg className="w-14 h-14 animate-spin" viewBox="0 0 56 56" fill="none">
+                <circle cx="28" cy="28" r="24" stroke="#E1E5F3" strokeWidth="3" fill="none" />
+                <circle
+                  cx="28" cy="28" r="24"
+                  stroke="#0073EA"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="150"
+                  strokeDashoffset="115"
+                />
+              </svg>
             </div>
             <div className="text-center">
               <p className="text-[#323338] font-semibold text-sm">Signing Out</p>

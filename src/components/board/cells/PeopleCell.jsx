@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { User, Check, X } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { User, Check } from "lucide-react";
 import { boardsApi } from "@/lib/api/boards";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * PeopleCell — menampilkan siapa yang di-assign ke task.
- * Menarik data user dari board_members (real users yang punya akses ke board).
+ * PeopleCell — dropdown assign menggunakan fixed position agar tidak terpotong overflow parent.
  */
 export default function PeopleCell({ value, onUpdate, itemId, column, boardId }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
-  // Parse value — bisa string atau array
+  // Parse value
   const assignedUsers = Array.isArray(value) ? value : value ? [value] : [];
 
   // Load board members
@@ -25,7 +26,6 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
     enabled: !!boardId,
   });
 
-  // Filter members based on search
   const filteredMembers = members.filter(
     (m) =>
       m.status === "active" &&
@@ -41,30 +41,73 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
     onUpdate(newAssigned);
   };
 
-  const getUserInitial = (email) => {
-    return email?.charAt(0)?.toUpperCase() || "?";
-  };
+  const getUserInitial = (email) => email?.charAt(0)?.toUpperCase() || "?";
 
   const getUserColor = (email) => {
     const colors = ["#0073EA", "#00C875", "#E2445C", "#FFCB00", "#A358DF", "#579BFC"];
     let hash = 0;
-    for (let i = 0; i < (email || "").length; i++) {
-      hash = email.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < (email || "").length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
   };
 
-  const handleBlur = () => {
-    // Gunakan setTimeout agar click event handler bisa berjalan dulu
-    setTimeout(() => setIsOpen(false), 200);
-  };
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const left = rect.left + rect.width > window.innerWidth - 270
+        ? window.innerWidth - 270
+        : rect.left;
+      setDropdownStyle({ top: rect.bottom + 4, left });
+    }
+  }, []);
+
+  const openDropdown = useCallback(() => {
+    updatePosition();
+    setIsOpen(true);
+  }, [updatePosition]);
+
+  const closeDropdown = useCallback(() => {
+    setIsOpen(false);
+    setSearch("");
+  }, []);
+
+  // Click outside handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target)
+      ) {
+        closeDropdown();
+      }
+    };
+    const timer = setTimeout(() => document.addEventListener("mousedown", handleClick), 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleClick);
+    };
+  }, [isOpen, closeDropdown]);
+
+  // Reposition on scroll/resize
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isOpen, updatePosition]);
 
   return (
-    <div className="relative" onBlur={handleBlur}>
-      {/* Display assigned users */}
+    <div className="relative">
+      {/* Trigger */}
       <div
+        ref={triggerRef}
         className="cursor-pointer flex items-center gap-1 flex-wrap min-h-[28px] px-1 py-0.5 rounded hover:bg-[#E1E5F3]/50 transition-colors"
-        onClick={() => setIsOpen(true)}
+        onClick={openDropdown}
       >
         {assignedUsers.length === 0 && (
           <span className="text-[#676879] text-sm flex items-center gap-1">
@@ -76,26 +119,25 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
           <div
             key={email}
             className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white -ml-1 first:ml-0 shadow-sm"
-            style={{
-              backgroundColor: getUserColor(email),
-              zIndex: assignedUsers.length - i,
-            }}
+            style={{ backgroundColor: getUserColor(email), zIndex: assignedUsers.length - i }}
             title={email}
           >
             {getUserInitial(email)}
           </div>
         ))}
         {assignedUsers.length > 3 && (
-          <span className="text-xs text-[#676879] ml-1">
-            +{assignedUsers.length - 3}
-          </span>
+          <span className="text-xs text-[#676879] ml-1">+{assignedUsers.length - 3}</span>
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown — fixed position agar tidak terhalang overflow parent */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-lg border border-[#E1E5F3] z-50 overflow-hidden">
-          {/* Search input */}
+        <div
+          ref={dropdownRef}
+          style={{ position: "fixed", top: dropdownStyle.top, left: dropdownStyle.left, zIndex: 100 }}
+          className="w-64 bg-white rounded-xl shadow-lg border border-[#E1E5F3] overflow-hidden"
+        >
+          {/* Search */}
           <div className="p-2 border-b border-[#E1E5F3]">
             <input
               value={search}
@@ -142,20 +184,16 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
                       <p className="text-sm font-medium text-[#323338] truncate">
                         {email.split("@")[0]}
                       </p>
-                      <p className="text-xs text-[#676879] truncate">
-                        {email}
-                      </p>
+                      <p className="text-xs text-[#676879] truncate">{email}</p>
                     </div>
-                    {isChecked && (
-                      <Check className="w-4 h-4 text-[#0073EA] flex-shrink-0" />
-                    )}
+                    {isChecked && <Check className="w-4 h-4 text-[#0073EA] flex-shrink-0" />}
                   </button>
                 );
               })
             )}
           </div>
 
-          {/* Close button */}
+          {/* Close */}
           <div className="p-2 border-t border-[#E1E5F3]">
             <button
               type="button"
