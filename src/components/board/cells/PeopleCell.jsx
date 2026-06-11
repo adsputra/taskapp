@@ -7,19 +7,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * PeopleCell — dropdown assign menggunakan fixed position agar tidak terpotong overflow parent.
+ * PeopleCell — assign dropdown. Fixed position agar tidak terpotong overflow.
+ * Menampilkan nama + avatar setelah dipilih.
  */
 export default function PeopleCell({ value, onUpdate, itemId, column, boardId }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Parse value
   const assignedUsers = Array.isArray(value) ? value : value ? [value] : [];
 
-  // Load board members
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["board-members", boardId],
     queryFn: () => boardsApi.listMembers(boardId),
@@ -42,35 +40,36 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
   };
 
   const getUserInitial = (email) => email?.charAt(0)?.toUpperCase() || "?";
+  const getUserName = (email) => email?.split("@")[0] || email || "Unknown";
 
   const getUserColor = (email) => {
     const colors = ["#0073EA", "#00C875", "#E2445C", "#FFCB00", "#A358DF", "#579BFC"];
     let hash = 0;
-    for (let i = 0; i < (email || "").length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash);
+    for (let i = 0; i < (email || "").length; i++)
+      hash = email.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
   };
 
-  const updatePosition = useCallback(() => {
+  const getDropdownPos = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const left = rect.left + rect.width > window.innerWidth - 270
-        ? window.innerWidth - 270
-        : rect.left;
-      setDropdownStyle({ top: rect.bottom + 4, left });
+      let left = rect.left;
+      if (left + 256 > window.innerWidth) left = window.innerWidth - 272;
+      return { top: rect.bottom + 4, left };
     }
+    return { top: 0, left: 0 };
   }, []);
 
   const openDropdown = useCallback(() => {
-    updatePosition();
     setIsOpen(true);
-  }, [updatePosition]);
+  }, []);
 
   const closeDropdown = useCallback(() => {
     setIsOpen(false);
     setSearch("");
   }, []);
 
-  // Click outside handler
+  // Click outside
   useEffect(() => {
     if (!isOpen) return;
     const handleClick = (e) => {
@@ -90,54 +89,77 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
     };
   }, [isOpen, closeDropdown]);
 
-  // Reposition on scroll/resize
+  // Force re-render on scroll/resize
+  const [, setTick] = useState(0);
   useEffect(() => {
     if (!isOpen) return;
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
+    const rerender = () => setTick((t) => t + 1);
+    window.addEventListener("scroll", rerender, true);
+    window.addEventListener("resize", rerender);
     return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", rerender, true);
+      window.removeEventListener("resize", rerender);
     };
-  }, [isOpen, updatePosition]);
+  }, [isOpen]);
+
+  // Dropdown position — dihitung saat render, bukan via state
+  const pos = getDropdownPos();
 
   return (
     <div className="relative">
-      {/* Trigger */}
+      {/* Trigger — avatar + nama */}
       <div
         ref={triggerRef}
-        className="cursor-pointer flex items-center gap-1 flex-wrap min-h-[28px] px-1 py-0.5 rounded hover:bg-[#E1E5F3]/50 transition-colors"
+        className="cursor-pointer flex items-center gap-1.5 min-h-[28px] px-1 py-0.5 rounded hover:bg-[#E1E5F3]/50 transition-colors"
         onClick={openDropdown}
       >
         {assignedUsers.length === 0 && (
           <span className="text-[#676879] text-sm flex items-center gap-1">
-            <User className="w-3.5 h-3.5" />
+            <span className="w-5 h-5 rounded-full bg-[#E1E5F3] flex items-center justify-center">
+              <User className="w-3 h-3 text-[#676879]" />
+            </span>
             Assign
           </span>
         )}
-        {assignedUsers.map((email, i) => (
-          <div
-            key={email}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white -ml-1 first:ml-0 shadow-sm"
-            style={{ backgroundColor: getUserColor(email), zIndex: assignedUsers.length - i }}
-            title={email}
-          >
-            {getUserInitial(email)}
-          </div>
-        ))}
-        {assignedUsers.length > 3 && (
-          <span className="text-xs text-[#676879] ml-1">+{assignedUsers.length - 3}</span>
+        {assignedUsers.length === 1 && (
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+              style={{ backgroundColor: getUserColor(assignedUsers[0]) }}
+            >
+              {getUserInitial(assignedUsers[0])}
+            </span>
+            <span className="text-sm text-[#323338] truncate max-w-[100px]">
+              {getUserName(assignedUsers[0])}
+            </span>
+          </span>
+        )}
+        {assignedUsers.length > 1 && (
+          <span className="flex items-center gap-1">
+            {assignedUsers.slice(0, 3).map((email, i) => (
+              <span
+                key={email}
+                className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold border border-white -ml-1 first:ml-0"
+                style={{ backgroundColor: getUserColor(email) }}
+                title={getUserName(email)}
+              >
+                {getUserInitial(email)}
+              </span>
+            ))}
+            <span className="text-xs text-[#323338] ml-0.5">
+              {assignedUsers.length} people
+            </span>
+          </span>
         )}
       </div>
 
-      {/* Dropdown — fixed position agar tidak terhalang overflow parent */}
+      {/* Dropdown — fixed di viewport, posisi dihitung saat render */}
       {isOpen && (
         <div
           ref={dropdownRef}
-          style={{ position: "fixed", top: dropdownStyle.top, left: dropdownStyle.left, zIndex: 100 }}
-          className="w-64 bg-white rounded-xl shadow-lg border border-[#E1E5F3] overflow-hidden"
+          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 100, width: 256 }}
+          className="bg-white rounded-xl shadow-lg border border-[#E1E5F3] overflow-hidden"
         >
-          {/* Search */}
           <div className="p-2 border-b border-[#E1E5F3]">
             <input
               value={search}
@@ -147,19 +169,16 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
               autoFocus
             />
           </div>
-
-          {/* Member list */}
           <div className="max-h-48 overflow-y-auto">
             {isLoading ? (
               <div className="p-3 space-y-2">
-                <Skeleton className="h-8 w-full rounded" />
                 <Skeleton className="h-8 w-full rounded" />
                 <Skeleton className="h-8 w-full rounded" />
               </div>
             ) : filteredMembers.length === 0 ? (
               <div className="p-4 text-center text-sm text-[#A0A0A0]">
                 {members.length === 0
-                  ? "No team members yet. Share this board to add people."
+                  ? "No team members yet."
                   : "No matching members found."}
               </div>
             ) : (
@@ -174,26 +193,24 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
                     onClick={() => toggleUser(member.id, email)}
                     onMouseDown={(e) => e.preventDefault()}
                   >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0"
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                       style={{ backgroundColor: getUserColor(email) }}
                     >
                       {getUserInitial(email)}
-                    </div>
-                    <div className="flex-1 min-w-0">
+                    </span>
+                    <span className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[#323338] truncate">
-                        {email.split("@")[0]}
+                        {getUserName(email)}
                       </p>
                       <p className="text-xs text-[#676879] truncate">{email}</p>
-                    </div>
+                    </span>
                     {isChecked && <Check className="w-4 h-4 text-[#0073EA] flex-shrink-0" />}
                   </button>
                 );
               })
             )}
           </div>
-
-          {/* Close */}
           <div className="p-2 border-t border-[#E1E5F3]">
             <button
               type="button"
