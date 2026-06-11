@@ -111,14 +111,32 @@ export default function Boards() {
           </Button>
         </motion.div>
 
-        {/* ── Toolbar ── */}
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
+          {[
+            { label: "All", v: boards.length, icon: Folder, c: "bg-indigo-50 text-indigo-600" },
+            { label: "Owned", v: boards.filter(b => !b.shared).length, icon: Grid3X3, c: "bg-blue-50 text-blue-600" },
+            { label: "Shared", v: boards.filter(b => b.shared).length, icon: LayoutList, c: "bg-emerald-50 text-emerald-600" },
+          ].map((s) => (
+            <div key={s.label} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200/60 shadow-sm p-3.5">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.c} flex-shrink-0`}>
+                <s.icon className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium">{s.label}</p>
+                <p className="text-lg font-bold text-slate-800">{s.v}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.05 }}
-          className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between"
+          transition={{ duration: 0.35, delay: 0.08 }}
+          className="flex flex-col sm:flex-row gap-3 items-start sm:items-center"
         >
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Filter boards..."
