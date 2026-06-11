@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { boardsApi } from "@/lib/api/boards";
+import { userApi } from "@/lib/api/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -34,6 +35,14 @@ export default function Boards() {
     queryKey: ["boards"],
     queryFn: () => boardsApi.list(),
   });
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => userApi.me(),
+    staleTime: 5 * 1000,
+  });
+
+  const userId = user?.id;
 
   const filteredBoards = useMemo(() => {
     if (!searchQuery) return boards;
@@ -115,8 +124,8 @@ export default function Boards() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
           {[
             { label: "All", v: boards.length, icon: Folder, c: "bg-indigo-50 text-indigo-600" },
-            { label: "Owned", v: boards.filter(b => !b.shared).length, icon: Grid3X3, c: "bg-blue-50 text-blue-600" },
-            { label: "Shared", v: boards.filter(b => b.shared).length, icon: LayoutList, c: "bg-emerald-50 text-emerald-600" },
+            { label: "Owned", v: userId ? boards.filter(b => b.user_id === userId).length : "-", icon: Grid3X3, c: "bg-blue-50 text-blue-600" },
+            { label: "Shared", v: userId ? boards.filter(b => b.user_id !== userId).length : "-", icon: LayoutList, c: "bg-emerald-50 text-emerald-600" },
           ].map((s) => (
             <div key={s.label} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200/60 shadow-sm p-3.5">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.c} flex-shrink-0`}>
