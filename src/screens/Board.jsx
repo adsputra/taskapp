@@ -299,12 +299,13 @@ export default function BoardPage({ boardId }) {
             <>
               <div className="flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm border border-[#E1E5F3]">
                 <div className="flex items-center gap-4">
-                  {userRole === "admin" && (
-                    <Button onClick={() => setShowNewTaskModal(true)}
-                      className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium">
-                      <Plus className="w-4 h-4 mr-2" /> New Task
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => userRole === "admin" && setShowNewTaskModal(true)}
+                    disabled={userRole !== "admin"}
+                    title={userRole !== "admin" ? "Only admin can add tasks" : ""}
+                    className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Plus className="w-4 h-4 mr-2" /> New Task
+                  </Button>
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#676879]" />
                     <Input placeholder="Search" value={searchQuery}
@@ -401,22 +402,25 @@ export default function BoardPage({ boardId }) {
                   <div className="p-8 text-center text-[#676879]">
                     <h3 className="text-xl font-medium mb-2">No groups yet!</h3>
                     <p className="mb-4">Add your first group to organize tasks.</p>
-                    {userRole === "admin" && (
-                      <Button onClick={() => setShowNewGroupModal(true)}
-                        className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4">
-                        <Plus className="w-4 h-4 mr-2" /> Add First Group
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {userRole === "admin" && (
-                  <div className="p-4 border-t border-[#E1E5F3]">
-                    <Button variant="outline" onClick={() => setShowNewGroupModal(true)}
-                      className="w-full border-dashed border-[#0073EA] text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg h-10">
-                      <Plus className="w-4 h-4 mr-2" /> Add New Group
+                    <Button
+                      onClick={() => userRole === "admin" && setShowNewGroupModal(true)}
+                      disabled={userRole !== "admin"}
+                      title={userRole !== "admin" ? "Only admin can add groups" : ""}
+                      className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <Plus className="w-4 h-4 mr-2" /> Add First Group
                     </Button>
                   </div>
                 )}
+                <div className="p-4 border-t border-[#E1E5F3]">
+                  <Button
+                    variant="outline"
+                    onClick={() => userRole === "admin" && setShowNewGroupModal(true)}
+                    disabled={userRole !== "admin"}
+                    title={userRole !== "admin" ? "Only admin can add groups" : ""}
+                    className="w-full border-dashed border-[#0073EA] text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg h-10 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Plus className="w-4 h-4 mr-2" /> Add New Group
+                  </Button>
+                </div>
               </div>
             </>
           )}
