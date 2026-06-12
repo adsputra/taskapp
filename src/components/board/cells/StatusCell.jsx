@@ -21,7 +21,7 @@ export default function StatusCell({ value, options, onUpdate }) {
       <Select
         value={currentChoice.label}
         onValueChange={(newValue) => {
-          onUpdate(newValue);
+          if (onUpdate) onUpdate(newValue);
           setIsEditing(false);
         }}
         onOpenChange={(open) => {
@@ -51,9 +51,9 @@ export default function StatusCell({ value, options, onUpdate }) {
 
   return (
     <Badge
-      className="cursor-pointer border-none text-white font-medium px-3 py-1 hover:opacity-80 transition-opacity"
+      className={`border-none text-white font-medium px-3 py-1 ${onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
       style={{ backgroundColor: currentChoice.color }}
-      onClick={() => setIsEditing(true)}
+      onClick={() => onUpdate && setIsEditing(true)}
     >
       {currentChoice.label}
     </Badge>

@@ -9,7 +9,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// A predefined list of tag suggestions, could come from board settings in future
 const tagSuggestions = [
   { value: 'urgent', label: 'Urgent', color: '#E2445C' },
   { value: 'bug', label: 'Bug', color: '#FFCB00' },
@@ -19,28 +18,30 @@ const tagSuggestions = [
 ];
 
 export default function TagsCell({ value, onUpdate, options }) {
-  const currentTags = Array.isArray(value) ? value : []; // value is an array of tag objects like { value: 'urgent', label: 'Urgent', color: '#E2445C' }
+  const currentTags = Array.isArray(value) ? value : [];
   const [newTagInput, setNewTagInput] = useState('');
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const handleAddTag = (tag) => {
+    if (!onUpdate) return;
     if (tag && !currentTags.find(t => t.value === tag.value)) {
       onUpdate([...currentTags, tag]);
     }
-    setNewTagInput(''); // Clear input after adding
+    setNewTagInput('');
   };
 
   const handleRemoveTag = (tagValueToRemove) => {
+    if (!onUpdate) return;
     onUpdate(currentTags.filter(tag => tag.value !== tagValueToRemove));
   };
   
   const handleCreateNewTag = () => {
+    if (!onUpdate) return;
     if (newTagInput.trim() && !currentTags.find(t => t.label.toLowerCase() === newTagInput.trim().toLowerCase())) {
-        // For simplicity, new tags get a default color or generate one
         const newTag = {
-            value: newTagInput.trim().toLowerCase().replace(/\s+/g, '-'), // create a value from label
+            value: newTagInput.trim().toLowerCase().replace(/\s+/g, '-'),
             label: newTagInput.trim(),
-            color: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color for new tag
+            color: `#${Math.floor(Math.random()*16777215).toString(16)}`
         };
         handleAddTag(newTag);
     }
@@ -60,46 +61,50 @@ export default function TagsCell({ value, onUpdate, options }) {
           className="font-normal px-1.5 py-0.5 text-xs"
         >
           {tag.label}
-          <button onClick={() => handleRemoveTag(tag.value)} className="ml-1 opacity-70 hover:opacity-100">
-            <XIcon size={10} />
-          </button>
+          {onUpdate && (
+            <button onClick={() => handleRemoveTag(tag.value)} className="ml-1 opacity-70 hover:opacity-100">
+              <XIcon size={10} />
+            </button>
+          )}
         </Badge>
       ))}
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-5 w-5 p-0 ml-auto">
-            <Plus size={14} className="text-gray-500 hover:text-gray-700" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56 p-2 space-y-2">
-          <Input 
-            placeholder="Add or find tag..."
-            value={newTagInput}
-            onChange={(e) => setNewTagInput(e.target.value)}
-            className="h-8 text-sm"
-          />
-          {filteredSuggestions.length > 0 && (
-            <div className="max-h-32 overflow-y-auto space-y-1">
-              {filteredSuggestions.map(suggestion => (
-                <Button 
-                  key={suggestion.value} 
-                  variant="ghost" 
-                  className="w-full justify-start h-8 text-sm p-2"
-                  onClick={() => handleAddTag(suggestion)}
-                >
-                   <div className="w-2 h-2 rounded-full mr-2" style={{backgroundColor: suggestion.color}}/>
-                  {suggestion.label}
-                </Button>
-              ))}
-            </div>
-          )}
-           {(newTagInput.trim() && !filteredSuggestions.find(s => s.label.toLowerCase() === newTagInput.toLowerCase())) && (
-             <Button variant="outline" className="w-full h-8 text-sm" onClick={handleCreateNewTag}>
-                Create "{newTagInput.trim()}"
+      {onUpdate && (
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-5 w-5 p-0 ml-auto">
+              <Plus size={14} className="text-gray-500 hover:text-gray-700" />
             </Button>
-           )}
-        </PopoverContent>
-      </Popover>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-2 space-y-2">
+            <Input 
+              placeholder="Add or find tag..."
+              value={newTagInput}
+              onChange={(e) => setNewTagInput(e.target.value)}
+              className="h-8 text-sm"
+            />
+            {filteredSuggestions.length > 0 && (
+              <div className="max-h-32 overflow-y-auto space-y-1">
+                {filteredSuggestions.map(suggestion => (
+                  <Button 
+                    key={suggestion.value} 
+                    variant="ghost" 
+                    className="w-full justify-start h-8 text-sm p-2"
+                    onClick={() => handleAddTag(suggestion)}
+                  >
+                     <div className="w-2 h-2 rounded-full mr-2" style={{backgroundColor: suggestion.color}}/>
+                    {suggestion.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+             {(newTagInput.trim() && !filteredSuggestions.find(s => s.label.toLowerCase() === newTagInput.toLowerCase())) && (
+               <Button variant="outline" className="w-full h-8 text-sm" onClick={handleCreateNewTag}>
+                  Create "{newTagInput.trim()}"
+              </Button>
+             )}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }

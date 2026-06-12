@@ -33,6 +33,7 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
   );
 
   const toggleUser = (memberId, memberEmail) => {
+    if (!onUpdate) return;
     const newAssigned = assignedUsers.includes(memberEmail)
       ? assignedUsers.filter((u) => u !== memberEmail)
       : [...assignedUsers, memberEmail];
@@ -110,8 +111,8 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
       {/* Trigger — avatar + nama */}
       <div
         ref={triggerRef}
-        className="cursor-pointer flex items-center gap-1.5 min-h-[28px] px-1 py-0.5 rounded hover:bg-[#E1E5F3]/50 transition-colors"
-        onClick={openDropdown}
+        className={`flex items-center gap-1.5 min-h-[28px] px-1 py-0.5 rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+        onClick={() => onUpdate && openDropdown()}
       >
         {assignedUsers.length === 0 && (
           <span className="text-[#676879] text-sm flex items-center gap-1">

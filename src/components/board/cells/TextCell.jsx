@@ -6,7 +6,7 @@ export default function TextCell({ value, onUpdate }) {
   const [editValue, setEditValue] = useState(value || '');
 
   const handleSave = () => {
-    onUpdate(editValue);
+    if (onUpdate) onUpdate(editValue);
     setIsEditing(false);
   };
 
@@ -34,8 +34,8 @@ export default function TextCell({ value, onUpdate }) {
 
   return (
     <div
-      className="cursor-pointer text-[#323338] font-medium hover:bg-[#E1E5F3] hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors"
-      onClick={() => setIsEditing(true)}
+      className={`text-[#323338] font-medium px-2 py-1 -mx-2 transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3] hover:rounded' : ''}`}
+      onClick={() => onUpdate && setIsEditing(true)}
     >
       {value || 'Enter text...'}
     </div>

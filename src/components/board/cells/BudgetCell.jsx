@@ -5,7 +5,7 @@ export default function BudgetCell({ value, onUpdate, options }) {
   const [currentValue, setCurrentValue] = useState(value || 0);
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef(null);
-  const currencySymbol = options?.currency === 'ILS' ? '₪' : '$'; // Example, can be extended
+  const currencySymbol = options?.currency === 'ILS' ? '₪' : '$';
 
   useEffect(() => {
     setCurrentValue(value || 0);
@@ -21,10 +21,10 @@ export default function BudgetCell({ value, onUpdate, options }) {
   const handleBlur = () => {
     setIsEditing(false);
     const numericValue = parseFloat(currentValue) || 0;
-    if (numericValue !== parseFloat(value)) {
+    if (numericValue !== parseFloat(value) && onUpdate) {
       onUpdate(numericValue);
     }
-    setCurrentValue(numericValue); // Ensure it's a number after editing
+    setCurrentValue(numericValue);
   };
 
   const handleChange = (e) => {
@@ -36,7 +36,7 @@ export default function BudgetCell({ value, onUpdate, options }) {
       handleBlur();
     } else if (e.key === 'Escape') {
       setIsEditing(false);
-      setCurrentValue(value || 0); // Revert to original value
+      setCurrentValue(value || 0);
     }
   };
 
@@ -50,15 +50,15 @@ export default function BudgetCell({ value, onUpdate, options }) {
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         className="h-full w-full p-1 border-none focus:ring-1 focus:ring-blue-500 bg-transparent text-sm"
-        step="0.01" // For currency
+        step="0.01"
       />
     );
   }
 
   return (
     <div 
-      onClick={() => setIsEditing(true)} 
-      className="cursor-pointer h-full w-full flex items-center text-sm text-gray-700 hover:bg-gray-100/50 px-1 rounded"
+      onClick={() => onUpdate && setIsEditing(true)} 
+      className={`h-full w-full flex items-center text-sm text-gray-700 px-1 rounded ${onUpdate ? 'cursor-pointer hover:bg-gray-100/50' : ''}`}
     >
       {currencySymbol}{Number(currentValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </div>

@@ -19,12 +19,12 @@ export default function PriorityCell({ value, onUpdate, options }) {
   const selectedChoice = choices.find(c => c.value === value);
 
   const handleValueChange = (newValue) => {
-    onUpdate(newValue);
+    if (onUpdate) onUpdate(newValue);
   };
 
   return (
     <Select value={value || ""} onValueChange={handleValueChange}>
-      <SelectTrigger className="h-full w-full p-1 border-none bg-transparent text-sm focus:ring-0 shadow-none">
+      <SelectTrigger className={`h-full w-full p-1 border-none bg-transparent text-sm focus:ring-0 shadow-none ${!onUpdate ? 'cursor-default' : ''}`}>
         {selectedChoice ? (
           <Badge 
             style={{ 

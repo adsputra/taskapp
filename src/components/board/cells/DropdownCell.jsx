@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -13,8 +13,8 @@ export default function DropdownCell({ value, column, onUpdate }) {
   const choices = column?.options?.choices || [];
 
   return (
-    <Select value={value || ""} onValueChange={(v) => onUpdate(v)}>
-      <SelectTrigger className="h-8 border-0 bg-transparent focus:ring-0 text-sm">
+    <Select value={value || ""} onValueChange={(v) => onUpdate && onUpdate(v)}>
+      <SelectTrigger className={`h-8 border-0 bg-transparent focus:ring-0 text-sm ${!onUpdate ? 'cursor-default' : ''}`}>
         <SelectValue placeholder="Pilih..." />
       </SelectTrigger>
       <SelectContent>

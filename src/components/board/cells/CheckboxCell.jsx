@@ -2,10 +2,10 @@ import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function CheckboxCell({ value, onUpdate }) {
-  const isChecked = !!value; // Ensure boolean
+  const isChecked = !!value;
 
   const handleChange = (checked) => {
-    onUpdate(checked);
+    if (onUpdate) onUpdate(checked);
   };
 
   return (
@@ -13,6 +13,7 @@ export default function CheckboxCell({ value, onUpdate }) {
       <Checkbox
         checked={isChecked}
         onCheckedChange={handleChange}
+        disabled={!onUpdate}
         aria-label="Checkbox"
       />
     </div>

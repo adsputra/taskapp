@@ -8,7 +8,7 @@ export default function DateCell({ value, onUpdate }) {
   const [editValue, setEditValue] = useState(value || '');
 
   const handleSave = () => {
-    onUpdate(editValue);
+    if (onUpdate) onUpdate(editValue);
     setIsEditing(false);
   };
 
@@ -38,8 +38,8 @@ export default function DateCell({ value, onUpdate }) {
   if (!value) {
     return (
       <div
-        className="cursor-pointer text-[#676879] hover:bg-[#E1E5F3] hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors flex items-center gap-2"
-        onClick={() => setIsEditing(true)}
+        className={`text-[#676879] px-2 py-1 -mx-2 transition-colors flex items-center gap-2 ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3] hover:rounded' : ''}`}
+        onClick={() => onUpdate && setIsEditing(true)}
       >
         <Calendar className="w-4 h-4" />
         <span>Set date</span>
@@ -51,10 +51,12 @@ export default function DateCell({ value, onUpdate }) {
   
   return (
     <div
-      className={`cursor-pointer hover:opacity-80 transition-opacity px-2 py-1 -mx-2 -my-1 rounded text-sm ${
+      className={`px-2 py-1 -mx-2 rounded text-sm ${
+        onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+      } ${
         isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C]' : 'text-[#323338]'
       }`}
-      onClick={() => setIsEditing(true)}
+      onClick={() => onUpdate && setIsEditing(true)}
     >
       {format(new Date(value), 'MMM d')}
     </div>

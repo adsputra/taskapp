@@ -20,7 +20,7 @@ export default function NumberCell({ value, onUpdate }) {
   const handleBlur = () => {
     setIsEditing(false);
     const numericValue = parseFloat(currentValue) || 0;
-    if (numericValue !== parseFloat(value)) {
+    if (numericValue !== parseFloat(value) && onUpdate) {
       onUpdate(numericValue);
     }
     setCurrentValue(numericValue);
@@ -55,8 +55,8 @@ export default function NumberCell({ value, onUpdate }) {
 
   return (
     <div 
-      onClick={() => setIsEditing(true)} 
-      className="cursor-pointer h-full w-full flex items-center text-sm text-gray-700 hover:bg-gray-100/50 px-1 rounded"
+      onClick={() => onUpdate && setIsEditing(true)} 
+      className={`h-full w-full flex items-center text-sm text-gray-700 px-1 rounded ${onUpdate ? 'cursor-pointer hover:bg-gray-100/50' : ''}`}
     >
       {Number(currentValue).toLocaleString()}
     </div>
