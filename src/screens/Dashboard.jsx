@@ -86,50 +86,23 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-sky-500 p-6 sm:p-8">
-            {/* decorative blobs */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-xl" />
-            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white/5 rounded-full blur-xl" />
-            <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-sky-300/10 rounded-full blur-2xl" />
-
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-sm">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                      {getGreeting()},{" "}
-                      <span className="text-sky-200">
-                        {user?.full_name?.split(" ")[0] || "there"}
-                      </span>
-                      !
-                    </h1>
-                    <p className="text-sm text-sky-200/90 mt-0.5">
-                      {today} &middot;{" "}
-                      {pendingTasks > 0
-                        ? `${pendingTasks} task${pendingTasks > 1 ? "s" : ""} waiting`
-                        : "All caught up!"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Link href="/boards">
-                  <Button className="h-10 px-5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/25 text-white hover:bg-white/30 hover:text-white shadow-sm transition-all font-medium text-sm gap-2">
-                    <LayoutDashboard className="w-4 h-4" />
-                    Boards
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-                <Link href="/analytics">
-                  <Button className="h-10 px-5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-all font-medium text-sm gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Analytics
-                  </Button>
-                </Link>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 rounded-full bg-indigo-500" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
+                  {getGreeting()},{" "}
+                  <span className="text-indigo-600">
+                    {user?.full_name?.split(" ")[0] || "there"}
+                  </span>
+                  !
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  {today} &middot;{" "}
+                  {pendingTasks > 0
+                    ? `${pendingTasks} task${pendingTasks > 1 ? "s" : ""} waiting`
+                    : "All caught up!"}
+                </p>
               </div>
             </div>
           </div>

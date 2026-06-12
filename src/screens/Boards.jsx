@@ -105,7 +105,7 @@ export default function Boards() {
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Boards</h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="w-8 h-0.5 rounded-full bg-gradient-to-r from-blue-500 to-emerald-400" />
+              <span className="w-8 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400" />
               <p className="text-sm text-slate-400">
                 {filteredBoards.length} board{filteredBoards.length !== 1 ? "s" : ""}
               </p>
@@ -113,7 +113,7 @@ export default function Boards() {
           </div>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="h-10 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm gap-2 shadow-sm transition-all"
+            className="h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm gap-2 shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" />
             New Board
@@ -124,10 +124,10 @@ export default function Boards() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
           {[
             { label: "All", v: boards.length, icon: Folder, c: "bg-indigo-50 text-indigo-600" },
-            { label: "Owned", v: userId ? boards.filter(b => b.user_id === userId).length : "-", icon: Grid3X3, c: "bg-blue-50 text-blue-600" },
+            { label: "Owned", v: userId ? boards.filter(b => b.user_id === userId).length : "-", icon: Grid3X3, c: "bg-indigo-50 text-indigo-600" },
             { label: "Shared", v: userId ? boards.filter(b => b.user_id !== userId).length : "-", icon: LayoutList, c: "bg-emerald-50 text-emerald-600" },
           ].map((s) => (
-            <div key={s.label} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200/60 shadow-sm p-3.5">
+            <div key={s.label} className="flex items-center gap-3 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-3.5">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.c} flex-shrink-0`}>
                 <s.icon className="w-4.5 h-4.5" />
               </div>
@@ -151,7 +151,7 @@ export default function Boards() {
               placeholder="Filter boards..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 bg-white border-slate-200 rounded-xl h-10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm"
+              className="pl-9 pr-8 bg-white border-slate-200 rounded-xl h-10 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 text-sm"
             />
             {searchQuery && (
               <button
@@ -208,14 +208,14 @@ export default function Boards() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="bg-white rounded-2xl border border-slate-200/60 shadow-sm"
+              className="bg-white rounded-2xl shadow-md"
             >
               <div className="flex flex-col items-center justify-center py-20 px-6">
                 <div className="relative mb-6">
                   <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center">
                     <Folder className="w-9 h-9 text-slate-400" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm">
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center shadow-sm">
                     <Plus className="w-3.5 h-3.5 text-white" />
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function Boards() {
                 {!searchQuery && (
                   <Button
                     onClick={() => setShowCreateModal(true)}
-                    className="h-11 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium shadow-sm gap-2"
+                    className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Create Your First Board

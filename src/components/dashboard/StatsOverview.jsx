@@ -63,10 +63,10 @@ export default function StatsOverview({ boards, items, isLoading }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 * i }}
         >
-          <div className="relative group bg-white rounded-xl border border-slate-200/60 p-5 shadow-sm hover:shadow-md hover:border-slate-300/80 transition-all duration-200">
+          <div className="relative group bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-200">
             <div className="flex items-center justify-between mb-3">
               <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.bg} ${s.color} ring-1 ${s.ring}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} ${s.color} ring-1 ${s.ring}`}
               >
                 <s.icon className="w-5 h-5" />
               </div>

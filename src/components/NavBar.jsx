@@ -130,7 +130,7 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="bg-white border-b border-[#E1E5F3] shadow-sm sticky top-0 z-50">
+    <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-50">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo + Nav */}
@@ -139,10 +139,10 @@ export default function NavBar() {
               href="/"
               className="flex-shrink-0 flex items-center gap-2"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-[#323338] text-xl">
+              <span className="font-bold text-slate-800 text-xl">
                 Tuesday.com
               </span>
             </Link>
@@ -155,10 +155,10 @@ export default function NavBar() {
                   <Link
                     key={item.title}
                     href={item.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       active
-                        ? "bg-[#E1E5F3] text-[#0073EA]"
-                        : "text-[#323338] hover:bg-[#F5F6F8] hover:text-[#0073EA]"
+                        ? "bg-indigo-50 text-indigo-600"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-indigo-600"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -182,7 +182,7 @@ export default function NavBar() {
                 <Input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -195,22 +195,22 @@ export default function NavBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-[#E1E5F3] rounded-lg h-10 w-10"
+              className="hover:bg-slate-100 rounded-lg h-10 w-10"
             >
-              <Bell className="w-5 h-5 text-[#676879]" />
+              <Bell className="w-5 h-5 text-slate-500" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-[#E1E5F3] rounded-lg h-10 w-10"
+              className="hover:bg-slate-100 rounded-lg h-10 w-10"
             >
-              <HelpCircle className="w-5 h-5 text-[#676879]" />
+              <HelpCircle className="w-5 h-5 text-slate-500" />
             </Button>
 
             {/* Avatar + Dropdown — hanya tampil kalau ada user */}
             {!loading && !user ? (
               <Link href="/auth/login">
-                <Button className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-9 px-4 text-sm font-medium">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-9 px-4 text-sm font-medium shadow-sm">
                   Sign In
                 </Button>
               </Link>
@@ -224,7 +224,7 @@ export default function NavBar() {
                   {loading ? (
                     <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
                   ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#0073EA] to-[#00C875] rounded-full flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-sm">
                       <span className="text-white font-bold text-xs">
                         {userInitial}
                       </span>
@@ -282,7 +282,7 @@ export default function NavBar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[#E1E5F3] bg-white">
+        <div className="md:hidden border-t border-slate-200 bg-white">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navigationItems.map((item) => {
               const active = isActive(item.href);
@@ -290,10 +290,10 @@ export default function NavBar() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  className={`block px-3 py-2 rounded-lg text-base font-medium transition-colors ${
                     active
-                      ? "bg-[#E1E5F3] text-[#0073EA]"
-                      : "text-[#323338] hover:bg-[#F5F6F8] hover:text-[#0073EA]"
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-indigo-600"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -304,19 +304,19 @@ export default function NavBar() {
           </div>
 
           {/* Mobile: Search */}
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="pt-4 pb-3 border-t border-slate-200">
             <div className="px-2">
               <label htmlFor="search-mobile" className="sr-only">
                 Search
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <Search className="h-5 w-5 text-slate-400" aria-hidden="true" />
                 </div>
                 <Input
                   id="search-mobile"
                   name="search-mobile"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -325,13 +325,13 @@ export default function NavBar() {
           </div>
 
           {/* Mobile: User info */}
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="pt-4 pb-3 border-t border-slate-200">
             <div className="flex items-center px-5">
               <div className="flex-shrink-0">
                 {loading ? (
                   <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
                 ) : (
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#0073EA] to-[#00C875] rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {userInitial}
                     </span>
@@ -339,26 +339,26 @@ export default function NavBar() {
                 )}
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
+                <div className="text-base font-medium text-slate-800">
                   {userName}
                 </div>
-                <div className="text-sm font-medium text-gray-500">
+                <div className="text-sm font-medium text-slate-500">
                   {userEmail}
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="ml-auto hover:bg-[#E1E5F3] rounded-lg h-10 w-10"
+                className="ml-auto hover:bg-slate-100 rounded-lg h-10 w-10"
               >
-                <Bell className="w-5 h-5 text-[#676879]" />
+                <Bell className="w-5 h-5 text-slate-500" />
               </Button>
             </div>
             <div className="mt-3 px-2 space-y-1">
               <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50"
               >
                 Your Profile
               </Link>

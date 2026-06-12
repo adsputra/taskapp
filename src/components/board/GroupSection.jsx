@@ -319,18 +319,17 @@ export default function GroupSection({
                     />
                   </div>
                 ))}
-              {userRole === "admin" && (
               <div className="shrink-0 w-[40px]">
+                {userRole === "admin" && (
                 <button
-                  onClick={() => userRole === "admin" && onAddColumn?.()}
-                  disabled={userRole !== "admin"}
-                  className="p-2 text-[#A0A0A0] hover:text-[#0073EA] hover:bg-[#0073EA]/5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={userRole !== "admin" ? "Only admin can add columns" : "Add column"}
+                  onClick={() => onAddColumn?.()}
+                  className="p-2 text-[#A0A0A0] hover:text-[#0073EA] hover:bg-[#0073EA]/5 rounded-lg transition-colors"
+                  title="Add column"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
+                )}
               </div>
-              )}
             </div>
 
             {/* Items */}

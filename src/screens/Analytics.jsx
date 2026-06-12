@@ -99,9 +99,9 @@ export default function AnalyticsPage() {
       label: "Total Tasks",
       value: totalTasks,
       icon: Target,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      ring: "ring-blue-600/10",
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      ring: "ring-indigo-600/10",
     },
     {
       label: "Completion Rate",
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50/80 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-[#0073EA]" />
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-indigo-500" />
       </div>
     );
   }
@@ -146,37 +146,16 @@ export default function AnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-500 to-indigo-600 p-6 sm:p-8">
-            {/* decorative blobs */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-xl" />
-            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white/5 rounded-full blur-xl" />
-            <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-purple-300/10 rounded-full blur-2xl" />
-
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-sm">
-                    <BarChart3 className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                      Analytics
-                    </h1>
-                    <p className="text-sm text-purple-200/90 mt-0.5">
-                      Insights across your boards and tasks
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Link href="/">
-                  <Button className="h-10 px-5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/25 text-white hover:bg-white/30 hover:text-white shadow-sm transition-all font-medium text-sm gap-2">
-                    <LayoutDashboard className="w-4 h-4" />
-                    Dashboard
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 rounded-full bg-indigo-500" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
+                  Analytics
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  Insights across your boards and tasks
+                </p>
               </div>
             </div>
           </div>
@@ -254,10 +233,10 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-6">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-indigo-600" />
                 </div>
                 <h3 className="font-semibold text-slate-800">Status Distribution</h3>
               </div>
@@ -307,7 +286,7 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
           >
-            <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-6">
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-emerald-600" />

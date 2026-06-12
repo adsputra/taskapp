@@ -186,3 +186,7 @@ Atau ubah default via CSS:
 | `src/components/dashboard/StatsOverview.jsx` | Update colors to indigo palette |
 | `src/screens/Analytics.jsx` | Apply new card/shadow tokens |
 | `src/app/layout.jsx` | Add Jakarta Sans font loading |
+
+---
+
+> Konfirmasi: ini yang mau diterapin? Kalau ok, aku bakal implement semua perubahan file satu per satu.
