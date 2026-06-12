@@ -8,8 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, AlertCircle } from "lucide-react";
-import { Item } from "@/entities/Item";
-import { Board } from "@/entities/Board";
+import { itemsApi } from "@/lib/api/items";
+import { boardsApi } from "@/lib/api/boards";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isPast } from 'date-fns';
 import { motion } from "framer-motion";
 
@@ -30,8 +30,8 @@ export default function CalendarModal({ isOpen, onClose }) {
     setIsLoading(true);
     try {
       const [itemsData, boardsData] = await Promise.all([
-        Item.list("-updated_at"),
-        Board.list("-updated_at")
+        itemsApi.list({ sort: "-updated_at" }),
+        boardsApi.list({ sort: "-updated_at" })
       ]);
       setItems(itemsData);
       setBoards(boardsData);

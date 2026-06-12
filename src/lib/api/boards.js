@@ -25,10 +25,9 @@ function generateToken() {
 
 export const boardsApi = {
   // =============================================
-  // LIST — ambil SEMUA board user (owned + shared)
-  // RLS handles filtering automatically via policies
+  // LIST — ambil semua board user (owned + shared via RLS)
   // =============================================
-  async listMyBoards({ sort = "-updated_at", limit } = {}) {
+  async list({ sort = "-updated_at", limit } = {}) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -36,29 +35,10 @@ export const boardsApi = {
     const isDesc = sort.startsWith("-");
     const field = isDesc ? sort.slice(1) : sort;
 
-    // Cukup select all — RLS akan auto-filter:
-    // 1. Boards where user_id = auth.uid() (owner)
-    // 2. Boards where user exists in board_members with status='active' (member)
     let query = supabase
       .from("boards")
       .select(BOARD_SELECT)
       .order(field, { ascending: !isDesc });
-    if (limit) query = query.limit(limit);
-
-    const { data, error } = await query;
-    if (error) throw new Error("Gagal memuat boards: " + error.message);
-    return data || [];
-  },
-
-  // =============================================
-  // LIST — hanya board milik sendiri (deprecated, use listMyBoards)
-  // =============================================
-  async list({ sort = "-updated_at", limit } = {}) {
-    const supabase = createClient();
-    const isDesc = sort.startsWith("-");
-    const field = isDesc ? sort.slice(1) : sort;
-
-    let query = supabase.from("boards").select(BOARD_SELECT).order(field, { ascending: !isDesc });
     if (limit) query = query.limit(limit);
 
     const { data, error } = await query;

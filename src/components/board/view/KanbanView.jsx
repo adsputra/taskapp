@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, CalendarDays, MoreHorizontal, Users, List, Sparkles } from "lucide-react";
@@ -9,6 +9,17 @@ import { format } from "date-fns";
 import TaskEditModal from "../TaskEditModal";
 
 // Helper functions
+const safeFormatDate = (dateValue, formatStr) => {
+  if (!dateValue) return null;
+  try {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return null;
+    return format(d, formatStr);
+  } catch {
+    return null;
+  }
+};
+
 const getStatusColumns = (board) => {
   return board?.columns?.filter(col => col.type === 'status') || [];
 };
@@ -55,7 +66,10 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   const priorityOption = priorityColumn?.options?.choices?.find(c => c.value === priorityValue);
 
   const ownerColumn = board?.columns?.find(col => col.type === 'people');
-  const ownerValue = item.data?.[ownerColumn?.id];
+  const rawOwnerValue = item.data?.[ownerColumn?.id];
+  // PeopleCell stores values as arrays; normalize to a single string for display
+  const ownerValue = Array.isArray(rawOwnerValue) ? rawOwnerValue[0] : rawOwnerValue;
+  const ownerStr = typeof ownerValue === 'string' ? ownerValue : String(ownerValue ?? '');
 
   const statusColumn = board?.columns?.find(col => col.type === 'status');
   const statusValue = item.data?.[statusColumn?.id];
@@ -157,18 +171,18 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
               {dueDateValue && (
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-full">
                   <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
-                  <span className="text-blue-700 font-medium">{format(new Date(dueDateValue), 'MMM d')}</span>
+                  <span className="text-blue-700 font-medium">{safeFormatDate(dueDateValue, 'MMM d')}</span>
                 </div>
               )}
             </div>
             
-            {ownerValue && (
-              <div 
+            {ownerStr && (
+              <div
                 className="flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm shadow-md"
-                style={{ background: getRandomGradient(ownerValue.charCodeAt(0)) }}
-                title={ownerValue}
+                style={{ background: getRandomGradient(ownerStr.charCodeAt(0) || 0) }}
+                title={ownerStr}
               >
-                {ownerValue.substring(0, 2).toUpperCase()}
+                {ownerStr.substring(0, 2).toUpperCase()}
               </div>
             )}
           </div>
@@ -207,11 +221,14 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
     );
   }
 
-  if (groupBy === 'status' && !canGroupByStatus) {
-    setGroupBy('people');
-  } else if (groupBy === 'people' && !canGroupByPeople) {
-    setGroupBy('status');
-  }
+  // Derive effective groupBy — fallback when chosen grouping isn't available
+  useEffect(() => {
+    if (groupBy === 'status' && !canGroupByStatus && canGroupByPeople) {
+      setGroupBy('people');
+    } else if (groupBy === 'people' && !canGroupByPeople && canGroupByStatus) {
+      setGroupBy('status');
+    }
+  }, [groupBy, canGroupByStatus, canGroupByPeople]);
 
   const activeColumnDefinition = groupBy === 'status' 
     ? statusColumnsDef[0] 

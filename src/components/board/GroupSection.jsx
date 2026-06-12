@@ -6,7 +6,6 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  GripVertical,
   MoreHorizontal,
   Trash2,
   EyeOff,

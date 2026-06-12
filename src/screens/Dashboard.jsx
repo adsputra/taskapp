@@ -27,7 +27,7 @@ export default function Dashboard() {
 
   const { data: boards = [], isLoading: boardsLoading } = useQuery({
     queryKey: ["boards", "my"],
-    queryFn: () => boardsApi.listMyBoards({ limit: 10 }),
+    queryFn: () => boardsApi.list({ limit: 10 }),
   });
 
   const { data: items = [], isLoading: itemsLoading } = useQuery({
