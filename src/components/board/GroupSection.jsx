@@ -41,9 +41,11 @@ const COLUMN_DEFAULT_WIDTH = {
   budget: 150,
 };
 
-const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn }) => {
+const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, userRole }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(column.title);
+
+  const isAdmin = userRole === "admin";
 
   const handleBlur = () => {
     setIsEditing(false);
@@ -73,12 +75,13 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn }) 
         />
       ) : (
         <span
-          className="text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:text-[#323338] truncate"
-          onClick={() => setIsEditing(true)}
+          className={`text-xs font-semibold text-[#676879] uppercase tracking-wide truncate ${isAdmin ? "cursor-pointer hover:text-[#323338]" : ""}`}
+          onClick={() => isAdmin && setIsEditing(true)}
         >
           {column.title}
         </span>
       )}
+      {isAdmin && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="opacity-0 group-hover:opacity-100 text-[#A0A0A0] hover:text-[#323338] transition-opacity ml-auto">
@@ -101,6 +104,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn }) 
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
     </div>
   );
 };
@@ -114,17 +118,21 @@ const ItemRow = ({
   selectedItems,
   onSelectItem,
   boardId,
+  userRole,
 }) => {
+  const isViewer = userRole === "viewer";
   const renderCell = (column) => {
     const value = item.data?.[column.id];
     const cellProps = {
       value,
       column,
       itemId: item.id,
-      onUpdate: (newValue) =>
-        onUpdateItem(item.id, {
-          data: { ...item.data, [column.id]: newValue },
-        }),
+      onUpdate: isViewer
+        ? undefined
+        : (newValue) =>
+            onUpdateItem(item.id, {
+              data: { ...item.data, [column.id]: newValue },
+            }),
     };
 
     switch (column.type) {
@@ -214,6 +222,7 @@ export default function GroupSection({
   onDeleteGroup,
   onHideColumnFromGroup,
   boardId,
+  userRole,
 }) {
   const [collapsed, setCollapsed] = useState(group.collapsed || false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -254,6 +263,7 @@ export default function GroupSection({
         </span>
         <span className="text-xs text-[#A0A0A0]">({items.length})</span>
         <div className="flex-1" />
+        {userRole === "admin" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -276,6 +286,7 @@ export default function GroupSection({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        )}
       </div>
 
       {!collapsed && (
@@ -304,9 +315,11 @@ export default function GroupSection({
                       onHideColumn={(colId) =>
                         onHideColumnFromGroup(group.id, colId)
                       }
+                      userRole={userRole}
                     />
                   </div>
                 ))}
+              {userRole === "admin" && (
               <div className="shrink-0 w-[40px]">
                 <button
                   onClick={() => onAddColumn?.()}
@@ -316,6 +329,7 @@ export default function GroupSection({
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
+              )}
             </div>
 
             {/* Items */}
@@ -353,6 +367,7 @@ export default function GroupSection({
                               selectedItems={selectedItems}
                               onSelectItem={onSelectItem}
                               boardId={boardId}
+                              userRole={userRole}
                             />
                           </div>
                         )}
@@ -361,7 +376,7 @@ export default function GroupSection({
                     {provided.placeholder}
 
                     {/* Add Task Row */}
-                    {isAdding ? (
+                    {userRole === "admin" && (isAdding ? (
                       <div className="flex items-center px-4 py-2 border-t border-[#E1E5F3]">
                         <div className="shrink-0 w-[60px]" />
                         <div className="flex-1 min-w-[160px]">
@@ -410,7 +425,7 @@ export default function GroupSection({
                           Add Task
                         </button>
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
               </Droppable>

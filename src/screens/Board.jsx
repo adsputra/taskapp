@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { boardsApi } from "@/lib/api/boards";
 import { itemsApi } from "@/lib/api/items";
+import { userApi } from "@/lib/api/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
 import IntegrationsPanel from "../components/board/intregations/IntegrationsPanel";
 import AutomationsPanel from "../components/board/automations/AutomationsPanel";
 import ShareBoardModal from "../components/board/ShareBoardModal";
+import MemberAvatars from "../components/board/MemberAvatars";
 
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -51,6 +53,24 @@ export default function BoardPage({ boardId }) {
   });
 
   const isLoading = boardLoading || itemsLoading;
+
+  // --- Current user & role ---
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => userApi.me(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const userRole = useMemo(() => {
+    if (!board || !currentUser) return null;
+    // Owner is always admin
+    if (board.user_id === currentUser.id) return "admin";
+    // Check board_members
+    const member = (board.board_members || []).find(
+      (m) => m.user_id === currentUser.id && m.status === "active"
+    );
+    return member?.role || null;
+  }, [board, currentUser]);
 
   // --- Mutations ---
   const itemCreate = useMutation({
@@ -279,10 +299,12 @@ export default function BoardPage({ boardId }) {
             <>
               <div className="flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm border border-[#E1E5F3]">
                 <div className="flex items-center gap-4">
-                  <Button onClick={() => setShowNewTaskModal(true)}
-                    className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium">
-                    <Plus className="w-4 h-4 mr-2" /> New Task
-                  </Button>
+                  {userRole === "admin" && (
+                    <Button onClick={() => setShowNewTaskModal(true)}
+                      className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium">
+                      <Plus className="w-4 h-4 mr-2" /> New Task
+                    </Button>
+                  )}
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#676879]" />
                     <Input placeholder="Search" value={searchQuery}
@@ -349,6 +371,10 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                 </div>
+                <MemberAvatars
+                  members={board?.board_members}
+                  boardOwnerId={board?.user_id}
+                />
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-[#E1E5F3]">
@@ -368,24 +394,29 @@ export default function BoardPage({ boardId }) {
                     }}
                     onDeleteGroup={handleDeleteGroup}
                     onHideColumnFromGroup={handleHideColumnFromGroup}
-                    boardId={boardId} />
+                    boardId={boardId}
+                    userRole={userRole} />
                 ))}
                 {(!board.groups || board.groups.length === 0) && !isLoading && (
                   <div className="p-8 text-center text-[#676879]">
                     <h3 className="text-xl font-medium mb-2">No groups yet!</h3>
                     <p className="mb-4">Add your first group to organize tasks.</p>
-                    <Button onClick={() => setShowNewGroupModal(true)}
-                      className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4">
-                      <Plus className="w-4 h-4 mr-2" /> Add First Group
+                    {userRole === "admin" && (
+                      <Button onClick={() => setShowNewGroupModal(true)}
+                        className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4">
+                        <Plus className="w-4 h-4 mr-2" /> Add First Group
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {userRole === "admin" && (
+                  <div className="p-4 border-t border-[#E1E5F3]">
+                    <Button variant="outline" onClick={() => setShowNewGroupModal(true)}
+                      className="w-full border-dashed border-[#0073EA] text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg h-10">
+                      <Plus className="w-4 h-4 mr-2" /> Add New Group
                     </Button>
                   </div>
                 )}
-                <div className="p-4 border-t border-[#E1E5F3]">
-                  <Button variant="outline" onClick={() => setShowNewGroupModal(true)}
-                    className="w-full border-dashed border-[#0073EA] text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg h-10">
-                    <Plus className="w-4 h-4 mr-2" /> Add New Group
-                  </Button>
-                </div>
               </div>
             </>
           )}

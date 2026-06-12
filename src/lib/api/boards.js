@@ -224,6 +224,48 @@ export const boardsApi = {
   },
 
   // =============================================
+  // UPDATE MEMBER ROLE — ubah role member
+  // =============================================
+  async updateMemberRole(boardId, memberId, { role }) {
+    const supabase = createClient();
+
+    // Validasi role
+    if (!["admin", "editor", "viewer"].includes(role)) {
+      throw new Error("Role tidak valid. Gunakan: admin, editor, atau viewer.");
+    }
+
+    // Cek apakah member adalah owner board
+    const { data: board } = await supabase
+      .from("boards")
+      .select("user_id")
+      .eq("id", boardId)
+      .single();
+
+    if (!board) throw new Error("Board tidak ditemukan.");
+
+    const { data: member } = await supabase
+      .from("board_members")
+      .select("user_id")
+      .eq("id", memberId)
+      .single();
+
+    if (member && member.user_id === board.user_id) {
+      throw new Error("Tidak bisa mengubah role pemilik board.");
+    }
+
+    const { data, error } = await supabase
+      .from("board_members")
+      .update({ role })
+      .eq("id", memberId)
+      .eq("board_id", boardId)
+      .select()
+      .single();
+
+    if (error) throw new Error("Gagal update role: " + error.message);
+    return data;
+  },
+
+  // =============================================
   // LIST BOARD MEMBERS — daftar member suatu board
   // =============================================
   async listMembers(boardId) {

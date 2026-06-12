@@ -161,7 +161,7 @@ CREATE POLICY "member_insert_items" ON board_items FOR INSERT
       WHERE bm.board_id = board_items.board_id
         AND bm.user_id = auth.uid()
         AND bm.status = 'active'
-        AND bm.role IN ('admin', 'editor')
+        AND bm.role = 'admin'
     )
   );
 
