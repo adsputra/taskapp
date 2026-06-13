@@ -192,7 +192,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   );
 };
 
-export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, onReorderItems }) {
+export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, onReorderItems, onSelectTask }) {
   const [groupBy, setGroupBy] = useState('status');
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -359,8 +359,12 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   };
 
   const handleEditTask = (task) => {
-    setEditingTask(task);
-    setShowEditModal(true);
+    if (onSelectTask) {
+      onSelectTask(task);
+    } else {
+      setEditingTask(task);
+      setShowEditModal(true);
+    }
   };
 
   const handleUpdateTask = (taskId, updates) => {

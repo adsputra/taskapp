@@ -119,6 +119,7 @@ const ItemRow = ({
   onSelectItem,
   boardId,
   userRole,
+  onSelectTask,
 }) => {
   const isViewer = userRole === "viewer";
   const renderCell = (column) => {
@@ -184,7 +185,10 @@ const ItemRow = ({
       </div>
       {/* Task Title */}
       <div className="flex-1 min-w-[160px] px-3 h-[44px] flex items-center">
-        <span className="text-sm text-[#323338] font-medium truncate block">
+        <span
+          className="text-sm text-[#323338] font-medium truncate block cursor-pointer hover:text-[#0073EA] transition-colors"
+          onClick={() => onSelectTask?.(item)}
+        >
           {item.title}
         </span>
       </div>
@@ -223,6 +227,7 @@ export default function GroupSection({
   onHideColumnFromGroup,
   boardId,
   userRole,
+  onSelectTask,
 }) {
   const [collapsed, setCollapsed] = useState(group.collapsed || false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -368,6 +373,7 @@ export default function GroupSection({
                               onSelectItem={onSelectItem}
                               boardId={boardId}
                               userRole={userRole}
+                              onSelectTask={onSelectTask}
                             />
                           </div>
                         )}

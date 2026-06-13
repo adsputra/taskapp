@@ -16,13 +16,16 @@ import {
   Columns,
   Table,
   Share2,
+  Target,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 const viewOptions = [
   { id: "table", label: "Table", icon: Table },
   { id: "kanban", label: "Kanban", icon: Columns },
   { id: "calendar", label: "Calendar", icon: Calendar },
   { id: "timeline", label: "Timeline", icon: Activity },
+  { id: "sprint", label: "Sprint", icon: Target },
 ];
 
 export default function BoardHeader({
@@ -102,6 +105,7 @@ export default function BoardHeader({
             <BarChart3 className="w-4 h-4 mr-1.5" />
             Analytics
           </Button>
+          <NotificationBell boardId={board?.id} />
         </div>
       </div>
 

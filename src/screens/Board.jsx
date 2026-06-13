@@ -28,11 +28,13 @@ import NewGroupModal from "../components/board/NewGroupModal";
 import KanbanView from "../components/board/view/KanbanView";
 import CalendarView from "../components/board/view/CalendarView";
 import TimelineView from "../components/board/view/TimelineView";
+import SprintView from "../components/board/view/SprintView";
 import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
 import IntegrationsPanel from "../components/board/intregations/IntegrationsPanel";
 import AutomationsPanel from "../components/board/automations/AutomationsPanel";
 import ShareBoardModal from "../components/board/ShareBoardModal";
 import MemberAvatars from "../components/board/MemberAvatars";
+import TaskDetailDrawer from "../components/board/drawer/TaskDetailDrawer";
 
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -80,7 +82,7 @@ export default function BoardPage({ boardId }) {
   });
 
   const itemUpdate = useMutation({
-    mutationFn: ({ id, updates }) => itemsApi.update(id, updates),
+    mutationFn: ({ id, updates, prevItem }) => itemsApi.update(id, updates, prevItem),
     onError: (err) => toast.error(err.message),
   });
 
@@ -116,6 +118,7 @@ export default function BoardPage({ boardId }) {
   const [sortBy, setSortBy] = useState("order_index");
   const [sortDirection, setSortDirection] = useState("asc");
   const [hiddenColumns, setHiddenColumns] = useState(new Set());
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // --- Handlers ---
   const handleAddItem = useCallback(async (groupId, title) => {
@@ -147,13 +150,17 @@ export default function BoardPage({ boardId }) {
     });
   }, [boardId, board, items, itemCreate]);
 
-  const handleUpdateItem = useCallback((itemId, updates) => {
+  const handleUpdateItem = useCallback((itemId, updates, prevItem) => {
     // Optimistic update
     queryClient.setQueryData(["items", boardId], (old = []) =>
       old.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
     );
-    itemUpdate.mutate({ id: itemId, updates });
-  }, [boardId, queryClient, itemUpdate]);
+    itemUpdate.mutate({ id: itemId, updates, prevItem });
+    // Also update selectedTask if it's the one being edited
+    if (selectedTask?.id === itemId) {
+      setSelectedTask((prev) => prev ? { ...prev, ...updates } : prev);
+    }
+  }, [boardId, queryClient, itemUpdate, selectedTask]);
 
   const handleDeleteItem = useCallback((itemId) => {
     itemDelete.mutate(itemId);
@@ -396,7 +403,8 @@ export default function BoardPage({ boardId }) {
                     onDeleteGroup={handleDeleteGroup}
                     onHideColumnFromGroup={handleHideColumnFromGroup}
                     boardId={boardId}
-                    userRole={userRole} />
+                    userRole={userRole}
+                    onSelectTask={setSelectedTask} />
                 ))}
                 {(!board.groups || board.groups.length === 0) && !isLoading && (
                   <div className="p-8 text-center text-[#676879]">
@@ -428,7 +436,8 @@ export default function BoardPage({ boardId }) {
           {currentView === "kanban" && (
             <KanbanView board={board} items={sortedItems}
               onAddItem={handleAddItem} onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem} onReorderItems={handleReorderItems} />
+              onDeleteItem={handleDeleteItem} onReorderItems={handleReorderItems}
+              onSelectTask={setSelectedTask} />
           )}
           {currentView === "calendar" && (
             <CalendarView board={board} items={sortedItems}
@@ -439,6 +448,11 @@ export default function BoardPage({ boardId }) {
             <TimelineView board={board} items={sortedItems}
               onAddItem={handleAddItem} onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem} />
+          )}
+          {currentView === "sprint" && (
+            <SprintView board={board} items={sortedItems} boardId={boardId}
+              userRole={userRole} onSelectTask={setSelectedTask}
+              onUpdateItem={handleUpdateItem} />
           )}
         </div>
 
@@ -455,6 +469,23 @@ export default function BoardPage({ boardId }) {
         {showIntegrations && <IntegrationsPanel board={board} onClose={() => setShowIntegrations(false)} />}
         {showAutomations && <AutomationsPanel board={board} onClose={() => setShowAutomations(false)} />}
         {showShare && <ShareBoardModal isOpen={showShare} onClose={() => setShowShare(false)} board={board} />}
+
+        {/* Task Detail Drawer */}
+        {selectedTask && (
+          <TaskDetailDrawer
+            task={selectedTask}
+            board={board}
+            boardId={boardId}
+            userRole={userRole}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={handleUpdateItem}
+            onDelete={(id) => {
+              handleDeleteItem(id);
+              setSelectedTask(null);
+            }}
+            allItems={items}
+          />
+        )}
       </div>
     </div>
   );
