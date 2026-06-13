@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { commentsApi } from "@/lib/api/comments";
 import { activityApi } from "@/lib/api/activity";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Send, Edit3, Trash2, X, Check, AtSign } from "lucide-react";
 
@@ -26,25 +27,57 @@ export default function CommentsTab({ task, userRole, board }) {
     enabled: !!task?.id,
   });
 
+  // Realtime — listen for new/edited/deleted comments from other users
+  useEffect(() => {
+    if (!task?.id) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`comments:${task.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "task_comments",
+          filter: `item_id=eq.${task.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [task?.id, queryClient]);
+
   const createComment = useMutation({
-    mutationFn: (content) => commentsApi.create({ item_id: task.id, content }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
+    mutationFn: (text) => commentsApi.create({ item_id: task.id, content: text }),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(["comments", task.id], (old = []) => {
+        if (old.some((c) => c.id === data.id)) return old;
+        return [...old, data];
+      });
       setNewComment("");
-      // Log activity
-      activityApi.log({
-        item_id: task.id,
-        action: "commented",
-        new_value: content.slice(0, 100),
-      }).catch(() => {});
+      if (variables) {
+        activityApi.log({
+          item_id: task.id,
+          action: "commented",
+          new_value: String(variables).slice(0, 100),
+        }).catch(() => {});
+      }
     },
     onError: (err) => toast.error(err.message),
   });
 
   const updateComment = useMutation({
     mutationFn: ({ id, content }) => commentsApi.update(id, { content }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
+    onSuccess: (data) => {
+      queryClient.setQueryData(["comments", task.id], (old = []) =>
+        old.map((c) => (c.id === data.id ? data : c)),
+      );
       setEditingId(null);
     },
     onError: (err) => toast.error(err.message),
@@ -52,7 +85,11 @@ export default function CommentsTab({ task, userRole, board }) {
 
   const deleteComment = useMutation({
     mutationFn: (id) => commentsApi.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comments", task.id] }),
+    onSuccess: (_data, id) => {
+      queryClient.setQueryData(["comments", task.id], (old = []) =>
+        old.filter((c) => c.id !== id),
+      );
+    },
     onError: (err) => toast.error(err.message),
   });
 
