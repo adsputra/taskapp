@@ -88,11 +88,11 @@ export default function Dashboard() {
         >
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 rounded-full bg-indigo-500" />
+              <div className="w-1.5 h-8 rounded-full bg-blue-500" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
                   {getGreeting()},{" "}
-                  <span className="text-indigo-600">
+                  <span className="text-blue-600">
                     {user?.full_name?.split(" ")[0] || "there"}
                   </span>
                   !

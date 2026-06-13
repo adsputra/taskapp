@@ -26,7 +26,7 @@ export default function RecentBoards({
           {/* Icon */}
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 group-hover:scale-105 transition-transform"
-            style={{ backgroundColor: board.color || "#6366F1" }}
+            style={{ backgroundColor: board.color || "#3B82F6" }}
           >
             {isShared ? (
               <Users className="w-5 h-5" />
@@ -37,7 +37,7 @@ export default function RecentBoards({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+            <h4 className="text-sm font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
               {board.title}
             </h4>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -62,7 +62,7 @@ export default function RecentBoards({
               )}
               {board.visibility}
             </span>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-400 transition-colors" />
           </div>
         </div>
       </Link>
@@ -76,7 +76,7 @@ export default function RecentBoards({
         <div className="px-5 py-4 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
                 <Folder className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -90,7 +90,7 @@ export default function RecentBoards({
             </div>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               New
@@ -124,7 +124,7 @@ export default function RecentBoards({
               </p>
               <button
                 onClick={() => setShowCreate(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Create Board

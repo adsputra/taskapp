@@ -111,7 +111,7 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
       {/* Trigger — avatar + nama */}
       <div
         ref={triggerRef}
-        className={`flex items-center gap-1.5 min-h-[28px] px-1 py-0.5 rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+        className={`flex items-center gap-1.5 w-full h-full rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
         onClick={() => onUpdate && openDropdown()}
       >
         {assignedUsers.length === 0 && (

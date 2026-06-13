@@ -28,7 +28,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
     onEdit(board);
   };
 
-  const boardColor = board.color || '#6366F1';
+  const boardColor = board.color || '#3B82F6';
 
   if (viewMode === "list") {
     return (

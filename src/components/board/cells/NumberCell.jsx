@@ -56,7 +56,7 @@ export default function NumberCell({ value, onUpdate }) {
   return (
     <div 
       onClick={() => onUpdate && setIsEditing(true)} 
-      className={`h-full w-full flex items-center text-sm text-gray-700 px-1 rounded ${onUpdate ? 'cursor-pointer hover:bg-gray-100/50' : ''}`}
+      className={`w-full h-full flex items-center text-sm text-[#323338] rounded ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
     >
       {Number(currentValue).toLocaleString()}
     </div>

@@ -53,7 +53,7 @@ export default function TagsCell({ value, onUpdate, options }) {
   );
 
   return (
-    <div className="flex flex-wrap gap-1 items-center h-full w-full py-1">
+    <div className="flex flex-wrap gap-1 items-center w-full h-full">
       {currentTags.map((tag) => (
         <Badge
           key={tag.value}

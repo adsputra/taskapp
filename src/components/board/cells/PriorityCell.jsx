@@ -24,7 +24,7 @@ export default function PriorityCell({ value, onUpdate, options }) {
 
   return (
     <Select value={value || ""} onValueChange={handleValueChange}>
-      <SelectTrigger className={`h-full w-full p-1 border-none bg-transparent text-sm focus:ring-0 shadow-none ${!onUpdate ? 'cursor-default' : ''}`}>
+      <SelectTrigger className={`w-full p-0 border-none bg-transparent text-sm focus:ring-0 shadow-none h-auto ${!onUpdate ? 'cursor-default' : ''}`}>
         {selectedChoice ? (
           <Badge 
             style={{ 
@@ -32,7 +32,7 @@ export default function PriorityCell({ value, onUpdate, options }) {
               color: selectedChoice.color || '#374151',
               border: `1px solid ${selectedChoice.color || '#e5e7eb'}`
             }}
-            className="font-normal"
+            className="font-normal text-xs"
           >
             {selectedChoice.label}
           </Badge>

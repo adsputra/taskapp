@@ -14,7 +14,7 @@ export default function DropdownCell({ value, column, onUpdate }) {
 
   return (
     <Select value={value || ""} onValueChange={(v) => onUpdate && onUpdate(v)}>
-      <SelectTrigger className={`h-8 border-0 bg-transparent focus:ring-0 text-sm ${!onUpdate ? 'cursor-default' : ''}`}>
+      <SelectTrigger className={`w-full border-0 bg-transparent focus:ring-0 text-sm h-auto p-0 ${!onUpdate ? 'cursor-default' : ''}`}>
         <SelectValue placeholder="Pilih..." />
       </SelectTrigger>
       <SelectContent>

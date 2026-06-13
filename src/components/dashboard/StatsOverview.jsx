@@ -8,9 +8,9 @@ const statItems = [
     key: "boards",
     label: "Boards",
     icon: Folder,
-    color: "text-indigo-600",
-    bg: "bg-indigo-50",
-    ring: "ring-indigo-600/10",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    ring: "ring-blue-600/10",
   },
   {
     key: "completed",

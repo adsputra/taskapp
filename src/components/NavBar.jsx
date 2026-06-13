@@ -139,7 +139,7 @@ export default function NavBar() {
               href="/"
               className="flex-shrink-0 flex items-center gap-2"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-slate-800 text-xl">
@@ -157,8 +157,8 @@ export default function NavBar() {
                     href={item.href}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       active
-                        ? "bg-indigo-50 text-indigo-600"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-indigo-600"
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-blue-600"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -182,7 +182,7 @@ export default function NavBar() {
                 <Input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -210,7 +210,7 @@ export default function NavBar() {
             {/* Avatar + Dropdown — hanya tampil kalau ada user */}
             {!loading && !user ? (
               <Link href="/auth/login">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-9 px-4 text-sm font-medium shadow-sm">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 px-4 text-sm font-medium shadow-sm">
                   Sign In
                 </Button>
               </Link>
@@ -224,7 +224,7 @@ export default function NavBar() {
                   {loading ? (
                     <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
                   ) : (
-                    <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
                       <span className="text-white font-bold text-xs">
                         {userInitial}
                       </span>
@@ -292,8 +292,8 @@ export default function NavBar() {
                   href={item.href}
                   className={`block px-3 py-2 rounded-lg text-base font-medium transition-colors ${
                     active
-                      ? "bg-indigo-50 text-indigo-600"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-indigo-600"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-blue-600"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -316,7 +316,7 @@ export default function NavBar() {
                 <Input
                   id="search-mobile"
                   name="search-mobile"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -331,7 +331,7 @@ export default function NavBar() {
                 {loading ? (
                   <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
                 ) : (
-                  <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {userInitial}
                     </span>

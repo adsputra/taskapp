@@ -29,7 +29,7 @@ export default function DateCell({ value, onUpdate }) {
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyPress}
-        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-[#323338]"
+        className="border-none bg-transparent h-full w-full focus:ring-0 text-sm text-[#323338]"
         autoFocus
       />
     );
@@ -38,10 +38,10 @@ export default function DateCell({ value, onUpdate }) {
   if (!value) {
     return (
       <div
-        className={`text-[#676879] px-2 py-1 -mx-2 transition-colors flex items-center gap-2 ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3] hover:rounded' : ''}`}
+        className={`w-full h-full flex items-center gap-2 text-sm text-[#676879] rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
         onClick={() => onUpdate && setIsEditing(true)}
       >
-        <Calendar className="w-4 h-4" />
+        <Calendar className="w-4 h-4 flex-shrink-0" />
         <span>Set date</span>
       </div>
     );
@@ -51,10 +51,10 @@ export default function DateCell({ value, onUpdate }) {
   
   return (
     <div
-      className={`px-2 py-1 -mx-2 rounded text-sm ${
+      className={`w-full h-full flex items-center rounded text-sm ${
         onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
       } ${
-        isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C]' : 'text-[#323338]'
+        isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C] px-2' : 'text-[#323338]'
       }`}
       onClick={() => onUpdate && setIsEditing(true)}
     >

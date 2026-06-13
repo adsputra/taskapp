@@ -12,9 +12,9 @@ const actions = [
     title: "Create Board",
     desc: "Start a new project",
     icon: Plus,
-    gradient: "from-indigo-500 to-blue-600",
-    lightBg: "bg-indigo-50",
-    shadowColor: "shadow-indigo-200/50",
+    gradient: "from-blue-500 to-blue-600",
+    lightBg: "bg-blue-50",
+    shadowColor: "shadow-blue-200/50",
   },
   {
     title: "Invite Team",

@@ -50,12 +50,16 @@ export default function StatusCell({ value, options, onUpdate }) {
   }
 
   return (
-    <Badge
-      className={`border-none text-white font-medium px-3 py-1 ${onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-      style={{ backgroundColor: currentChoice.color }}
+    <div
+      className={`flex items-center w-full h-full ${onUpdate ? 'cursor-pointer' : ''}`}
       onClick={() => onUpdate && setIsEditing(true)}
     >
-      {currentChoice.label}
-    </Badge>
+      <Badge
+        className={`border-none text-white font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
+        style={{ backgroundColor: currentChoice.color }}
+      >
+        {currentChoice.label}
+      </Badge>
+    </div>
   );
 }

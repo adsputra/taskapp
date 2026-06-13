@@ -99,9 +99,9 @@ export default function AnalyticsPage() {
       label: "Total Tasks",
       value: totalTasks,
       icon: Target,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-      ring: "ring-indigo-600/10",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      ring: "ring-blue-600/10",
     },
     {
       label: "Completion Rate",
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50/80 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-indigo-500" />
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-blue-500" />
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
         >
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 rounded-full bg-indigo-500" />
+              <div className="w-1.5 h-8 rounded-full bg-blue-500" />
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
                   Analytics
@@ -235,8 +235,8 @@ export default function AnalyticsPage() {
           >
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-6">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-indigo-600" />
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-blue-600" />
                 </div>
                 <h3 className="font-semibold text-slate-800">Status Distribution</h3>
               </div>
