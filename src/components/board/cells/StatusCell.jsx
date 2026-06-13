@@ -51,7 +51,7 @@ export default function StatusCell({ value, options, onUpdate }) {
 
   return (
     <div
-      className={`flex items-center justify-center w-full h-full ${onUpdate ? 'cursor-pointer' : ''}`}
+      className={`w-full h-full flex items-center justify-center ${onUpdate ? 'cursor-pointer' : ''}`}
       onClick={() => onUpdate && setIsEditing(true)}
     >
       <Badge

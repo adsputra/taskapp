@@ -23,9 +23,9 @@ export default function PriorityCell({ value, onUpdate, options }) {
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div className={`flex items-center justify-center w-full h-full ${!onUpdate ? 'pointer-events-none' : ''}`}>
       <Select value={value || ""} onValueChange={handleValueChange}>
-        <SelectTrigger className={`w-auto p-0 pr-1 border-none bg-transparent text-sm focus:ring-0 shadow-none h-auto ${!onUpdate ? 'cursor-default' : ''}`}>
+        <SelectTrigger className="w-fit p-0 pr-1 border-none bg-transparent text-sm focus:ring-0 shadow-none h-auto">
           {selectedChoice ? (
             <Badge 
               style={{ 

@@ -107,11 +107,11 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
   const pos = getDropdownPos();
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       {/* Trigger — avatar + nama */}
       <div
         ref={triggerRef}
-        className={`flex items-center gap-2 w-full h-full px-1 rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+        className={`flex items-center justify-center gap-2 w-full h-full rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
         onClick={() => onUpdate && openDropdown()}
       >
         {assignedUsers.length === 0 && (
@@ -130,7 +130,7 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
             >
               {getUserInitial(assignedUsers[0])}
             </span>
-            <span className="text-sm text-[#323338] truncate max-w-[100px]">
+            <span className="text-sm text-[#323338] truncate max-w-[80px]">
               {getUserName(assignedUsers[0])}
             </span>
           </span>

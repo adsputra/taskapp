@@ -57,7 +57,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-[36px] min-w-[120px] px-3 group">
+    <div className="relative flex items-center justify-center w-full h-full min-w-[120px] px-3 group">
       {isEditing ? (
         <input
           value={title}
@@ -174,7 +174,7 @@ const ItemRow = ({
       }`}
     >
       {/* Drag Handle + Checkbox */}
-      <div className="shrink-0 flex items-center gap-2 px-2 w-[60px] min-h-[40px]">
+      <div className="shrink-0 flex items-center gap-2 px-2 w-[60px] h-[44px]">
         <input
           type="checkbox"
           checked={isSelected || false}
@@ -183,7 +183,7 @@ const ItemRow = ({
         />
       </div>
       {/* Task Title */}
-      <div className="flex-1 min-w-[160px] px-3 min-h-[40px] flex items-center">
+      <div className="flex-1 min-w-[160px] px-3 h-[44px] flex items-center">
         <span className="text-sm text-[#323338] font-medium truncate block">
           {item.title}
         </span>
@@ -194,7 +194,7 @@ const ItemRow = ({
         .map((column) => (
           <div
             key={column.id}
-            className="shrink-0 px-2 min-h-[40px] flex items-center"
+            className="shrink-0 px-2 h-[44px] flex items-center justify-center"
             style={{ width: column.width || COLUMN_DEFAULT_WIDTH[column.type] || 130 }}
           >
             {renderCell(column)}
@@ -294,8 +294,8 @@ export default function GroupSection({
           <div className="min-w-[600px]">
             {/* Column Headers */}
             <div className="flex items-center border-b border-[#E1E5F3] bg-white">
-              <div className="shrink-0 w-[60px] min-h-[36px] px-2" />
-              <div className="flex-1 min-w-[160px] px-3 min-h-[36px] flex items-center">
+              <div className="shrink-0 w-[60px] h-[40px] px-2" />
+              <div className="flex-1 min-w-[160px] px-3 h-[40px] flex items-center">
                 <span className="text-xs font-semibold text-[#676879] uppercase tracking-wide">
                   Task
                 </span>
@@ -305,7 +305,7 @@ export default function GroupSection({
                 .map((column) => (
                   <div
                     key={column.id}
-                    className="shrink-0 px-2"
+                    className="shrink-0 px-2 h-[40px]"
                     style={{ width: column.width || COLUMN_DEFAULT_WIDTH[column.type] || 130 }}
                   >
                     <ColumnHeader
