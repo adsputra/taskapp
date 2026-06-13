@@ -23,35 +23,37 @@ export default function PriorityCell({ value, onUpdate, options }) {
   };
 
   return (
-    <Select value={value || ""} onValueChange={handleValueChange}>
-      <SelectTrigger className={`w-full p-0 border-none bg-transparent text-sm focus:ring-0 shadow-none h-auto justify-center ${!onUpdate ? 'cursor-default' : ''}`}>
-        {selectedChoice ? (
-          <Badge 
-            style={{ 
-              backgroundColor: selectedChoice.color ? `${selectedChoice.color}20` : '#e5e7eb', 
-              color: selectedChoice.color || '#374151',
-            }}
-            className="font-normal text-xs px-2.5 py-0.5 border-none"
-          >
-            {selectedChoice.label}
-          </Badge>
-        ) : (
-          <SelectValue placeholder="Set priority..." />
-        )}
-      </SelectTrigger>
-      <SelectContent>
-        {choices.map((choice) => (
-          <SelectItem key={choice.value} value={choice.value}>
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: choice.color }}
-              />
-              <span>{choice.label}</span>
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex items-center justify-center w-full h-full">
+      <Select value={value || ""} onValueChange={handleValueChange}>
+        <SelectTrigger className={`w-auto p-0 pr-1 border-none bg-transparent text-sm focus:ring-0 shadow-none h-auto ${!onUpdate ? 'cursor-default' : ''}`}>
+          {selectedChoice ? (
+            <Badge 
+              style={{ 
+                backgroundColor: selectedChoice.color ? `${selectedChoice.color}20` : '#e5e7eb', 
+                color: selectedChoice.color || '#374151',
+              }}
+              className="font-medium text-xs px-3 py-1 border-none"
+            >
+              {selectedChoice.label}
+            </Badge>
+          ) : (
+            <SelectValue placeholder="Set priority..." />
+          )}
+        </SelectTrigger>
+        <SelectContent>
+          {choices.map((choice) => (
+            <SelectItem key={choice.value} value={choice.value}>
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: choice.color }}
+                />
+                <span>{choice.label}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

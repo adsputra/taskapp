@@ -57,7 +57,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
   };
 
   return (
-    <div className="flex items-center gap-2 group px-3 min-h-[36px] min-w-[120px]">
+    <div className="relative flex items-center justify-center min-h-[36px] min-w-[120px] px-3 group">
       {isEditing ? (
         <input
           value={title}
@@ -70,7 +70,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
               setIsEditing(false);
             }
           }}
-          className="text-xs font-semibold text-[#323338] bg-white border border-[#0073EA] rounded px-1 py-0.5 focus:outline-none w-full"
+          className="text-xs font-semibold text-[#323338] bg-white border border-[#0073EA] rounded px-1 py-0.5 focus:outline-none w-full text-center"
           autoFocus
         />
       ) : (
@@ -84,7 +84,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
       {isAdmin && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="opacity-0 group-hover:opacity-100 text-[#A0A0A0] hover:text-[#323338] transition-opacity ml-auto">
+          <button className="absolute right-1 opacity-0 group-hover:opacity-100 text-[#A0A0A0] hover:text-[#323338] transition-opacity p-0.5 rounded hover:bg-white/80">
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
