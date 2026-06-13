@@ -58,7 +58,7 @@ export default function BudgetCell({ value, onUpdate, options }) {
   return (
     <div 
       onClick={() => onUpdate && setIsEditing(true)} 
-      className={`w-full h-full flex items-center text-sm text-[#323338] rounded ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+      className={`w-full h-full flex items-center justify-center text-sm text-[#323338] rounded ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
     >
       {currencySymbol}{Number(currentValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </div>

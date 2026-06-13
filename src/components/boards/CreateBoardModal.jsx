@@ -49,7 +49,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
           {
             id: 'priority', // New default column
             title: 'Priority',
-            type: 'dropdown', // Assuming priority is a dropdown
+            type: 'priority',
             width: 120,
             options: {
               choices: [

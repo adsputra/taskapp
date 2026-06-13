@@ -127,6 +127,27 @@ export default function DetailsTab({
       case "status":
       case "priority":
       case "dropdown":
+        const getChoices = () => {
+          if (column.options?.choices) return column.options.choices;
+          if (column.id === 'status' || column.type === 'status') {
+            return [
+              { label: 'Not Started', value: 'Not Started' },
+              { label: 'Working on it', value: 'Working on it' },
+              { label: 'Done', value: 'Done' },
+              { label: 'Stuck', value: 'Stuck' }
+            ];
+          }
+          if (column.id === 'priority' || column.type === 'priority') {
+            return [
+              { label: 'Low', value: 'low' },
+              { label: 'Medium', value: 'medium' },
+              { label: 'High', value: 'high' },
+              { label: 'Critical', value: 'critical' }
+            ];
+          }
+          return [];
+        };
+        const choices = getChoices();
         return (
           <select
             value={value || ""}
@@ -135,7 +156,7 @@ export default function DetailsTab({
             className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed bg-white"
           >
             <option value="">{`Select ${column.title}`}</option>
-            {column.options?.choices?.map((choice) => (
+            {choices.map((choice) => (
               <option key={choice.value || choice.label} value={choice.value || choice.label}>
                 {choice.label}
               </option>

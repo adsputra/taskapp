@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function StatusCell({ value, options, onUpdate }) {
+export default function StatusCell({ value, column, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   
-  const choices = options?.choices || [
+  const choices = column?.options?.choices || [
     { label: 'Not Started', color: '#C4C4C4' },
     { label: 'Working on it', color: '#FFCB00' },
     { label: 'Done', color: '#00C875' },

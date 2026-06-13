@@ -57,7 +57,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
   };
 
   return (
-    <div className="relative flex items-center justify-center w-full h-full min-w-[120px] px-3 group">
+    <div className="relative flex items-center justify-center w-full h-full px-3 group">
       {isEditing ? (
         <input
           value={title}
@@ -136,6 +136,10 @@ const ItemRow = ({
             }),
     };
 
+    if (column.id === "priority" || column.type === "priority") {
+      return <PriorityCell {...cellProps} />;
+    }
+
     switch (column.type) {
       case "text":
         return <TextCell {...cellProps} />;
@@ -204,7 +208,7 @@ const ItemRow = ({
             {renderCell(column)}
           </div>
         ))}
-      <div className="shrink-0 w-10" />
+      <div className="shrink-0 w-[40px]" />
     </div>
   );
 };
