@@ -38,7 +38,7 @@ export default function DateCell({ value, onUpdate }) {
   if (!value) {
     return (
       <div
-        className={`w-full h-full flex items-center gap-2 text-sm text-[#676879] rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+        className={`w-full h-full flex items-center justify-center gap-2 text-sm text-[#676879] rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
         onClick={() => onUpdate && setIsEditing(true)}
       >
         <Calendar className="w-4 h-4 flex-shrink-0" />
@@ -51,7 +51,7 @@ export default function DateCell({ value, onUpdate }) {
   
   return (
     <div
-      className={`w-full h-full flex items-center rounded text-sm ${
+      className={`w-full h-full flex items-center justify-center rounded text-sm ${
         onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
       } ${
         isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C] px-2' : 'text-[#323338]'
