@@ -12,7 +12,7 @@ export const commentsApi = {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("task_comments")
-      .select("*, profiles(id, full_name, avatar_url)")
+      .select("*, profiles(id, full_name, email, avatar_url)")
       .eq("item_id", itemId)
       .order("created_at", { ascending: true });
 
@@ -30,7 +30,7 @@ export const commentsApi = {
     const { data, error } = await supabase
       .from("task_comments")
       .insert({ item_id, user_id: user.id, content })
-      .select("*, profiles(id, full_name, avatar_url)")
+      .select("*, profiles(id, full_name, email, avatar_url)")
       .single();
 
     if (error) throw new Error("Failed to create comment: " + error.message);
@@ -46,7 +46,7 @@ export const commentsApi = {
       .from("task_comments")
       .update({ content })
       .eq("id", id)
-      .select("*, profiles(id, full_name, avatar_url)")
+      .select("*, profiles(id, full_name, email, avatar_url)")
       .single();
 
     if (error) throw new Error("Failed to update comment: " + error.message);

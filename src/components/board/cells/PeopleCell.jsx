@@ -111,13 +111,13 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
       {/* Trigger — avatar + nama */}
       <div
         ref={triggerRef}
-        className={`flex items-center justify-center gap-2 w-full h-full rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+        className={`flex items-center justify-center gap-2 w-full h-full rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50 dark:hover:bg-slate-700' : ''}`}
         onClick={() => onUpdate && openDropdown()}
       >
         {assignedUsers.length === 0 && (
-          <span className="text-[#676879] text-sm flex items-center gap-1.5">
-            <span className="w-6 h-6 rounded-full bg-[#E1E5F3] flex items-center justify-center">
-              <User className="w-3 h-3 text-[#676879]" />
+          <span className="text-[#676879] dark:text-slate-400 text-sm flex items-center gap-1.5">
+            <span className="w-6 h-6 rounded-full bg-[#E1E5F3] dark:bg-slate-700 flex items-center justify-center">
+              <User className="w-3 h-3 text-[#676879] dark:text-slate-400" />
             </span>
             Assign
           </span>
@@ -130,7 +130,7 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
             >
               {getUserInitial(assignedUsers[0])}
             </span>
-            <span className="text-sm text-[#323338] truncate max-w-[80px]">
+            <span className="text-sm text-[#323338] dark:text-slate-200 truncate max-w-[80px]">
               {getUserName(assignedUsers[0])}
             </span>
           </span>
@@ -140,14 +140,14 @@ export default function PeopleCell({ value, onUpdate, itemId, column, boardId })
             {assignedUsers.slice(0, 3).map((email, i) => (
               <span
                 key={email}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white -ml-1 first:ml-0"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white dark:border-slate-800 -ml-1 first:ml-0"
                 style={{ backgroundColor: getUserColor(email) }}
                 title={getUserName(email)}
               >
                 {getUserInitial(email)}
               </span>
             ))}
-            <span className="text-xs text-[#323338] ml-1">
+            <span className="text-xs text-[#323338] dark:text-slate-200 ml-1">
               {assignedUsers.length} people
             </span>
           </span>

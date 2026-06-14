@@ -13,7 +13,7 @@ const CalendarEvent = ({ item, board, onEdit }) => {
   
   return (
     <div 
-      className="p-1.5 mb-1 bg-white rounded-md shadow-sm border border-[#E1E5F3] hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
+      className="p-1.5 mb-1 bg-white dark:bg-slate-700 rounded-md shadow-sm border border-[#E1E5F3] dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
       title={item.title}
       onClick={(e) => {
         e.stopPropagation();
@@ -27,7 +27,7 @@ const CalendarEvent = ({ item, board, onEdit }) => {
             style={{ backgroundColor: priorityOption.color || '#ccc' }}
           />
         )}
-        <p className="text-xs font-medium text-[#323338] truncate">{item.title}</p>
+        <p className="text-xs font-medium text-[#323338] dark:text-slate-200 truncate">{item.title}</p>
       </div>
     </div>
   );
@@ -76,7 +76,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
         <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h2 className="text-xl font-semibold text-[#323338]">
+        <h2 className="text-xl font-semibold text-[#323338] dark:text-slate-100">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
         <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
@@ -89,8 +89,8 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
   const renderDays = () => {
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return (
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-[#676879] mb-2">
-        {daysOfWeek.map(day => <div key={day} className="py-2 border-b">{day}</div>)}
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-[#676879] dark:text-slate-400 mb-2">
+        {daysOfWeek.map(day => <div key={day} className="py-2 border-b dark:border-slate-700">{day}</div>)}
       </div>
     );
   };
@@ -109,12 +109,12 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
         {days.map(day => (
           <div
             key={day.toString()}
-            className={`p-2 border border-[#E1E5F3] min-h-[100px] relative transition-colors hover:bg-[#F9FAFB]
-              ${!isSameMonth(day, monthStart) ? 'bg-[#F9FAFB] text-gray-400' : 'bg-white'}
+            className={`p-2 border border-[#E1E5F3] dark:border-slate-700 min-h-[100px] relative transition-colors hover:bg-[#F9FAFB] dark:hover:bg-slate-800
+              ${!isSameMonth(day, monthStart) ? 'bg-[#F9FAFB] dark:bg-slate-900 text-gray-400 dark:text-slate-600' : 'bg-white dark:bg-slate-800'}
               ${isSameDay(day, today) ? 'ring-2 ring-[#0073EA] ring-inset' : ''}
             `}
           >
-            <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-[#0073EA]' : ''}`}>
+            <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-[#0073EA] dark:text-blue-400' : 'text-gray-700 dark:text-slate-300'}`}>
               {format(day, 'd')}
             </span>
             <div className="mt-1 space-y-1 overflow-y-auto max-h-[70px]">
@@ -143,7 +143,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
 
   return (
     <>
-      <Card className="shadow-lg border-[#E1E5F3]">
+      <Card className="shadow-lg border-[#E1E5F3] dark:border-slate-700 dark:bg-slate-900">
         <CardContent className="p-4">
           {renderHeader()}
           {renderDays()}

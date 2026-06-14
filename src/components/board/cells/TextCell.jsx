@@ -26,7 +26,7 @@ export default function TextCell({ value, onUpdate }) {
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyPress}
-        className="border-none bg-transparent h-full w-full focus:ring-0 text-sm text-[#323338] font-medium"
+        className="border-none bg-transparent h-full w-full focus:ring-0 text-sm text-[#323338] dark:text-slate-200 font-medium"
         autoFocus
       />
     );
@@ -34,7 +34,7 @@ export default function TextCell({ value, onUpdate }) {
 
   return (
     <div
-      className={`w-full h-full flex items-center text-sm text-[#323338] font-medium rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50' : ''}`}
+      className={`w-full h-full flex items-center text-sm text-[#323338] dark:text-slate-200 font-medium rounded transition-colors ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50 dark:hover:bg-slate-700' : ''}`}
       onClick={() => onUpdate && setIsEditing(true)}
     >
       {value || 'Enter text...'}

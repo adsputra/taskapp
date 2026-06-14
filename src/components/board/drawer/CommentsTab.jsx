@@ -15,11 +15,20 @@ export default function CommentsTab({ task, userRole, board }) {
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const textareaRef = useRef(null);
   const commentsEndRef = useRef(null);
   const queryClient = useQueryClient();
 
   const isViewer = userRole === "viewer";
+
+  // Get current logged-in user ID
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data?.user?.id ?? null);
+    });
+  }, []);
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["comments", task?.id],
@@ -160,11 +169,22 @@ export default function CommentsTab({ task, userRole, board }) {
     }
   };
 
-  const getUserInitial = (email) => email?.charAt(0).toUpperCase() || "?";
+  const getUserInitial = (comment) => {
+    const name = comment.profiles?.full_name || comment.profiles?.email || "";
+    return name.charAt(0).toUpperCase() || "?";
+  };
 
-  const getUserColor = (email) => {
+  const getDisplayName = (comment) => {
+    const p = comment.profiles;
+    if (p?.full_name && p.full_name.trim()) return p.full_name.trim();
+    if (p?.email) return p.email.split("@")[0];
+    return "Unknown";
+  };
+
+  const getUserColor = (comment) => {
     const colors = ["#0073EA", "#00C875", "#FFCB00", "#E2445C", "#A25DDC", "#FDAB3D"];
-    const hash = (email || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    const key = comment.profiles?.email || comment.profiles?.full_name || comment.user_id || "";
+    const hash = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
     return colors[hash % colors.length];
   };
 
@@ -199,27 +219,37 @@ export default function CommentsTab({ task, userRole, board }) {
 
         {comments.map((comment) => {
           const isEditing = editingId === comment.id;
-          const email = comment.profiles?.full_name || comment.user_id;
+          const isOwn = currentUserId && comment.user_id === currentUserId;
+          const displayName = getDisplayName(comment);
           return (
-            <div key={comment.id} className="flex gap-3 group">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                style={{ backgroundColor: getUserColor(email) }}
-              >
-                {getUserInitial(email)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-sm font-medium text-[#323338] dark:text-slate-200 truncate">
-                    {email}
+            <div
+              key={comment.id}
+              className={`flex gap-2 group ${isOwn ? "justify-end" : "justify-start"}`}
+            >
+              {/* Avatar — only for others */}
+              {!isOwn && (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-5"
+                  style={{ backgroundColor: getUserColor(comment) }}
+                >
+                  {getUserInitial(comment)}
+                </div>
+              )}
+
+              <div className={`flex flex-col min-w-0 max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}>
+                {/* Name + time */}
+                <div className={`flex items-center gap-2 mb-0.5 px-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+                  <span className={`text-[11px] font-medium truncate ${isOwn ? "text-[#0073EA] dark:text-blue-400" : "text-[#676879] dark:text-slate-400"}`}>
+                    {isOwn ? "You" : displayName}
                   </span>
-                  <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600">
+                  <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600 shrink-0">
                     {formatTime(comment.created_at)}
                   </span>
                 </div>
 
+                {/* Bubble */}
                 {isEditing ? (
-                  <div className="space-y-2">
+                  <div className="w-full space-y-2">
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
@@ -244,18 +274,24 @@ export default function CommentsTab({ task, userRole, board }) {
                   </div>
                 ) : (
                   <div className="relative">
-                    <p className="text-sm text-[#323338] dark:text-slate-300 whitespace-pre-wrap break-words">
+                    <div
+                      className={`px-3 py-2 text-sm whitespace-pre-wrap break-words rounded-2xl ${
+                        isOwn
+                          ? "bg-[#0073EA] text-white rounded-br-sm"
+                          : "bg-[#F0F2F5] dark:bg-slate-700 text-[#323338] dark:text-slate-200 rounded-bl-sm"
+                      }`}
+                    >
                       {comment.content}
-                    </p>
-                    {/* Action buttons - visible on hover */}
+                    </div>
+                    {/* Action buttons — visible on hover */}
                     {!isViewer && (
-                      <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+                      <div className={`absolute -top-2 ${isOwn ? "-left-1" : "-right-1"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5`}>
                         <button
                           onClick={() => {
                             setEditingId(comment.id);
                             setEditContent(comment.content);
                           }}
-                          className="p-1 text-[#A0A0A0] hover:text-[#0073EA] hover:bg-white rounded shadow-sm"
+                          className="p-1 text-[#A0A0A0] hover:text-[#0073EA] bg-white dark:bg-slate-800 rounded shadow-sm border border-gray-100 dark:border-slate-600"
                         >
                           <Edit3 className="w-3 h-3" />
                         </button>
@@ -265,7 +301,7 @@ export default function CommentsTab({ task, userRole, board }) {
                               deleteComment.mutate(comment.id);
                             }
                           }}
-                          className="p-1 text-[#A0A0A0] hover:text-red-500 hover:bg-white rounded shadow-sm"
+                          className="p-1 text-[#A0A0A0] hover:text-red-500 bg-white dark:bg-slate-800 rounded shadow-sm border border-gray-100 dark:border-slate-600"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -291,7 +327,15 @@ export default function CommentsTab({ task, userRole, board }) {
                   <AtSign className="w-3 h-3 inline mr-1" />
                   Members
                 </div>
-                {filteredMembers.map((member, i) => (
+                {filteredMembers.map((member, i) => {
+                  const memberName = member.full_name || member.email?.split("@")[0] || "?";
+                  const memberColor = (() => {
+                    const colors = ["#0073EA", "#00C875", "#FFCB00", "#E2445C", "#A25DDC", "#FDAB3D"];
+                    const key = member.email || member.full_name || "";
+                    const hash = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+                    return colors[hash % colors.length];
+                  })();
+                  return (
                   <button
                     key={member.id}
                     onClick={() => insertMention(member)}
@@ -301,13 +345,14 @@ export default function CommentsTab({ task, userRole, board }) {
                   >
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
-                      style={{ backgroundColor: getUserColor(member.email) }}
+                      style={{ backgroundColor: memberColor }}
                     >
-                      {getUserInitial(member.email)}
+                      {memberName.charAt(0).toUpperCase()}
                     </div>
-                    <span className="truncate">{member.email}</span>
+                    <span className="truncate">{memberName}</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
 

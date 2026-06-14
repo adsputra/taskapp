@@ -44,7 +44,7 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex items-center gap-3 px-4 py-3 bg-white border border-[#E1E5F3] rounded-xl mb-2 hover:shadow-sm transition-all cursor-pointer group ${
+          className={`flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border border-[#E1E5F3] dark:border-slate-700 rounded-xl mb-2 hover:shadow-sm transition-all cursor-pointer group ${
             snapshot.isDragging ? "shadow-lg ring-2 ring-[#0073EA]/30" : ""
           }`}
           style={provided.draggableProps.style}
@@ -54,7 +54,7 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
             {...provided.dragHandleProps}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <GripVertical className="w-4 h-4 text-[#676879]" />
+            <GripVertical className="w-4 h-4 text-[#676879] dark:text-slate-500" />
           </div>
 
           {/* Status dot */}
@@ -65,7 +65,7 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
           />
 
           {/* Title */}
-          <span className="text-sm font-medium text-[#323338] truncate flex-1">{item.title}</span>
+          <span className="text-sm font-medium text-[#323338] dark:text-slate-200 truncate flex-1">{item.title}</span>
 
           {/* Priority badge */}
           {priorityOption && (
@@ -126,17 +126,17 @@ const SprintSection = ({
     <div className="mb-6">
       {/* Sprint Header */}
       <div className="flex items-center gap-3 mb-3 px-2">
-        <button onClick={onToggle} className="p-0.5 hover:bg-[#E1E5F3] rounded">
+        <button onClick={onToggle} className="p-0.5 hover:bg-[#E1E5F3] dark:hover:bg-slate-700 rounded">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-[#676879]" />
+            <ChevronDown className="w-4 h-4 text-[#676879] dark:text-slate-400" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-[#676879]" />
+            <ChevronRight className="w-4 h-4 text-[#676879] dark:text-slate-400" />
           )}
         </button>
 
         <Target className="w-5 h-5" style={{ color: statusColor }} />
 
-        <h3 className="text-base font-bold text-[#323338]">{sprint.title}</h3>
+        <h3 className="text-base font-bold text-[#323338] dark:text-slate-100">{sprint.title}</h3>
 
         <Badge
           className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -149,12 +149,12 @@ const SprintSection = ({
           {statusLabel}
         </Badge>
 
-        <span className="text-xs text-[#676879]">
+        <span className="text-xs text-[#676879] dark:text-slate-400">
           {items.length} items · {progress}% done
         </span>
 
         {sprint.start_date && (
-          <span className="text-xs text-[#676879] flex items-center gap-1">
+          <span className="text-xs text-[#676879] dark:text-slate-400 flex items-center gap-1">
             <CalendarDays className="w-3 h-3" />
             {format(new Date(sprint.start_date), "MMM d")}
             {sprint.end_date && ` – ${format(new Date(sprint.end_date), "MMM d")}`}
@@ -205,7 +205,7 @@ const SprintSection = ({
 
       {/* Progress bar */}
       {items.length > 0 && (
-        <div className="h-1.5 bg-[#E1E5F3] rounded-full mx-2 mb-3 overflow-hidden">
+        <div className="h-1.5 bg-[#E1E5F3] dark:bg-slate-700 rounded-full mx-2 mb-3 overflow-hidden">
           <div
             className="h-full bg-[#00C875] rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -225,7 +225,7 @@ const SprintSection = ({
               }`}
             >
               {items.length === 0 && !snapshot.isDraggingOver && (
-                <p className="text-sm text-[#676879] text-center py-4">No items in this sprint</p>
+                <p className="text-sm text-[#676879] dark:text-slate-400 text-center py-4">No items in this sprint</p>
               )}
               {items.map((item, idx) => (
                 <SprintItemRow
@@ -381,14 +381,14 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
   return (
     <div className="h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl border border-green-100">
+      <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-green-100 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
             <Target className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Sprint Board</h2>
-            <p className="text-sm text-gray-600">Manage sprints and track progress</p>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Sprint Board</h2>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Manage sprints and track progress</p>
           </div>
         </div>
 
@@ -404,7 +404,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
 
       {/* Create sprint form */}
       {showCreateForm && (
-        <div className="mb-6 p-4 bg-white rounded-xl border border-[#E1E5F3] shadow-sm">
+        <div className="mb-6 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#E1E5F3] dark:border-slate-700 shadow-sm">
           <div className="flex items-center gap-3">
             <Input
               placeholder="Sprint name (e.g., Sprint 1)"
@@ -452,18 +452,18 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
             <div className="flex items-center gap-3 mb-3 px-2">
               <button
                 onClick={() => toggleExpanded("backlog")}
-                className="p-0.5 hover:bg-[#E1E5F3] rounded"
+                className="p-0.5 hover:bg-[#E1E5F3] dark:hover:bg-slate-700 rounded"
               >
                 {expandedSprints.has("backlog") ? (
-                  <ChevronDown className="w-4 h-4 text-[#676879]" />
+                  <ChevronDown className="w-4 h-4 text-[#676879] dark:text-slate-400" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-[#676879]" />
+                  <ChevronRight className="w-4 h-4 text-[#676879] dark:text-slate-400" />
                 )}
               </button>
-              <Inbox className="w-5 h-5 text-[#676879]" />
-              <h3 className="text-base font-bold text-[#323338]">Backlog</h3>
-              <span className="text-xs text-[#676879]">{backlogItems.length} items</span>
-              <span className="text-xs text-[#676879] ml-2">
+              <Inbox className="w-5 h-5 text-[#676879] dark:text-slate-400" />
+              <h3 className="text-base font-bold text-[#323338] dark:text-slate-100">Backlog</h3>
+              <span className="text-xs text-[#676879] dark:text-slate-400">{backlogItems.length} items</span>
+              <span className="text-xs text-[#676879] dark:text-slate-400 ml-2">
                 Drag items here or to a sprint below
               </span>
             </div>
@@ -481,7 +481,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
                     }`}
                   >
                     {backlogItems.length === 0 && !snapshot.isDraggingOver && (
-                      <p className="text-sm text-[#676879] text-center py-4">
+                      <p className="text-sm text-[#676879] dark:text-slate-400 text-center py-4">
                         All items are assigned to sprints
                       </p>
                     )}
@@ -545,7 +545,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
           {/* Completed Sprints */}
           {completedSprints.length > 0 && (
             <div className="mt-8">
-              <h4 className="text-sm font-semibold text-[#676879] uppercase tracking-wider mb-3 px-2">
+              <h4 className="text-sm font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wider mb-3 px-2">
                 Completed Sprints
               </h4>
               {completedSprints.map((sprint) => (
@@ -566,9 +566,9 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
           {/* Empty state */}
           {sprints.length === 0 && (
             <div className="text-center py-16">
-              <Target className="w-16 h-16 text-[#E1E5F3] mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-[#323338] mb-2">No sprints yet</h3>
-              <p className="text-sm text-[#676879] mb-4">
+              <Target className="w-16 h-16 text-[#E1E5F3] dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-[#323338] dark:text-slate-100 mb-2">No sprints yet</h3>
+              <p className="text-sm text-[#676879] dark:text-slate-400 mb-4">
                 Create your first sprint to start organizing work
               </p>
               {userRole === "admin" && (

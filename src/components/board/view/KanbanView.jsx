@@ -99,10 +99,9 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`relative p-4 mb-4 bg-white rounded-2xl shadow-lg border-l-4 hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer ${snapshot.isDragging ? 'shadow-2xl ring-4 ring-blue-200 scale-105' : ''}`}
+          className={`relative p-4 mb-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-l-4 hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer ${snapshot.isDragging ? 'shadow-2xl ring-4 ring-blue-500/30 scale-105' : ''}`}
           style={{ 
             borderLeftColor: getCardAccentColor(),
-            background: snapshot.isDragging ? 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)' : 'white',
             ...provided.draggableProps.style
           }}
           onClick={(e) => {
@@ -122,11 +121,11 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           )}
 
           <div className="flex justify-between items-start mb-3">
-            <h4 className="font-bold text-lg text-gray-800 leading-tight pr-2">{item.title}</h4>
+            <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100 leading-tight pr-2">{item.title}</h4>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-8 w-8 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(item);
@@ -166,12 +165,12 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           </div>
           
           {/* Footer */}
-          <div className="flex items-center justify-between text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mt-4 pt-3 border-t border-gray-100 dark:border-slate-700">
             <div className="flex items-center gap-3">
               {dueDateValue && (
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-full">
-                  <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
-                  <span className="text-blue-700 font-medium">{safeFormatDate(dueDateValue, 'MMM d')}</span>
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full">
+                  <CalendarDays className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">{safeFormatDate(dueDateValue, 'MMM d')}</span>
                 </div>
               )}
             </div>
@@ -382,21 +381,21 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   return (
     <div className="h-full">
       {/* Header with grouping selector */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100">
+      <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-blue-100 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
             <MoreHorizontal className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Kanban Board</h2>
-            <p className="text-sm text-gray-600">Drag and drop to manage your tasks</p>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Kanban Board</h2>
+            <p className="text-sm text-gray-600 dark:text-slate-400">Drag and drop to manage your tasks</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">Group by:</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Group by:</span>
           <Select value={groupBy} onValueChange={setGroupBy}>
-            <SelectTrigger className="w-32 bg-white border-2 border-gray-200 rounded-xl">
+            <SelectTrigger className="w-32 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 rounded-xl dark:text-slate-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -430,21 +429,21 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`w-80 flex-shrink-0 rounded-2xl p-2 transition-all duration-300 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
+                  className={`w-80 flex-shrink-0 rounded-2xl p-2 transition-all duration-300 bg-slate-100 dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
                   style={{ 
                     background: snapshot.isDraggingOver 
                       ? `linear-gradient(135deg, ${column.color}20 0%, ${column.color}10 100%)`
-                      : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+                      : undefined
                   }}
                 >
                   {/* Column Header */}
                   <div className="px-4 py-3 mb-2">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-lg text-gray-800">
+                        <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">
                           {column.title}
                           {column.id === 'people-unassigned' && (
-                            <span className="text-sm font-normal text-gray-500 ml-1">(No one assigned)</span>
+                            <span className="text-sm font-normal text-gray-500 dark:text-slate-400 ml-1">(No one assigned)</span>
                           )}
                         </h3>
                         <span 
@@ -460,7 +459,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 rounded-full hover:bg-white/50"
+                        className="h-8 w-8 rounded-full hover:bg-white/50 dark:hover:bg-slate-600"
                       >
                         <Plus className="w-5 h-5" style={{ color: column.color }} />
                       </Button>
@@ -484,7 +483,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                           <p className="text-sm font-medium" style={{ color: column.color }}>
                             {column.id === 'people-unassigned' ? 'Drag unassigned tasks here' : 'Drag tasks here'}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">or click + to add new</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">or click + to add new</p>
                         </div>
                       </div>
                     )}
@@ -535,8 +534,15 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
           border-radius: 10px;
           border: 1px solid #e2e8f0;
         }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #475569 0%, #334155 100%);
+          border: 1px solid #334155;
+        }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #64748b 0%, #475569 100%);
         }
         .group:hover .group-hover\\:opacity-100 {
           opacity: 1;
