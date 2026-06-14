@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +14,14 @@ import { motion } from "framer-motion";
 export default function SignupPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { theme, setTheme } = useTheme();
+
+  // Force light mode on auth pages
+  useEffect(() => {
+    const prev = theme;
+    setTheme("light");
+    return () => { if (prev && prev !== "light") setTheme(prev); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

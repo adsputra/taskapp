@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,15 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { theme, setTheme } = useTheme();
+
+  // Force light mode on auth pages
+  useEffect(() => {
+    const prev = theme;
+    setTheme("light");
+    return () => { if (prev && prev !== "light") setTheme(prev); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const redirectTo = searchParams.get("redirect") || "/";
 
   const [email, setEmail] = useState("");
