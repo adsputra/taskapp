@@ -76,9 +76,9 @@ export default function TaskDetailDrawer({
       />
 
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-[520px] bg-white shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-200">
+      <div className="fixed top-0 right-0 h-full w-full max-w-[520px] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-200">
         {/* Header */}
-        <div className="shrink-0 border-b border-[#E1E5F3] px-6 py-4">
+        <div className="shrink-0 border-b border-[#E1E5F3] dark:border-slate-800 px-6 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               {isEditingTitle && !isViewer ? (
@@ -93,19 +93,19 @@ export default function TaskDetailDrawer({
                       setIsEditingTitle(false);
                     }
                   }}
-                  className="w-full text-lg font-semibold text-[#323338] border border-[#0073EA] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
+                  className="w-full text-lg font-semibold text-[#323338] dark:text-slate-100 border border-[#0073EA] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#0073EA] bg-white dark:bg-slate-800"
                   autoFocus
                 />
               ) : (
                 <h2
-                  className={`text-lg font-semibold text-[#323338] truncate ${!isViewer ? "cursor-pointer hover:text-[#0073EA]" : ""}`}
+                  className={`text-lg font-semibold text-[#323338] dark:text-slate-100 truncate ${!isViewer ? "cursor-pointer hover:text-[#0073EA] dark:hover:text-blue-400" : ""}`}
                   onClick={() => !isViewer && setIsEditingTitle(true)}
                   title={!isViewer ? "Click to edit" : ""}
                 >
                   {task.title}
                 </h2>
               )}
-              <p className="text-xs text-[#676879] mt-1">
+              <p className="text-xs text-[#676879] dark:text-slate-500 mt-1">
                 Created {new Date(task.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
             </div>
@@ -118,7 +118,7 @@ export default function TaskDetailDrawer({
                       onClose();
                     }
                   }}
-                  className="p-2 text-[#A0A0A0] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   title="Delete task"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -126,7 +126,7 @@ export default function TaskDetailDrawer({
               )}
               <button
                 onClick={onClose}
-                className="p-2 text-[#A0A0A0] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+                className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 hover:bg-[#F5F6F8] dark:hover:bg-slate-800 rounded-lg transition-colors"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -145,8 +145,8 @@ export default function TaskDetailDrawer({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg border-b-2 transition-colors ${
                     isActive
-                      ? "text-[#0073EA] border-[#0073EA] bg-[#0073EA]/5"
-                      : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
+                      ? "text-[#0073EA] border-[#0073EA] bg-[#0073EA]/5 dark:bg-[#0073EA]/10"
+                      : "text-[#676879] dark:text-slate-500 border-transparent hover:text-[#323338] dark:hover:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -158,7 +158,7 @@ export default function TaskDetailDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto dark:bg-slate-900">
           {activeTab === "details" && (
             <DetailsTab
               task={task}

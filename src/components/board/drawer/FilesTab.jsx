@@ -83,11 +83,11 @@ export default function FilesTab({ task, boardId, userRole }) {
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors mb-6 ${
             isDragging
               ? "border-[#0073EA] bg-[#0073EA]/5"
-              : "border-[#E1E5F3] hover:border-[#0073EA] hover:bg-[#F5F6F8]"
+              : "border-[#E1E5F3] dark:border-slate-700 hover:border-[#0073EA] hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
           }`}
         >
           <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? "text-[#0073EA]" : "text-[#A0A0A0]"}`} />
-          <p className="text-sm text-[#323338] font-medium">
+          <p className="text-sm text-[#323338] dark:text-slate-200 font-medium">
             {uploadFile.isPending ? "Uploading..." : "Drop files here or click to upload"}
           </p>
           <p className="text-xs text-[#A0A0A0] mt-1">Any file type supported</p>
@@ -104,11 +104,11 @@ export default function FilesTab({ task, boardId, userRole }) {
       {/* File List */}
       {attachments.length === 0 && !isLoading && (
         <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] flex items-center justify-center mx-auto mb-3">
-            <File className="w-5 h-5 text-[#A0A0A0]" />
+          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+            <File className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
           </div>
-          <p className="text-sm text-[#676879]">No files attached</p>
-          <p className="text-xs text-[#A0A0A0] mt-1">Upload files to share with your team</p>
+          <p className="text-sm text-[#676879] dark:text-slate-400">No files attached</p>
+          <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Upload files to share with your team</p>
         </div>
       )}
 
@@ -121,7 +121,7 @@ export default function FilesTab({ task, boardId, userRole }) {
           return (
             <div
               key={att.id}
-              className="flex items-center gap-3 p-3 rounded-lg border border-[#E1E5F3] hover:bg-[#F5F6F8] group transition-colors"
+              className="flex items-center gap-3 p-3 rounded-lg border border-[#E1E5F3] dark:border-slate-700 hover:bg-[#F5F6F8] dark:hover:bg-slate-800 group transition-colors"
             >
               {/* Thumbnail or Icon */}
               {isImage ? (
@@ -131,8 +131,8 @@ export default function FilesTab({ task, boardId, userRole }) {
                   className="w-10 h-10 rounded object-cover shrink-0"
                 />
               ) : (
-                <div className="w-10 h-10 rounded bg-[#F5F6F8] flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-[#676879]" />
+                <div className="w-10 h-10 rounded bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-[#676879] dark:text-slate-500" />
                 </div>
               )}
 
@@ -142,7 +142,7 @@ export default function FilesTab({ task, boardId, userRole }) {
                   href={att.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-[#323338] hover:text-[#0073EA] truncate block"
+                  className="text-sm font-medium text-[#323338] dark:text-slate-200 hover:text-[#0073EA] dark:hover:text-blue-400 truncate block"
                 >
                   {att.file_name}
                 </a>

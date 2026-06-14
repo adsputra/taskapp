@@ -78,17 +78,17 @@ export default function ActivityTab({ task }) {
     <div className="p-6">
       {activities.length === 0 && !isLoading && (
         <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] flex items-center justify-center mx-auto mb-3">
-            <ArrowRightLeft className="w-5 h-5 text-[#A0A0A0]" />
+          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+            <ArrowRightLeft className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
           </div>
-          <p className="text-sm text-[#676879]">No activity yet</p>
-          <p className="text-xs text-[#A0A0A0] mt-1">Changes to this task will appear here</p>
+          <p className="text-sm text-[#676879] dark:text-slate-400">No activity yet</p>
+          <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Changes to this task will appear here</p>
         </div>
       )}
 
       {Object.entries(grouped).map(([dateGroup, items]) => (
         <div key={dateGroup} className="mb-6 last:mb-0">
-          <h4 className="text-xs font-semibold text-[#676879] uppercase tracking-wide mb-3">
+          <h4 className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-3">
             {dateGroup}
           </h4>
           <div className="space-y-0">
@@ -101,7 +101,7 @@ export default function ActivityTab({ task }) {
                 <div key={activity.id} className="flex gap-3 relative">
                   {/* Timeline line */}
                   {idx < items.length - 1 && (
-                    <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-[#E1E5F3]" />
+                    <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-[#E1E5F3] dark:bg-slate-800" />
                   )}
 
                   {/* Icon */}
@@ -112,10 +112,10 @@ export default function ActivityTab({ task }) {
                   {/* Content */}
                   <div className="flex-1 min-w-0 pb-4">
                     <div className="flex items-baseline gap-1 flex-wrap">
-                      <span className="text-sm font-medium text-[#323338]">{userName}</span>
-                      <span className="text-xs text-[#676879]">{config.label}</span>
+                      <span className="text-sm font-medium text-[#323338] dark:text-slate-200">{userName}</span>
+                      <span className="text-xs text-[#676879] dark:text-slate-500">{config.label}</span>
                       {activity.field_name && (
-                        <span className="text-xs font-medium text-[#323338]">
+                        <span className="text-xs font-medium text-[#323338] dark:text-slate-300">
                           {formatFieldName(activity.field_name)}
                         </span>
                       )}
@@ -140,7 +140,7 @@ export default function ActivityTab({ task }) {
                       </div>
                     )}
 
-                    <span className="text-[10px] text-[#A0A0A0] mt-1 block">
+                    <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600 mt-1 block">
                       {formatTime(activity.created_at)}
                     </span>
                   </div>

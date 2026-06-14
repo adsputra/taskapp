@@ -189,11 +189,11 @@ export default function CommentsTab({ task, userRole, board }) {
       <div className="flex-1 p-6 space-y-4">
         {comments.length === 0 && !isLoading && (
           <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-[#F5F6F8] flex items-center justify-center mx-auto mb-3">
-              <Send className="w-5 h-5 text-[#A0A0A0]" />
+            <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+              <Send className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
             </div>
-            <p className="text-sm text-[#676879]">No comments yet</p>
-            <p className="text-xs text-[#A0A0A0] mt-1">Start the conversation</p>
+            <p className="text-sm text-[#676879] dark:text-slate-400">No comments yet</p>
+            <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Start the conversation</p>
           </div>
         )}
 
@@ -210,10 +210,10 @@ export default function CommentsTab({ task, userRole, board }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-sm font-medium text-[#323338] truncate">
+                  <span className="text-sm font-medium text-[#323338] dark:text-slate-200 truncate">
                     {email}
                   </span>
-                  <span className="text-[10px] text-[#A0A0A0]">
+                  <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600">
                     {formatTime(comment.created_at)}
                   </span>
                 </div>
@@ -223,7 +223,7 @@ export default function CommentsTab({ task, userRole, board }) {
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full rounded-lg border border-[#0073EA] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] resize-none"
+                      className="w-full rounded-lg border border-[#0073EA] dark:border-[#0073EA] bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] resize-none"
                       rows={2}
                       autoFocus
                     />
@@ -244,7 +244,7 @@ export default function CommentsTab({ task, userRole, board }) {
                   </div>
                 ) : (
                   <div className="relative">
-                    <p className="text-sm text-[#323338] whitespace-pre-wrap break-words">
+                    <p className="text-sm text-[#323338] dark:text-slate-300 whitespace-pre-wrap break-words">
                       {comment.content}
                     </p>
                     {/* Action buttons - visible on hover */}
@@ -282,11 +282,11 @@ export default function CommentsTab({ task, userRole, board }) {
 
       {/* Comment Input */}
       {!isViewer && (
-        <div className="shrink-0 border-t border-[#E1E5F3] p-4">
+        <div className="shrink-0 border-t border-[#E1E5F3] dark:border-slate-800 p-4">
           <div className="relative">
             {/* Mention dropdown */}
             {showMentions && filteredMembers.length > 0 && (
-              <div className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-[#E1E5F3] rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
+              <div className="absolute bottom-full left-0 mb-2 w-56 bg-white dark:bg-slate-800 border border-[#E1E5F3] dark:border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
                 <div className="p-1.5 text-[10px] font-semibold text-[#676879] uppercase px-3">
                   <AtSign className="w-3 h-3 inline mr-1" />
                   Members
@@ -318,7 +318,7 @@ export default function CommentsTab({ task, userRole, board }) {
               onKeyDown={handleKeyDown}
               placeholder="Write a comment... (use @ to mention)"
               rows={2}
-              className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] resize-none"
+              className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] resize-none"
             />
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-[#A0A0A0]">

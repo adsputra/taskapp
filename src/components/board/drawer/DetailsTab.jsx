@@ -121,7 +121,7 @@ export default function DetailsTab({
             }
             placeholder={column.title}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
           />
         );
       case "status":
@@ -153,7 +153,7 @@ export default function DetailsTab({
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed bg-white"
+            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option value="">{`Select ${column.title}`}</option>
             {choices.map((choice) => (
@@ -170,7 +170,7 @@ export default function DetailsTab({
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
           />
         );
       case "checkbox":
@@ -183,7 +183,7 @@ export default function DetailsTab({
               disabled={isViewer}
               className="w-4 h-4 rounded border-gray-300 text-[#0073EA] focus:ring-[#0073EA]"
             />
-            <span className="text-sm text-[#323338]">{column.title}</span>
+            <span className="text-sm text-[#323338] dark:text-slate-300">{column.title}</span>
           </label>
         );
       default:
@@ -193,7 +193,7 @@ export default function DetailsTab({
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             placeholder={column.title}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
           />
         );
     }
@@ -203,7 +203,7 @@ export default function DetailsTab({
     <div className="p-6 space-y-6">
       {/* Description */}
       <div>
-        <label className="text-xs font-semibold text-[#676879] uppercase tracking-wide mb-2 block">
+        <label className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-2 block">
           Description
         </label>
         <textarea
@@ -213,7 +213,7 @@ export default function DetailsTab({
           placeholder="Add a description..."
           disabled={isViewer}
           rows={4}
-          className="w-full rounded-lg border border-[#E1E5F3] px-3 py-2 text-sm text-[#323338] focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed resize-none"
+          className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm text-[#323338] dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed resize-none"
         />
       </div>
 
@@ -221,7 +221,7 @@ export default function DetailsTab({
       <div>
         <button
           onClick={() => setShowSubtasks(!showSubtasks)}
-          className="flex items-center gap-2 text-xs font-semibold text-[#676879] uppercase tracking-wide mb-2 hover:text-[#323338]"
+          className="flex items-center gap-2 text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-2 hover:text-[#323338] dark:hover:text-slate-300"
         >
           {showSubtasks ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           Subtasks
@@ -247,7 +247,7 @@ export default function DetailsTab({
               return (
                 <div
                   key={subtask.id}
-                  className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[#F5F6F8] group"
+                  className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[#F5F6F8] dark:hover:bg-slate-800 group"
                 >
                   <button
                     onClick={() => {
@@ -265,12 +265,12 @@ export default function DetailsTab({
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                       isDone
                         ? "bg-[#00C875] border-[#00C875] text-white"
-                        : "border-[#C4C4C4] hover:border-[#0073EA]"
+                        : "border-[#C4C4C4] dark:border-slate-600 hover:border-[#0073EA]"
                     }`}
                   >
                     {isDone && <Check className="w-2.5 h-2.5" />}
                   </button>
-                  <span className={`text-sm ${isDone ? "text-[#676879] line-through" : "text-[#323338]"}`}>
+                  <span className={`text-sm ${isDone ? "text-[#676879] dark:text-slate-500 line-through" : "text-[#323338] dark:text-slate-200"}`}>
                     {subtask.title}
                   </span>
                 </div>
@@ -288,7 +288,7 @@ export default function DetailsTab({
                     }
                   }}
                   placeholder="Add subtask..."
-                  className="flex-1 rounded-lg border border-[#E1E5F3] px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA]"
+                  className="flex-1 rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA]"
                 />
                 <Button
                   onClick={() => newSubtaskTitle.trim() && createSubtask.mutate(newSubtaskTitle.trim())}
@@ -306,13 +306,13 @@ export default function DetailsTab({
 
       {/* Fields */}
       <div>
-        <label className="text-xs font-semibold text-[#676879] uppercase tracking-wide mb-3 block">
+        <label className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-3 block">
           Fields
         </label>
         <div className="space-y-3">
           {editableColumns.map((column) => (
             <div key={column.id}>
-              <label className="text-xs font-medium text-[#676879] mb-1 block">
+              <label className="text-xs font-medium text-[#676879] dark:text-slate-500 mb-1 block">
                 {column.title}
               </label>
               {renderField(column)}

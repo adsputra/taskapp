@@ -245,6 +245,8 @@ export default function BoardPage({ boardId }) {
 
   // --- Filter & sort ---
   const filteredItems = items.filter((item) => {
+    // Hide subtasks from the main board view
+    if (item.parent_id) return false;
     if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (filters.status.length && !filters.status.includes(item.data?.status)) return false;
     if (filters.people.length && !filters.people.includes(item.data?.owner)) return false;
