@@ -11,7 +11,6 @@ import {
   Folder,
   Search,
   Bell,
-  HelpCircle,
   Menu,
   X,
   Briefcase,
@@ -29,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navigationItems = [
   { title: "Dashboard", href: "/", icon: LayoutGrid },
@@ -130,7 +130,7 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-50">
+    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 sticky top-0 z-50 transition-colors duration-300">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo + Nav */}
@@ -142,7 +142,7 @@ export default function NavBar() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-slate-800 text-xl">
+              <span className="font-bold text-slate-800 dark:text-slate-100 text-xl">
                 Tuesday.com
               </span>
             </Link>
@@ -157,8 +157,8 @@ export default function NavBar() {
                     href={item.href}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       active
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -177,12 +177,12 @@ export default function NavBar() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <Search className="h-5 w-5 text-gray-400 dark:text-slate-500" aria-hidden="true" />
                 </div>
                 <Input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -195,17 +195,11 @@ export default function NavBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="hover:bg-slate-100 rounded-lg h-10 w-10"
+              className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg h-10 w-10"
             >
-              <Bell className="w-5 h-5 text-slate-500" />
+              <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-slate-100 rounded-lg h-10 w-10"
-            >
-              <HelpCircle className="w-5 h-5 text-slate-500" />
-            </Button>
+            <ThemeToggle />
 
             {/* Avatar + Dropdown — hanya tampil kalau ada user */}
             {!loading && !user ? (
@@ -267,7 +261,7 @@ export default function NavBar() {
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="hover:bg-[#E1E5F3] rounded-lg h-10 w-10"
+              className="hover:bg-[#E1E5F3] dark:hover:bg-slate-800 rounded-lg h-10 w-10"
             >
               <span className="sr-only">Open main menu</span>
               {mobileMenuOpen ? (
@@ -282,7 +276,7 @@ export default function NavBar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navigationItems.map((item) => {
               const active = isActive(item.href);
@@ -292,8 +286,8 @@ export default function NavBar() {
                   href={item.href}
                   className={`block px-3 py-2 rounded-lg text-base font-medium transition-colors ${
                     active
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -304,19 +298,19 @@ export default function NavBar() {
           </div>
 
           {/* Mobile: Search */}
-          <div className="pt-4 pb-3 border-t border-slate-200">
+          <div className="pt-4 pb-3 border-t border-slate-200 dark:border-slate-700">
             <div className="px-2">
               <label htmlFor="search-mobile" className="sr-only">
                 Search
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-slate-400" aria-hidden="true" />
+                  <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                 </div>
                 <Input
                   id="search-mobile"
                   name="search-mobile"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
                   placeholder="Search everything..."
                   type="search"
                 />
@@ -325,7 +319,7 @@ export default function NavBar() {
           </div>
 
           {/* Mobile: User info */}
-          <div className="pt-4 pb-3 border-t border-slate-200">
+          <div className="pt-4 pb-3 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center px-5">
               <div className="flex-shrink-0">
                 {loading ? (
@@ -339,7 +333,7 @@ export default function NavBar() {
                 )}
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium text-slate-800">
+                <div className="text-base font-medium text-slate-800 dark:text-slate-100">
                   {userName}
                 </div>
                 <div className="text-sm font-medium text-slate-500">
@@ -349,16 +343,19 @@ export default function NavBar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="ml-auto hover:bg-slate-100 rounded-lg h-10 w-10"
+                className="ml-auto hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg h-10 w-10"
               >
-                <Bell className="w-5 h-5 text-slate-500" />
+                <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400" />
               </Button>
+              <div className="ml-2">
+                <ThemeToggle />
+              </div>
             </div>
             <div className="mt-3 px-2 space-y-1">
               <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50"
+                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Your Profile
               </Link>

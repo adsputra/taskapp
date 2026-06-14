@@ -70,12 +70,12 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
               setIsEditing(false);
             }
           }}
-          className="text-xs font-semibold text-[#323338] bg-white border border-[#0073EA] rounded px-1 py-0.5 focus:outline-none w-full text-center"
+          className="text-xs font-semibold text-[#323338] dark:text-slate-200 bg-white dark:bg-slate-800 border border-[#0073EA] rounded px-1 py-0.5 focus:outline-none w-full text-center"
           autoFocus
         />
       ) : (
         <span
-          className={`text-xs font-semibold text-[#676879] uppercase tracking-wide truncate ${isAdmin ? "cursor-pointer hover:text-[#323338]" : ""}`}
+          className={`text-xs font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wide truncate ${isAdmin ? "cursor-pointer hover:text-[#323338] dark:hover:text-slate-200" : ""}`}
           onClick={() => isAdmin && setIsEditing(true)}
         >
           {column.title}
@@ -84,7 +84,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
       {isAdmin && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="absolute right-1 opacity-0 group-hover:opacity-100 text-[#A0A0A0] hover:text-[#323338] transition-opacity p-0.5 rounded hover:bg-white/80">
+          <button className="absolute right-1 opacity-0 group-hover:opacity-100 text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 transition-opacity p-0.5 rounded hover:bg-white/80 dark:hover:bg-slate-700">
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
@@ -163,7 +163,7 @@ const ItemRow = ({
         return <BudgetCell {...cellProps} />;
       default:
         return (
-          <div className="px-3 py-2 text-sm text-[#676879]">
+          <div className="px-3 py-2 text-sm text-[#676879] dark:text-slate-400">
             {String(value ?? "")}
           </div>
         );
@@ -174,8 +174,8 @@ const ItemRow = ({
 
   return (
     <div
-      className={`flex items-center border-b border-[#E1E5F3] hover:bg-[#F5F6F8]/50 transition-colors ${
-        isSelected ? "bg-[#0073EA]/5" : ""
+      className={`flex items-center border-b border-[#E1E5F3] dark:border-slate-800 hover:bg-[#F5F6F8]/50 dark:hover:bg-slate-800/50 transition-colors ${
+        isSelected ? "bg-[#0073EA]/5 dark:bg-[#0073EA]/10" : ""
       }`}
     >
       {/* Drag Handle + Checkbox */}
@@ -190,7 +190,7 @@ const ItemRow = ({
       {/* Task Title */}
       <div className="flex-1 min-w-[160px] px-3 h-[44px] flex items-center">
         <span
-          className="text-sm text-[#323338] font-medium truncate block cursor-pointer hover:text-[#0073EA] transition-colors"
+          className="text-sm text-[#323338] dark:text-slate-200 font-medium truncate block cursor-pointer hover:text-[#0073EA] dark:hover:text-blue-400 transition-colors"
           onClick={() => onSelectTask?.(item)}
         >
           {item.title}
@@ -250,13 +250,13 @@ export default function GroupSection({
   };
 
   return (
-    <div className="border-b border-[#E1E5F3] last:border-b-0">
+    <div className="border-b border-[#E1E5F3] dark:border-slate-800 last:border-b-0">
       {/* Group Header */}
       <div
-        className="flex items-center gap-3 px-4 py-3 bg-[#F5F6F8] border-b border-[#E1E5F3] cursor-pointer"
+        className="flex items-center gap-3 px-4 py-3 bg-[#F5F6F8] dark:bg-slate-800/80 border-b border-[#E1E5F3] dark:border-slate-800 cursor-pointer"
         onClick={() => setCollapsed(!collapsed)}
       >
-        <button className="text-[#676879] hover:text-[#323338]">
+        <button className="text-[#676879] dark:text-slate-400 hover:text-[#323338] dark:hover:text-slate-200">
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
           ) : (
@@ -267,16 +267,16 @@ export default function GroupSection({
           className="w-3 h-3 rounded-full flex-shrink-0"
           style={{ backgroundColor: group.color || "#0073EA" }}
         />
-        <span className="font-semibold text-[#323338] text-sm">
+        <span className="font-semibold text-[#323338] dark:text-slate-200 text-sm">
           {group.title}
         </span>
-        <span className="text-xs text-[#A0A0A0]">({items.length})</span>
+        <span className="text-xs text-[#A0A0A0] dark:text-slate-500">({items.length})</span>
         <div className="flex-1" />
         {userRole === "admin" && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="text-[#A0A0A0] hover:text-[#323338] p-1 rounded hover:bg-white/50"
+              className="text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 p-1 rounded hover:bg-white/50 dark:hover:bg-slate-700"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -302,10 +302,10 @@ export default function GroupSection({
         <div className="overflow-x-auto">
           <div className="min-w-[600px]">
             {/* Column Headers */}
-            <div className="flex items-center border-b border-[#E1E5F3] bg-white">
+            <div className="flex items-center border-b border-[#E1E5F3] dark:border-slate-800 bg-white dark:bg-slate-900">
               <div className="shrink-0 w-[60px] h-[40px] px-2" />
               <div className="flex-1 min-w-[160px] px-3 h-[40px] flex items-center">
-                <span className="text-xs font-semibold text-[#676879] uppercase tracking-wide">
+                <span className="text-xs font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wide">
                   Task
                 </span>
               </div>
@@ -332,7 +332,7 @@ export default function GroupSection({
                 {userRole === "admin" && (
                 <button
                   onClick={() => onAddColumn?.()}
-                  className="p-2 text-[#A0A0A0] hover:text-[#0073EA] hover:bg-[#0073EA]/5 rounded-lg transition-colors"
+                  className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-[#0073EA] dark:hover:text-blue-400 hover:bg-[#0073EA]/5 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                   title="Add column"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -348,10 +348,10 @@ export default function GroupSection({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-white"
+                    className="bg-white dark:bg-slate-900"
                   >
                     {items.length === 0 && !isLoading && (
-                      <div className="px-4 py-8 text-center text-[#A0A0A0] text-sm">
+                      <div className="px-4 py-8 text-center text-[#A0A0A0] dark:text-slate-500 text-sm">
                         No tasks in this group. Click + to add one.
                       </div>
                     )}
@@ -387,7 +387,7 @@ export default function GroupSection({
 
                     {/* Add Task Row */}
                     {userRole === "admin" && (isAdding ? (
-                      <div className="flex items-center px-4 py-2 border-t border-[#E1E5F3]">
+                      <div className="flex items-center px-4 py-2 border-t border-[#E1E5F3] dark:border-slate-800">
                         <div className="shrink-0 w-[60px]" />
                         <div className="flex-1 min-w-[160px]">
                           <input
@@ -401,7 +401,7 @@ export default function GroupSection({
                               }
                             }}
                             placeholder="Enter task title..."
-                            className="w-full text-sm border border-[#0073EA] rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
+                            className="w-full text-sm border border-[#0073EA] dark:bg-slate-800 dark:text-slate-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
                             autoFocus
                           />
                         </div>
@@ -420,16 +420,16 @@ export default function GroupSection({
                             setNewTaskTitle("");
                             setIsAdding(false);
                           }}
-                          className="text-[#676879] h-8 px-2 ml-1 text-xs"
+                          className="text-[#676879] dark:text-slate-400 h-8 px-2 ml-1 text-xs"
                         >
                           Cancel
                         </Button>
                       </div>
                     ) : (
-                      <div className="px-4 py-2 border-t border-[#E1E5F3]">
+                      <div className="px-4 py-2 border-t border-[#E1E5F3] dark:border-slate-800">
                         <button
                           onClick={() => setIsAdding(true)}
-                          className="flex items-center gap-2 text-sm text-[#0073EA] hover:text-[#0056B3] font-medium px-2 py-1 rounded hover:bg-[#0073EA]/5 transition-colors"
+                          className="flex items-center gap-2 text-sm text-[#0073EA] dark:text-blue-400 hover:text-[#0056B3] dark:hover:text-blue-300 font-medium px-2 py-1 rounded hover:bg-[#0073EA]/5 dark:hover:bg-blue-900/30 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Task

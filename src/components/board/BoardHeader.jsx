@@ -50,7 +50,7 @@ export default function BoardHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-lg hover:bg-[#E1E5F3] text-[#676879]"
+            className="h-9 w-9 rounded-lg hover:bg-[#E1E5F3] dark:hover:bg-slate-800 text-[#676879] dark:text-slate-400"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -63,8 +63,8 @@ export default function BoardHeader({
             <LayoutGrid className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#323338]">{board.title}</h1>
-            <p className="text-sm text-[#676879]">
+            <h1 className="text-xl font-bold text-[#323338] dark:text-slate-100">{board.title}</h1>
+            <p className="text-sm text-[#676879] dark:text-slate-400">
               {itemsCount} items
               {selectedCount > 0 && ` · ${selectedCount} selected`}
             </p>
@@ -75,7 +75,7 @@ export default function BoardHeader({
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="rounded-lg h-9 px-3 border-[#E1E5F3] text-sm text-[#323338] hover:bg-[#F5F6F8]"
+            className="rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
             onClick={onShowShare}
           >
             <Share2 className="w-4 h-4 mr-1.5" />
@@ -83,7 +83,7 @@ export default function BoardHeader({
           </Button>
           <Button
             variant="outline"
-            className="rounded-lg h-9 px-3 border-[#E1E5F3] text-sm text-[#323338] hover:bg-[#F5F6F8]"
+            className="rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
             onClick={onShowAutomations}
           >
             <Zap className="w-4 h-4 mr-1.5" />
@@ -91,7 +91,7 @@ export default function BoardHeader({
           </Button>
           <Button
             variant="outline"
-            className="rounded-lg h-9 px-3 border-[#E1E5F3] text-sm text-[#323338] hover:bg-[#F5F6F8]"
+            className="rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
             onClick={onShowIntegrations}
           >
             <Puzzle className="w-4 h-4 mr-1.5" />
@@ -99,7 +99,7 @@ export default function BoardHeader({
           </Button>
           <Button
             variant="outline"
-            className="rounded-lg h-9 px-3 border-[#E1E5F3] text-sm text-[#323338] hover:bg-[#F5F6F8]"
+            className="rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
             onClick={onShowAnalytics}
           >
             <BarChart3 className="w-4 h-4 mr-1.5" />
@@ -110,7 +110,7 @@ export default function BoardHeader({
       </div>
 
       {/* View Switcher */}
-      <div className="flex items-center gap-1 bg-[#F5F6F8] rounded-lg p-1 w-fit">
+      <div className="flex items-center gap-1 bg-[#F5F6F8] dark:bg-slate-800 rounded-lg p-1 w-fit">
         {viewOptions.map((view) => {
           const Icon = view.icon;
           const isActive = currentView === view.id;
@@ -120,8 +120,8 @@ export default function BoardHeader({
               onClick={() => onViewChange(view.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-white text-[#0073EA] shadow-sm"
-                  : "text-[#676879] hover:text-[#323338] hover:bg-white/50"
+                  ? "bg-white dark:bg-slate-700 text-[#0073EA] dark:text-blue-400 shadow-sm"
+                  : "text-[#676879] dark:text-slate-400 hover:text-[#323338] dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50"
               }`}
             >
               <Icon className="w-4 h-4" />

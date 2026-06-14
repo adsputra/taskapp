@@ -269,7 +269,7 @@ export default function BoardPage({ boardId }) {
   // --- Render ---
   if (isLoading && !board) {
     return (
-      <div className="p-8 bg-[#F5F6F8] min-h-screen flex items-center justify-center">
+      <div className="p-8 bg-[#F5F6F8] dark:bg-slate-950 min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0073EA]" />
       </div>
     );
@@ -277,8 +277,8 @@ export default function BoardPage({ boardId }) {
 
   if (!board) {
     return (
-      <div className="p-8 bg-[#F5F6F8] min-h-screen text-center py-16">
-        <h2 className="text-2xl font-bold text-[#323338] mb-4">Board not found</h2>
+      <div className="p-8 bg-[#F5F6F8] dark:bg-slate-950 min-h-screen text-center py-16">
+        <h2 className="text-2xl font-bold text-[#323338] dark:text-slate-200 mb-4">Board not found</h2>
         <Link href="/boards">
           <Button className="bg-[#0073EA] text-white rounded-xl">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Boards
@@ -289,9 +289,9 @@ export default function BoardPage({ boardId }) {
   }
 
   return (
-    <div className="bg-[#F5F6F8] min-h-screen">
+    <div className="bg-[#F5F6F8] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       <div className="max-w-full">
-        <div className="sticky top-0 z-20 bg-[#F5F6F8] pb-4">
+        <div className="sticky top-0 z-20 bg-[#F5F6F8] dark:bg-slate-950 pb-4">
           <BoardHeader board={board} items={items} itemsCount={items.length}
             selectedCount={selectedItems.size} currentView={currentView}
             onViewChange={setCurrentView}
@@ -304,7 +304,7 @@ export default function BoardPage({ boardId }) {
         <div className="px-6 py-6">
           {currentView === "table" && (
             <>
-              <div className="flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm border border-[#E1E5F3]">
+              <div className="flex items-center justify-between mb-6 bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm dark:shadow-none border border-[#E1E5F3] dark:border-slate-800">
                 <div className="flex items-center gap-4">
                   <Button
                     onClick={() => userRole === "admin" && setShowNewTaskModal(true)}
@@ -314,13 +314,13 @@ export default function BoardPage({ boardId }) {
                     <Plus className="w-4 h-4 mr-2" /> New Task
                   </Button>
                   <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#676879]" />
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#676879] dark:text-slate-500" />
                     <Input placeholder="Search" value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 w-64 bg-[#F5F6F8] border-none rounded-lg h-10" />
+                      className="pl-10 w-64 bg-[#F5F6F8] dark:bg-slate-800 dark:text-slate-200 border-none rounded-lg h-10" />
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowPersonFilter(!showPersonFilter)}>
                       <Users className="w-4 h-4 mr-2" /> Person
                       {filters.people.length > 0 && (
@@ -336,7 +336,7 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowFilterPanel(!showFilterPanel)}>
                       <Filter className="w-4 h-4 mr-2" /> Filter
                     </Button>
@@ -346,7 +346,7 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowSortMenu(!showSortMenu)}>
                       <SortAsc className="w-4 h-4 mr-2" /> Sort
                     </Button>
@@ -358,7 +358,7 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowHideMenu(!showHideMenu)}>
                       {hiddenColumns.size > 0 ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                       Hide
@@ -369,7 +369,7 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowGroupByMenu(!showGroupByMenu)}>
                       <GroupIcon className="w-4 h-4 mr-2" /> Group by
                     </Button>
@@ -385,7 +385,7 @@ export default function BoardPage({ boardId }) {
                 />
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-[#E1E5F3]">
+              <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm dark:shadow-none border border-[#E1E5F3] dark:border-slate-800">
                 {(board.groups || []).map((group) => (
                   <GroupSection key={group.id} group={group}
                     items={groupedItems[group.id] || []} columns={visibleColumns}
@@ -407,7 +407,7 @@ export default function BoardPage({ boardId }) {
                     onSelectTask={setSelectedTask} />
                 ))}
                 {(!board.groups || board.groups.length === 0) && !isLoading && (
-                  <div className="p-8 text-center text-[#676879]">
+                  <div className="p-8 text-center text-[#676879] dark:text-slate-400">
                     <h3 className="text-xl font-medium mb-2">No groups yet!</h3>
                     <p className="mb-4">Add your first group to organize tasks.</p>
                     <Button
@@ -419,7 +419,7 @@ export default function BoardPage({ boardId }) {
                     </Button>
                   </div>
                 )}
-                <div className="p-4 border-t border-[#E1E5F3]">
+                <div className="p-4 border-t border-[#E1E5F3] dark:border-slate-800">
                   <Button
                     variant="outline"
                     onClick={() => userRole === "admin" && setShowNewGroupModal(true)}

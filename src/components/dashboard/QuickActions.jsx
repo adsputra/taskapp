@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Plus, Users, Calendar, BarChart3, Zap, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 
 import CreateBoardModal from "../boards/CreateBoardModal";
@@ -13,7 +12,6 @@ const actions = [
     desc: "Start a new project",
     icon: Plus,
     gradient: "from-blue-500 to-blue-600",
-    lightBg: "bg-blue-50",
     shadowColor: "shadow-blue-200/50",
   },
   {
@@ -21,7 +19,6 @@ const actions = [
     desc: "Add collaborators",
     icon: Users,
     gradient: "from-emerald-500 to-teal-600",
-    lightBg: "bg-emerald-50",
     shadowColor: "shadow-emerald-200/50",
   },
   {
@@ -29,7 +26,6 @@ const actions = [
     desc: "View deadlines",
     icon: Calendar,
     gradient: "from-amber-500 to-orange-600",
-    lightBg: "bg-amber-50",
     shadowColor: "shadow-amber-200/50",
   },
   {
@@ -37,7 +33,6 @@ const actions = [
     desc: "View insights",
     icon: BarChart3,
     gradient: "from-violet-500 to-purple-600",
-    lightBg: "bg-violet-50",
     shadowColor: "shadow-violet-200/50",
     link: "/analytics",
   },
@@ -57,67 +52,39 @@ export default function QuickActions({ onCreateBoard }) {
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shadow-rose-200/50">
-              <Zap className="w-5 h-5 text-white" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shadow-rose-200/50">
+              <Zap className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 Quick Actions
               </h3>
-              <p className="text-xs text-slate-400">Get things done</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">Get things done</p>
             </div>
           </div>
         </div>
 
-        <div className="p-3 space-y-2.5">
-          {actions.map((a, i) => {
-            const content = (
-              <div className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-white to-slate-50/80 border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                {/* Hover gradient accent */}
-                <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-l-xl"
-                     style={{ background: `linear-gradient(to bottom, var(--tw-gradient-stops))` }}
-                />
-                
-                <div className="relative flex items-center gap-3.5 px-4 py-3.5">
-                  {/* Icon with gradient bg */}
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${a.gradient} flex items-center justify-center shadow-sm ${a.shadowColor} group-hover:scale-110 transition-transform duration-200`}>
-                    <a.icon className="w-5 h-5 text-white" />
-                  </div>
-
-                  {/* Text */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 group-hover:text-slate-900 transition-colors">
-                      {a.title}
-                    </p>
-                    <p className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors truncate">
-                      {a.desc}
-                    </p>
-                  </div>
-
-                  {/* Arrow */}
-                  <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </div>
-            );
-
-            return (
-              <motion.div
-                key={a.title}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.06 * i }}
-              >
-                {a.link ? (
-                  <Link href={a.link}>{content}</Link>
-                ) : (
-                  <div onClick={() => handleClick(a)}>{content}</div>
-                )}
-              </motion.div>
-            );
-          })}
+        {/* Action list */}
+        <div className="p-2 space-y-1">
+          {actions.map((a) => (
+            <div
+              key={a.title}
+              onClick={() => handleClick(a)}
+              className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              {a.link ? (
+                <Link href={a.link} className="contents">
+                  <ActionItemContent a={a} />
+                </Link>
+              ) : (
+                <ActionItemContent a={a} />
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -137,6 +104,30 @@ export default function QuickActions({ onCreateBoard }) {
         isOpen={showCalendar}
         onClose={() => setShowCalendar(false)}
       />
+    </>
+  );
+}
+
+function ActionItemContent({ a }) {
+  return (
+    <>
+      {/* Icon */}
+      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${a.gradient} flex items-center justify-center shadow-sm ${a.shadowColor} shrink-0`}>
+        <a.icon className="w-4 h-4 text-white" />
+      </div>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+          {a.title}
+        </p>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+          {a.desc}
+        </p>
+      </div>
+
+      {/* Arrow */}
+      <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 group-hover:translate-x-0.5 shrink-0" />
     </>
   );
 }

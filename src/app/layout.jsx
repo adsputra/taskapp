@@ -2,6 +2,7 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 
 const jakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -24,10 +25,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${jakartaSans.variable} ${inter.variable}`}>
+    <html lang="en" className={`${jakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col antialiased">
-        <QueryProvider>{children}</QueryProvider>
-        <Toaster position="bottom-right" richColors closeButton />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <QueryProvider>{children}</QueryProvider>
+          <Toaster position="bottom-right" richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );

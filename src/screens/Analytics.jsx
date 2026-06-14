@@ -131,15 +131,14 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50/80 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-blue-500" />
+      <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 dark:border-slate-700 border-t-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+    <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
         {/* ── Hero Banner ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -150,10 +149,10 @@ export default function AnalyticsPage() {
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-8 rounded-full bg-blue-500" />
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                   Analytics
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   Insights across your boards and tasks
                 </p>
               </div>
@@ -169,7 +168,7 @@ export default function AnalyticsPage() {
         >
           <div className="flex flex-wrap items-center gap-3">
             <Select value={selectedBoard} onValueChange={setSelectedBoard}>
-              <SelectTrigger className="w-44 h-10 rounded-xl border-slate-200 bg-white text-sm">
+              <SelectTrigger className="w-44 h-10 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-200 text-sm">
                 <SelectValue placeholder="Select board" />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +181,7 @@ export default function AnalyticsPage() {
               </SelectContent>
             </Select>
             <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-              <SelectTrigger className="w-40 h-10 rounded-xl border-slate-200 bg-white text-sm">
+              <SelectTrigger className="w-40 h-10 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-200 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -204,7 +203,7 @@ export default function AnalyticsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.08 * i }}
             >
-              <div className="relative group bg-white rounded-xl border border-slate-200/60 p-5 shadow-sm hover:shadow-md hover:border-slate-300/80 transition-all duration-200">
+              <div className="relative group bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 p-5 shadow-sm dark:shadow-none hover:shadow-md hover:border-slate-300/80 dark:hover:border-slate-700 transition-all duration-200">
                 <div className="flex items-center justify-between mb-3">
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.bg} ${s.color} ring-1 ${s.ring}`}
@@ -213,10 +212,10 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     {s.label}
                   </p>
-                  <p className="text-2xl font-bold text-slate-800 tabular-nums">
+                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums">
                     {s.value}
                   </p>
                 </div>
@@ -233,16 +232,16 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-6">
+            <div className="bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-xl shadow-md hover:shadow-lg dark:shadow-none transition-all duration-200 p-6">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="font-semibold text-slate-800">Status Distribution</h3>
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">Status Distribution</h3>
               </div>
 
               {Object.keys(statusDistribution).length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">
+                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">
                   No data yet for the selected period
                 </p>
               ) : (
@@ -253,17 +252,17 @@ export default function AnalyticsPage() {
                     return (
                       <div key={status} className="group">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-slate-700">{status}</span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{status}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-slate-800 tabular-nums">
+                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
                               {count}
                             </span>
-                            <span className="text-xs text-slate-400 w-9 text-right tabular-nums">
+                            <span className="text-xs text-slate-400 dark:text-slate-500 w-9 text-right tabular-nums">
                               {pct}%
                             </span>
                           </div>
                         </div>
-                        <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                           <motion.div
                             className="h-full rounded-full"
                             style={{ backgroundColor: barColor }}
@@ -286,16 +285,16 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
           >
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-6">
+            <div className="bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-xl shadow-md hover:shadow-lg dark:shadow-none transition-all duration-200 p-6">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h3 className="font-semibold text-slate-800">Board Performance</h3>
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">Board Performance</h3>
               </div>
 
               {boardStats.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">
+                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">
                   No boards found
                 </p>
               ) : (
@@ -303,7 +302,7 @@ export default function AnalyticsPage() {
                   {boardStats.map((board) => (
                     <div
                       key={board.id}
-                      className="group flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                      className="group flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       <div
                         className="w-3 h-3 rounded-md flex-shrink-0"
@@ -311,18 +310,18 @@ export default function AnalyticsPage() {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="text-sm font-semibold text-slate-800 truncate">
+                          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
                             {board.title}
                           </h4>
                           <Badge
                             variant="outline"
-                            className="text-xs font-medium border-slate-200 text-slate-600"
+                            className="text-xs font-medium border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
                           >
                             {board.completionRate}%
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <motion.div
                               className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
                               initial={{ width: 0 }}
@@ -330,7 +329,7 @@ export default function AnalyticsPage() {
                               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                             />
                           </div>
-                          <span className="text-xs text-slate-400 flex-shrink-0">
+                          <span className="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">
                             {board.completedTasks}/{board.totalTasks}
                           </span>
                         </div>

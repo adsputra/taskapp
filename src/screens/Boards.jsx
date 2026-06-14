@@ -86,14 +86,14 @@ export default function Boards() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50/80 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0073EA]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
+    <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
         {/* ── Header ── */}
         <motion.div
@@ -103,11 +103,10 @@ export default function Boards() {
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Boards</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Boards</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="w-8 h-0.5 rounded-full bg-gradient-to-r from-blue-500 to-emerald-400" />
-              <p className="text-sm text-slate-400">
-                {filteredBoards.length} board{filteredBoards.length !== 1 ? "s" : ""}
+              <p className="text-sm text-slate-400 dark:text-slate-500">                {filteredBoards.length} board{filteredBoards.length !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
@@ -127,13 +126,13 @@ export default function Boards() {
             { label: "Owned", v: userId ? boards.filter(b => b.user_id === userId).length : "-", icon: Grid3X3, c: "bg-blue-50 text-blue-600" },
             { label: "Shared", v: userId ? boards.filter(b => b.user_id !== userId).length : "-", icon: LayoutList, c: "bg-emerald-50 text-emerald-600" },
           ].map((s) => (
-            <div key={s.label} className="flex items-center gap-3 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-3.5">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.c} flex-shrink-0`}>
+            <div key={s.label} className="flex items-center gap-3 bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-xl shadow-md hover:shadow-lg dark:shadow-none transition-all duration-200 p-3.5">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.c} dark:bg-opacity-20 flex-shrink-0`}>
                 <s.icon className="w-4.5 h-4.5" />
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-medium">{s.label}</p>
-                <p className="text-lg font-bold text-slate-800">{s.v}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{s.label}</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{s.v}</p>
               </div>
             </div>
           ))}
@@ -151,7 +150,7 @@ export default function Boards() {
               placeholder="Filter boards..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 bg-white border-slate-200 rounded-xl h-10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm"
+              className="pl-9 pr-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl h-10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
             />
             {searchQuery && (
               <button
@@ -164,13 +163,13 @@ export default function Boards() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex bg-slate-100 rounded-lg p-0.5">
+            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`px-2.5 py-1.5 rounded-md transition-all ${
                   viewMode === "grid"
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
                 title="Grid view"
               >
@@ -180,8 +179,8 @@ export default function Boards() {
                 onClick={() => setViewMode("list")}
                 className={`px-2.5 py-1.5 rounded-md transition-all ${
                   viewMode === "list"
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
                 title="List view"
               >
@@ -191,7 +190,7 @@ export default function Boards() {
             <Link href="/analytics">
               <Button
                 variant="outline"
-                className="rounded-xl h-10 px-4 border-slate-200 text-slate-600 text-sm gap-1.5 hover:bg-slate-50"
+                className="rounded-xl h-10 px-4 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 <BarChart className="w-4 h-4" />
                 Analytics
@@ -208,21 +207,21 @@ export default function Boards() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="bg-white rounded-2xl shadow-md"
+              className="bg-white dark:bg-slate-900 dark:border dark:border-slate-800 rounded-2xl shadow-md dark:shadow-none"
             >
               <div className="flex flex-col items-center justify-center py-20 px-6">
                 <div className="relative mb-6">
-                  <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center">
-                    <Folder className="w-9 h-9 text-slate-400" />
+                  <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <Folder className="w-9 h-9 text-slate-400 dark:text-slate-600" />
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm">
                     <Plus className="w-3.5 h-3.5 text-white" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-1.5">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
                   {searchQuery ? "No matching boards" : "No boards yet"}
                 </h3>
-                <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">
+                <p className="text-sm text-slate-400 dark:text-slate-500 mb-8 text-center max-w-sm">
                   {searchQuery
                     ? "Try a different search term."
                     : "Create your first board to start organizing your work."}
