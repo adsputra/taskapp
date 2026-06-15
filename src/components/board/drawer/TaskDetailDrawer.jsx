@@ -41,6 +41,38 @@ export default function TaskDetailDrawer({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const queryClient = useQueryClient();
 
+  // ── Unread comments tracking ──
+  const storageKey = task?.id ? `comments_read_${task.id}` : null;
+  const getSeenCount = () => {
+    if (!storageKey) return 0;
+    return parseInt(localStorage.getItem(storageKey) || "0", 10);
+  };
+  const [seenCount, setSeenCount] = useState(getSeenCount);
+
+  const { data: comments = [] } = useQuery({
+    queryKey: ["comments", task?.id],
+    queryFn: () => commentsApi.listByItem(task.id),
+    enabled: !!task?.id,
+    staleTime: 30_000,
+  });
+
+  const totalComments = comments.length;
+  const hasUnread = totalComments > seenCount;
+
+  // Mark as read when user opens comments tab
+  useEffect(() => {
+    if (activeTab === "comments" && storageKey) {
+      const current = comments.length;
+      localStorage.setItem(storageKey, String(current));
+      setSeenCount(current);
+    }
+  }, [activeTab, comments.length, storageKey]);
+
+  // Reset seen count when task changes
+  useEffect(() => {
+    setSeenCount(getSeenCount());
+  }, [task?.id]);
+
   useEffect(() => {
     if (task) setTitle(task.title || "");
   }, [task?.id]);
@@ -149,7 +181,12 @@ export default function TaskDetailDrawer({
                       : "text-[#676879] dark:text-slate-500 border-transparent hover:text-[#323338] dark:hover:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <div className="relative">
+                    <Icon className="w-3.5 h-3.5" />
+                    {tab.id === "comments" && hasUnread && activeTab !== "comments" && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900" />
+                    )}
+                  </div>
                   {tab.label}
                 </button>
               );
