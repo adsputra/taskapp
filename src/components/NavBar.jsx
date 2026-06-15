@@ -256,20 +256,29 @@ export default function NavBar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="hover:bg-[#E1E5F3] dark:hover:bg-slate-800 rounded-lg h-10 w-10"
-            >
-              <span className="sr-only">Open main menu</span>
-              {mobileMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </Button>
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
+            {!loading && !user ? (
+              <Link href="/auth/login">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 px-4 text-sm font-medium shadow-sm">
+                  Sign In
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="hover:bg-[#E1E5F3] dark:hover:bg-slate-800 rounded-lg h-10 w-10"
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? (
+                  <X className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -348,18 +357,29 @@ export default function NavBar() {
             </Link>
           </div>
 
-          {/* Sign Out — separated at bottom */}
+          {/* Sign In or Sign Out — separated at bottom */}
           <div className="border-t border-slate-200 dark:border-slate-700 px-2 py-3">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                handleSignOut();
-              }}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign out
-            </button>
+            {!loading && !user ? (
+              <Link
+                href="/auth/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                <LogOut className="w-5 h-5 rotate-180" />
+                Sign in
+              </Link>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                Sign out
+              </button>
+            )}
           </div>
         </div>
       )}
