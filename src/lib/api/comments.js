@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 export const commentsApi = {
   /**
    * List all comments for a task, ordered oldest first (chat-style).
+   * Auto-creates missing profiles so names resolve correctly.
    */
   async listByItem(itemId) {
     const supabase = createClient();
@@ -17,7 +18,38 @@ export const commentsApi = {
       .order("created_at", { ascending: true });
 
     if (error) throw new Error("Failed to load comments: " + error.message);
-    return data || [];
+    const comments = data || [];
+
+    // Find comments whose profile join returned null — ensure profiles exist
+    const missingUserIds = [
+      ...new Set(
+        comments
+          .filter((c) => !c.profiles)
+          .map((c) => c.user_id)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (missingUserIds.length > 0) {
+      // Try to create missing profiles from auth.users metadata
+      for (const uid of missingUserIds) {
+        await supabase.from("profiles").upsert(
+          { id: uid, full_name: null, email: null },
+          { onConflict: "id", ignoreDuplicates: true }
+        );
+      }
+
+      // Re-fetch with profiles now created
+      const { data: refreshed } = await supabase
+        .from("task_comments")
+        .select("*, profiles(id, full_name, email, avatar_url)")
+        .eq("item_id", itemId)
+        .order("created_at", { ascending: true });
+
+      return refreshed || comments;
+    }
+
+    return comments;
   },
 
   /**

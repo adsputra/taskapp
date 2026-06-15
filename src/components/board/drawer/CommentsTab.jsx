@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { commentsApi } from "@/lib/api/comments";
 import { activityApi } from "@/lib/api/activity";
+import { fixMissingProfiles } from "@/app/actions/profile";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Send, Edit3, Trash2, X, Check, AtSign } from "lucide-react";
@@ -18,6 +19,7 @@ export default function CommentsTab({ task, userRole, board }) {
   const [currentUserId, setCurrentUserId] = useState(null);
   const textareaRef = useRef(null);
   const commentsEndRef = useRef(null);
+  const profilesFixedRef = useRef(false);
   const queryClient = useQueryClient();
 
   const isViewer = userRole === "viewer";
@@ -35,6 +37,23 @@ export default function CommentsTab({ task, userRole, board }) {
     queryFn: () => commentsApi.listByItem(task.id),
     enabled: !!task?.id,
   });
+
+  // Auto-fix profiles with missing data (runs once)
+  useEffect(() => {
+    if (!comments.length || profilesFixedRef.current) return;
+    const missingIds = comments
+      .filter((c) => !c.profiles?.email && !c.profiles?.full_name)
+      .map((c) => c.user_id)
+      .filter(Boolean);
+    const unique = [...new Set(missingIds)];
+    if (unique.length > 0) {
+      profilesFixedRef.current = true;
+      fixMissingProfiles(unique).then(() => {
+        // Re-fetch comments after fixing profiles
+        queryClient.invalidateQueries({ queryKey: ["comments", task?.id] });
+      });
+    }
+  }, [comments, task?.id, queryClient]);
 
   // Realtime — listen for new/edited/deleted comments from other users
   useEffect(() => {
@@ -170,15 +189,20 @@ export default function CommentsTab({ task, userRole, board }) {
   };
 
   const getUserInitial = (comment) => {
-    const name = comment.profiles?.full_name || comment.profiles?.email || "";
-    return name.charAt(0).toUpperCase() || "?";
+    const p = comment.profiles;
+    if (p?.full_name) return p.full_name.charAt(0).toUpperCase();
+    if (p?.email) return p.email.charAt(0).toUpperCase();
+    // Fallback: use first char of user_id
+    return (comment.user_id || "U").charAt(0).toUpperCase();
   };
 
   const getDisplayName = (comment) => {
     const p = comment.profiles;
     if (p?.full_name && p.full_name.trim()) return p.full_name.trim();
     if (p?.email) return p.email.split("@")[0];
-    return "Unknown";
+    // Fallback: show shortened user_id
+    if (comment.user_id) return "User " + comment.user_id.slice(0, 6);
+    return "User";
   };
 
   const getUserColor = (comment) => {

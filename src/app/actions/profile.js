@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 /**
  * Memastikan user memiliki row di tabel `profiles`.
@@ -112,5 +113,75 @@ export async function getProfile() {
   } catch (err) {
     console.error("getProfile error:", err);
     return { error: "Gagal mengambil profile." };
+  }
+}
+
+/**
+ * Fix profiles that have null email/full_name by pulling data from auth.users.
+ * Called when comments display "Unknown" users.
+ * Uses service_role key for admin access when available.
+ */
+export async function fixMissingProfiles(userIds) {
+  try {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!serviceKey || !url) {
+      // No service role key — try with regular client as fallback
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { error: "Not authenticated" };
+
+      // Can only fix own profile
+      if (userIds.includes(user.id)) {
+        await supabase
+          .from("profiles")
+          .update({
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0],
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+      }
+      return { ok: true, partial: true };
+    }
+
+    // Use service role for full admin access
+    const supabase = createAdminClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Get all auth users
+    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    if (error || !users) return { error: "Cannot list users: " + (error?.message || "") };
+
+    // Build a map of id -> { email, full_name }
+    const userMap = {};
+    for (const u of users) {
+      userMap[u.id] = {
+        email: u.email,
+        full_name: u.user_metadata?.full_name || u.email?.split("@")[0] || null,
+      };
+    }
+
+    // Use the same admin client for DB writes (service_role bypasses RLS)
+    for (const uid of userIds) {
+      const info = userMap[uid];
+      if (!info) continue;
+
+      await supabase
+        .from("profiles")
+        .update({
+          email: info.email,
+          full_name: info.full_name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", uid);
+    }
+
+    return { ok: true };
+  } catch (err) {
+    console.error("fixMissingProfiles error:", err);
+    return { error: "Failed to fix profiles." };
   }
 }
