@@ -123,6 +123,8 @@ export async function getProfile() {
  */
 export async function fixMissingProfiles(userIds) {
   try {
+    if (!userIds || userIds.length === 0) return { ok: true };
+
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -130,18 +132,34 @@ export async function fixMissingProfiles(userIds) {
       // No service role key — try with regular client as fallback
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { error: "Not authenticated" };
 
-      // Can only fix own profile
-      if (userIds.includes(user.id)) {
-        await supabase
-          .from("profiles")
-          .update({
-            email: user.email,
-            full_name: user.user_metadata?.full_name || user.email?.split("@")[0],
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id);
+      if (user) {
+        // Fix the current user's profile if it's in the list
+        if (userIds.includes(user.id)) {
+          const fullName =
+            user.user_metadata?.full_name ||
+            user.email?.split("@")[0] ||
+            "User";
+          await supabase
+            .from("profiles")
+            .upsert(
+              {
+                id: user.id,
+                email: user.email,
+                full_name: fullName,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "id" }
+            );
+        }
+
+        // For other users: ensure profile rows exist at minimum
+        // (with the RLS fix, the profiles join will work and names will show)
+        for (const uid of userIds) {
+          if (uid === user.id) continue;
+          await supabase.from("profiles")
+            .upsert({ id: uid }, { onConflict: "id", ignoreDuplicates: true });
+        }
       }
       return { ok: true, partial: true };
     }
@@ -155,12 +173,17 @@ export async function fixMissingProfiles(userIds) {
     for (const uid of userIds) {
       try {
         const { data: { user }, error } = await supabase.auth.admin.getUserById(uid);
-        if (error || !user) continue;
+        if (error || !user) {
+          // User might have been deleted — ensure at least a profile row exists
+          await supabase.from("profiles")
+            .upsert({ id: uid }, { onConflict: "id", ignoreDuplicates: true });
+          continue;
+        }
 
         const email = user.email;
         const fullName = user.user_metadata?.full_name || email?.split("@")[0] || null;
 
-        // Ensure profile row exists (upsert), then update with real data
+        // Upsert profile with real data from auth.users
         await supabase.from("profiles").upsert(
           {
             id: uid,

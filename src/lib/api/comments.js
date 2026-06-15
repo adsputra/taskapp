@@ -3,11 +3,12 @@
  * Joins with profiles to get user display info.
  */
 import { createClient } from "@/lib/supabase/client";
+import { fixMissingProfiles } from "@/app/actions/profile";
 
 export const commentsApi = {
   /**
    * List all comments for a task, ordered oldest first (chat-style).
-   * Auto-creates missing profiles so names resolve correctly.
+   * Auto-fixes missing profiles via server action so names resolve correctly.
    */
   async listByItem(itemId) {
     const supabase = createClient();
@@ -20,26 +21,21 @@ export const commentsApi = {
     if (error) throw new Error("Failed to load comments: " + error.message);
     const comments = data || [];
 
-    // Find comments whose profile join returned null — ensure profiles exist
+    // Find comments whose profile data is missing or incomplete
     const missingUserIds = [
       ...new Set(
         comments
-          .filter((c) => !c.profiles)
+          .filter((c) => !c.profiles || (!c.profiles.full_name && !c.profiles.email))
           .map((c) => c.user_id)
           .filter(Boolean)
       ),
     ];
 
     if (missingUserIds.length > 0) {
-      // Try to create missing profiles from auth.users metadata
-      for (const uid of missingUserIds) {
-        await supabase.from("profiles").upsert(
-          { id: uid, full_name: null, email: null },
-          { onConflict: "id", ignoreDuplicates: true }
-        );
-      }
+      // Use server action to properly fix profiles (has access to auth.users)
+      await fixMissingProfiles(missingUserIds);
 
-      // Re-fetch with profiles now created
+      // Re-fetch with profiles now populated
       const { data: refreshed } = await supabase
         .from("task_comments")
         .select("*, profiles(id, full_name, email, avatar_url)")

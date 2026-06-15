@@ -38,20 +38,29 @@ export default function CommentsTab({ task, userRole, board }) {
     enabled: !!task?.id,
   });
 
-  // Auto-fix profiles with missing data (runs once)
+  // Auto-fix profiles with missing data (runs once per mount)
   useEffect(() => {
     if (!comments.length || profilesFixedRef.current) return;
     const missingIds = comments
-      .filter((c) => !c.profiles?.email && !c.profiles?.full_name)
+      .filter((c) => !c.profiles || (!c.profiles.email && !c.profiles.full_name))
       .map((c) => c.user_id)
       .filter(Boolean);
     const unique = [...new Set(missingIds)];
     if (unique.length > 0) {
       profilesFixedRef.current = true;
-      fixMissingProfiles(unique).then(() => {
-        // Re-fetch comments after fixing profiles
-        queryClient.invalidateQueries({ queryKey: ["comments", task?.id] });
-      });
+      fixMissingProfiles(unique)
+        .then((result) => {
+          // Re-fetch comments after fixing profiles
+          queryClient.invalidateQueries({ queryKey: ["comments", task?.id] });
+          // If only partial fix (no service role key), allow retry next time
+          if (result?.partial) {
+            profilesFixedRef.current = false;
+          }
+        })
+        .catch(() => {
+          // Allow retry on error
+          profilesFixedRef.current = false;
+        });
     }
   }, [comments, task?.id, queryClient]);
 
@@ -200,9 +209,9 @@ export default function CommentsTab({ task, userRole, board }) {
     const p = comment.profiles;
     if (p?.full_name && p.full_name.trim()) return p.full_name.trim();
     if (p?.email) return p.email.split("@")[0];
-    // Fallback: show shortened user_id
-    if (comment.user_id) return "User " + comment.user_id.slice(0, 6);
-    return "User";
+    // Fallback: show short user id prefix (profiles may not have loaded yet)
+    if (comment.user_id) return comment.user_id.slice(0, 8);
+    return "Unknown";
   };
 
   const getUserColor = (comment) => {
