@@ -429,7 +429,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`w-80 flex-shrink-0 rounded-2xl p-2 transition-all duration-300 bg-slate-100 dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
+                  className={`w-80 flex-shrink-0 rounded-2xl p-2 transition-all duration-300 bg-[#f1f5f9] dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
                   style={{ 
                     background: snapshot.isDraggingOver 
                       ? `linear-gradient(135deg, ${column.color}20 0%, ${column.color}10 100%)`
