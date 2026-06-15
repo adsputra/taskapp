@@ -303,34 +303,35 @@ export default function BoardPage({ boardId }) {
             onShowShare={() => setShowShare(true)} />
         </div>
 
-        <div className="px-6 py-6">
+        <div className="px-3 sm:px-6 py-4 sm:py-6">
           {currentView === "table" && (
             <>
-              <div className="flex items-center justify-between mb-6 bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm dark:shadow-none border border-[#E1E5F3] dark:border-slate-800">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6 bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 shadow-sm dark:shadow-none border border-[#E1E5F3] dark:border-slate-800">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 flex-1">
                   <Button
                     onClick={() => userRole === "admin" && setShowNewTaskModal(true)}
                     disabled={userRole !== "admin"}
                     title={userRole !== "admin" ? "Only admin can add tasks" : ""}
                     className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                    <Plus className="w-4 h-4 mr-2" /> New Task
+                    <Plus className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">New Task</span><span className="sm:hidden">New</span>
                   </Button>
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none min-w-[120px] sm:min-w-0">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#676879] dark:text-slate-500" />
                     <Input placeholder="Search" value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 w-64 bg-[#F5F6F8] dark:bg-slate-800 dark:text-slate-200 border-none rounded-lg h-10" />
+                      className="pl-10 w-full sm:w-64 bg-[#F5F6F8] dark:bg-slate-800 dark:text-slate-200 border-none rounded-lg h-10" />
                   </div>
-                  <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                      onClick={() => setShowPersonFilter(!showPersonFilter)}>
-                      <Users className="w-4 h-4 mr-2" /> Person
-                      {filters.people.length > 0 && (
-                        <Badge className="ml-2 bg-[#0073EA] text-white rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
-                          {filters.people.length}
-                        </Badge>
-                      )}
-                    </Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="relative">
+                      <Button variant="outline" className="rounded-lg h-10 px-3 sm:px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        onClick={() => setShowPersonFilter(!showPersonFilter)}>
+                        <Users className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Person</span>
+                        {filters.people.length > 0 && (
+                          <Badge className="ml-2 bg-[#0073EA] text-white rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                            {filters.people.length}
+                          </Badge>
+                        )}
+                      </Button>
                     {showPersonFilter && (
                       <PersonFilter items={items} selectedPeople={filters.people}
                         onChange={(p) => setFilters((f) => ({ ...f, people: p }))}
@@ -338,9 +339,9 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    <Button variant="outline" className="rounded-lg h-10 px-3 sm:px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowFilterPanel(!showFilterPanel)}>
-                      <Filter className="w-4 h-4 mr-2" /> Filter
+                      <Filter className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Filter</span>
                     </Button>
                     {showFilterPanel && (
                       <FilterPanel filters={filters} onChange={setFilters}
@@ -348,9 +349,9 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    <Button variant="outline" className="rounded-lg h-10 px-3 sm:px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowSortMenu(!showSortMenu)}>
-                      <SortAsc className="w-4 h-4 mr-2" /> Sort
+                      <SortAsc className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Sort</span>
                     </Button>
                     {showSortMenu && (
                       <SortMenu sortBy={sortBy} sortDirection={sortDirection}
@@ -360,10 +361,9 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    <Button variant="outline" className="rounded-lg h-10 px-3 sm:px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowHideMenu(!showHideMenu)}>
-                      {hiddenColumns.size > 0 ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                      Hide
+                      {hiddenColumns.size > 0 ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} <span className="hidden sm:inline ml-2">Hide</span>
                     </Button>
                     {showHideMenu && (
                       <HideMenu columns={board.columns} hiddenColumns={hiddenColumns}
@@ -371,19 +371,21 @@ export default function BoardPage({ boardId }) {
                     )}
                   </div>
                   <div className="relative">
-                    <Button variant="outline" className="rounded-lg h-10 px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    <Button variant="outline" className="rounded-lg h-10 px-3 sm:px-4 border-[#E1E5F3] dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       onClick={() => setShowGroupByMenu(!showGroupByMenu)}>
-                      <GroupIcon className="w-4 h-4 mr-2" /> Group by
+                      <GroupIcon className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Group by</span>
                     </Button>
                     {showGroupByMenu && (
                       <GroupByMenu columns={board.columns}
                         onChange={setShowGroupByMenu} onClose={() => setShowGroupByMenu(false)} />
                     )}
                   </div>
+                  </div>
                 </div>
                 <MemberAvatars
                   members={board?.board_members}
                   boardOwnerId={board?.user_id}
+                  className="hidden sm:block"
                 />
               </div>
 

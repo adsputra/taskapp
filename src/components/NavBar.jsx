@@ -277,98 +277,89 @@ export default function NavBar() {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navigationItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className={`block px-3 py-2 rounded-lg text-base font-medium transition-colors ${
-                    active
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.title}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Mobile: Search */}
-          <div className="pt-4 pb-3 border-t border-slate-200 dark:border-slate-700">
-            <div className="px-2">
-              <label htmlFor="search-mobile" className="sr-only">
-                Search
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-                </div>
-                <Input
-                  id="search-mobile"
-                  name="search-mobile"
-                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 sm:text-sm"
-                  placeholder="Search everything..."
-                  type="search"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Mobile: User info */}
-          <div className="pt-4 pb-3 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex items-center px-5">
+          <div className="px-4 pt-4 pb-3">
+            <div className="flex items-center gap-3">
               <div className="flex-shrink-0">
                 {loading ? (
-                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="w-11 h-11 bg-gray-200 rounded-full animate-pulse" />
                 ) : (
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {userInitial}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="ml-3">
-                <div className="text-base font-medium text-slate-800 dark:text-slate-100">
+              <div className="flex-1 min-w-0">
+                <div className="text-base font-medium text-slate-800 dark:text-slate-100 truncate">
                   {userName}
                 </div>
-                <div className="text-sm font-medium text-slate-500">
+                <div className="text-sm text-slate-500 truncate">
                   {userEmail}
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-auto hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg h-10 w-10"
-              >
-                <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-              </Button>
-              <div className="ml-2">
-                <ThemeToggle />
+              <ThemeToggle />
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="px-4 pb-3">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               </div>
+              <Input
+                className="block w-full pl-9 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                placeholder="Search everything..."
+                type="search"
+              />
             </div>
-            <div className="mt-3 px-2 space-y-1">
-              <Link
-                href="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                Your Profile
-              </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleSignOut();
-                }}
-                className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                Sign out
-              </button>
-            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="px-2 pb-2 space-y-0.5">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors ${
+                    active
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Icon className="w-5 h-5" />
+                  {item.title}
+                </Link>
+              );
+            })}
+            <Link
+              href="/profile"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <UserIcon className="w-5 h-5" />
+              Your Profile
+            </Link>
+          </div>
+
+          {/* Sign Out — separated at bottom */}
+          <div className="border-t border-slate-200 dark:border-slate-700 px-2 py-3">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                handleSignOut();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign out
+            </button>
           </div>
         </div>
       )}

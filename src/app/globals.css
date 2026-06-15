@@ -112,3 +112,12 @@
     font-family: var(--font-jakarta), system-ui, sans-serif;
   }
 }
+
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
