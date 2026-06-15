@@ -4,9 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
 
-import TaskEditModal from "../TaskEditModal";
-
-const CalendarEvent = ({ item, board, onEdit }) => {
+const CalendarEvent = ({ item, board, onSelect }) => {
   const priorityColumn = board?.columns?.find(col => col.type === 'priority');
   const priorityValue = item.data?.[priorityColumn?.id];
   const priorityOption = priorityColumn?.options?.choices?.find(c => c.value === priorityValue);
@@ -17,7 +15,7 @@ const CalendarEvent = ({ item, board, onEdit }) => {
       title={item.title}
       onClick={(e) => {
         e.stopPropagation();
-        onEdit(item);
+        onSelect(item);
       }}
     >
       <div className="flex items-center gap-1.5">
@@ -33,11 +31,9 @@ const CalendarEvent = ({ item, board, onEdit }) => {
   );
 };
 
-export default function CalendarView({ board, items, onUpdateItem, onDeleteItem }) {
+export default function CalendarView({ board, items, onUpdateItem, onDeleteItem, onSelectTask }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dateColumnId, setDateColumnId] = useState(null);
-  const [editingTask, setEditingTask] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     // Try to find a 'date' type column to use for events
@@ -53,21 +49,8 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
     }
   }, [board]);
 
-  const handleEditTask = (task) => {
-    setEditingTask(task);
-    setShowEditModal(true);
-  };
-
-  const handleUpdateTask = (taskId, updates) => {
-    onUpdateItem(taskId, updates);
-    setShowEditModal(false);
-    setEditingTask(null);
-  };
-
-  const handleDeleteTask = (taskId) => {
-    onDeleteItem(taskId);
-    setShowEditModal(false);
-    setEditingTask(null);
+  const handleSelectTask = (task) => {
+    if (onSelectTask) onSelectTask(task);
   };
 
   const renderHeader = () => {
@@ -125,7 +108,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
                     key={item.id} 
                     item={item} 
                     board={board} 
-                    onEdit={handleEditTask}
+                    onSelect={handleSelectTask}
                   />
                 ))}
             </div>
@@ -142,27 +125,12 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
   }
 
   return (
-    <>
-      <Card className="shadow-lg border-[#E1E5F3] dark:border-slate-700 dark:bg-slate-900">
-        <CardContent className="p-4">
-          {renderHeader()}
-          {renderDays()}
-          {renderCells()}
-        </CardContent>
-      </Card>
-
-      {/* Task Edit Modal */}
-      <TaskEditModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditingTask(null);
-        }}
-        task={editingTask}
-        board={board}
-        onUpdate={handleUpdateTask}
-        onDelete={handleDeleteTask}
-      />
-    </>
+    <Card className="shadow-lg border-[#E1E5F3] dark:border-slate-700 dark:bg-slate-900">
+      <CardContent className="p-4">
+        {renderHeader()}
+        {renderDays()}
+        {renderCells()}
+      </CardContent>
+    </Card>
   );
 }

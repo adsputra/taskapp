@@ -446,7 +446,7 @@ export default function BoardPage({ boardId }) {
           {currentView === "calendar" && (
             <CalendarView board={board} items={sortedItems}
               onAddItem={handleAddItem} onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem} />
+              onDeleteItem={handleDeleteItem} onSelectTask={setSelectedTask} />
           )}
           {currentView === "timeline" && (
             <TimelineView board={board} items={sortedItems}
