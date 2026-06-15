@@ -17,6 +17,7 @@ export default function CommentsTab({ task, userRole, board }) {
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [userIdReady, setUserIdReady] = useState(false);
   const textareaRef = useRef(null);
   const commentsEndRef = useRef(null);
   const profilesFixedRef = useRef(false);
@@ -24,11 +25,12 @@ export default function CommentsTab({ task, userRole, board }) {
 
   const isViewer = userRole === "viewer";
 
-  // Get current logged-in user ID
+  // Get current logged-in user ID before rendering comments
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data?.user?.id ?? null);
+      setUserIdReady(true);
     });
   }, []);
 
@@ -235,6 +237,16 @@ export default function CommentsTab({ task, userRole, board }) {
     if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
+
+  // Don't render until user ID is resolved — prevents comments from
+  // briefly appearing on the wrong side (left vs right)
+  if (!userIdReady) {
+    return (
+      <div className="flex items-center justify-center h-full p-6">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
