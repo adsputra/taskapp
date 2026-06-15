@@ -258,27 +258,26 @@ export default function NavBar() {
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeToggle />
-            {!loading && !user ? (
+            {!loading && !user && (
               <Link href="/auth/login">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 px-4 text-sm font-medium shadow-sm">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-9 px-3 text-sm font-medium shadow-sm">
                   Sign In
                 </Button>
               </Link>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="hover:bg-[#E1E5F3] dark:hover:bg-slate-800 rounded-lg h-10 w-10"
-              >
-                <span className="sr-only">Open main menu</span>
-                {mobileMenuOpen ? (
-                  <X className="block h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <Menu className="block h-6 w-6" aria-hidden="true" />
-                )}
-              </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="hover:bg-[#E1E5F3] dark:hover:bg-slate-800 rounded-lg h-10 w-10"
+            >
+              <span className="sr-only">Open main menu</span>
+              {mobileMenuOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
@@ -292,6 +291,10 @@ export default function NavBar() {
               <div className="flex-shrink-0">
                 {loading ? (
                   <div className="w-11 h-11 bg-gray-200 rounded-full animate-pulse" />
+                ) : !user ? (
+                  <div className="w-11 h-11 bg-slate-400 rounded-full flex items-center justify-center">
+                    <UserIcon className="w-5 h-5 text-white" />
+                  </div>
                 ) : (
                   <div className="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
@@ -305,10 +308,9 @@ export default function NavBar() {
                   {userName}
                 </div>
                 <div className="text-sm text-slate-500 truncate">
-                  {userEmail}
+                  {userEmail || "Not signed in"}
                 </div>
               </div>
-              <ThemeToggle />
             </div>
           </div>
 
