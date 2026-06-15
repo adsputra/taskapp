@@ -151,32 +151,29 @@ export async function fixMissingProfiles(userIds) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Get all auth users
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
-    if (error || !users) return { error: "Cannot list users: " + (error?.message || "") };
-
-    // Build a map of id -> { email, full_name }
-    const userMap = {};
-    for (const u of users) {
-      userMap[u.id] = {
-        email: u.email,
-        full_name: u.user_metadata?.full_name || u.email?.split("@")[0] || null,
-      };
-    }
-
-    // Use the same admin client for DB writes (service_role bypasses RLS)
+    // Fix each user individually using getUserById (avoids pagination issues)
     for (const uid of userIds) {
-      const info = userMap[uid];
-      if (!info) continue;
+      try {
+        const { data: { user }, error } = await supabase.auth.admin.getUserById(uid);
+        if (error || !user) continue;
 
-      await supabase
-        .from("profiles")
-        .update({
-          email: info.email,
-          full_name: info.full_name,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", uid);
+        const email = user.email;
+        const fullName = user.user_metadata?.full_name || email?.split("@")[0] || null;
+
+        // Ensure profile row exists (upsert), then update with real data
+        await supabase.from("profiles").upsert(
+          {
+            id: uid,
+            email,
+            full_name: fullName,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+      } catch (e) {
+        // Skip this user, continue with others
+        console.warn(`fixMissingProfiles: failed for user ${uid}:`, e.message);
+      }
     }
 
     return { ok: true };
