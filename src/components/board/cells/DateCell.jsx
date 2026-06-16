@@ -51,13 +51,16 @@ export default function DateCell({ value, onUpdate }) {
   
   return (
     <div
-      className={`w-full h-full flex items-center justify-center rounded text-sm ${
+      className={`w-full h-full flex items-center justify-center gap-1.5 rounded text-sm ${
         onUpdate ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
       } ${
-        isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C] px-2' : 'text-[#323338] dark:text-slate-200'
+        isOverdue ? 'text-[#E2445C]' : 'text-[#323338] dark:text-slate-200'
       }`}
       onClick={() => onUpdate && setIsEditing(true)}
     >
+      {isOverdue && (
+        <span className="w-1.5 h-1.5 rounded-full bg-[#E2445C] flex-shrink-0" />
+      )}
       {format(new Date(value), 'MMM d')}
     </div>
   );
