@@ -342,7 +342,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
       onUpdateItem(itemToMove.id, { 
         data: updatedData,
         order_index: newOrderIndex
-      });
+      }, itemToMove);
 
       // Re-calculate order_index for items in the source column
       const sourceColumn = columnsData.find(col => col.id === source.droppableId);
@@ -367,7 +367,8 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   };
 
   const handleUpdateTask = (taskId, updates) => {
-    onUpdateItem(taskId, updates);
+    const prevItem = items.find(i => i.id === taskId);
+    onUpdateItem(taskId, updates, prevItem);
     setShowEditModal(false);
     setEditingTask(null);
   };

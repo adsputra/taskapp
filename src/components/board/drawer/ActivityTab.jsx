@@ -33,6 +33,7 @@ const FIELD_LABELS = {
   number: "Number",
   checkbox: "Checkbox",
   dropdown: "Dropdown",
+  subtask: "Subtask",
 };
 
 export default function ActivityTab({ task }) {

@@ -133,7 +133,7 @@ const ItemRow = ({
         : (newValue) =>
             onUpdateItem(item.id, {
               data: { ...item.data, [column.id]: newValue },
-            }),
+            }, item),
     };
 
     if (column.id === "priority" || column.type === "priority") {

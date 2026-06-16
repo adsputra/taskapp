@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { itemsApi } from "@/lib/api/items";
+import { activityApi } from "@/lib/api/activity";
 import {
   Input,
   Select,
@@ -56,16 +57,24 @@ export default function DetailsTab({
             })
         ) : {},
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
       setNewSubtaskTitle("");
+      // Log subtask addition to parent task's activity
+      activityApi.log({
+        item_id: task.id,
+        action: "updated",
+        field_name: "subtask",
+        old_value: "",
+        new_value: `Added: ${data.title}`,
+      }).catch(() => {});
     },
     onError: (err) => toast.error(err.message),
   });
 
   const toggleSubtask = useMutation({
-    mutationFn: ({ id, data }) => itemsApi.update(id, { data }),
+    mutationFn: ({ id, data, prevData }) => itemsApi.update(id, { data }, { ...task, data: prevData, id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
@@ -254,6 +263,7 @@ export default function DetailsTab({
                       if (!isViewer && statusCol) {
                         toggleSubtask.mutate({
                           id: subtask.id,
+                          prevData: subtask.data,
                           data: {
                             ...subtask.data,
                             [statusCol.id]: isDone ? "Not Started" : "Done",
