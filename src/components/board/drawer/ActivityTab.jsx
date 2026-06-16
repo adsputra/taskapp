@@ -4,7 +4,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { activityApi } from "@/lib/api/activity";
 import {
-  Edit3, Plus, Trash2, MessageSquare, Paperclip,
+  Edit3, Plus, Trash2, Paperclip,
   ArrowRightLeft, UserCheck, CircleDot,
 } from "lucide-react";
 
@@ -12,7 +12,6 @@ const ACTION_CONFIG = {
   created: { icon: Plus, color: "text-[#00C875]", bg: "bg-[#00C875]/10", label: "created task" },
   updated: { icon: Edit3, color: "text-[#0073EA]", bg: "bg-[#0073EA]/10", label: "updated" },
   deleted: { icon: Trash2, color: "text-[#E2445C]", bg: "bg-[#E2445C]/10", label: "deleted task" },
-  commented: { icon: MessageSquare, color: "text-[#A25DDC]", bg: "bg-[#A25DDC]/10", label: "commented" },
   attached: { icon: Paperclip, color: "text-[#FDAB3D]", bg: "bg-[#FDAB3D]/10", label: "attached file" },
   status_changed: { icon: CircleDot, color: "text-[#FFCB00]", bg: "bg-[#FFCB00]/10", label: "changed status" },
   assigned: { icon: UserCheck, color: "text-[#0073EA]", bg: "bg-[#0073EA]/10", label: "assigned" },
@@ -25,6 +24,15 @@ const FIELD_LABELS = {
   priority: "Priority",
   owner: "Owner",
   due_date: "Due Date",
+  start_date: "Start Date",
+  end_date: "End Date",
+  budget: "Salary",
+  salary: "Salary",
+  tags: "Tags",
+  people: "People",
+  number: "Number",
+  checkbox: "Checkbox",
+  dropdown: "Dropdown",
 };
 
 export default function ActivityTab({ task }) {
@@ -34,8 +42,11 @@ export default function ActivityTab({ task }) {
     enabled: !!task?.id,
   });
 
+  // Filter out comments — they have their own tab
+  const filtered = activities.filter((a) => a.action !== "commented");
+
   // Group activities by date
-  const grouped = activities.reduce((acc, activity) => {
+  const grouped = filtered.reduce((acc, activity) => {
     const date = new Date(activity.created_at);
     const today = new Date();
     const yesterday = new Date(today);
