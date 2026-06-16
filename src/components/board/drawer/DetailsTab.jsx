@@ -74,7 +74,7 @@ export default function DetailsTab({
   });
 
   const toggleSubtask = useMutation({
-    mutationFn: ({ id, data, prevData }) => itemsApi.update(id, { data }, { ...task, data: prevData, id }),
+    mutationFn: ({ id, data, prevData }) => itemsApi.update(id, { data }, { ...task, data: prevData, id }, board?.columns),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });

@@ -87,9 +87,12 @@ export const itemsApi = {
 
   /**
    * Update item with activity logging.
-   * Accepts optional `prevData` to compare old vs new values for logging.
+   * @param {string} id - item ID
+   * @param {object} updates - fields to update
+   * @param {object} prevItem - previous item data (for diff logging)
+   * @param {Array}  columns - board column definitions (for readable field names)
    */
-  async update(id, updates, prevItem) {
+  async update(id, updates, prevItem, columns) {
     const supabase = createClient();
 
     const clean = { ...updates };
@@ -106,6 +109,37 @@ export const itemsApi = {
 
     if (error) throw new Error("Gagal update item: " + error.message);
 
+    // Build column title lookup from column definitions
+    const colTitleMap = {};
+    if (columns) {
+      for (const col of columns) {
+        colTitleMap[col.id] = col.title || col.id;
+      }
+    }
+
+    const getFieldLabel = (key) => {
+      // Check built-in fields first
+      const builtins = {
+        title: "Title",
+        description: "Description",
+        order_index: "Order",
+        group_id: "Group",
+      };
+      if (builtins[key]) return builtins[key];
+      // Use column title if available
+      if (colTitleMap[key]) return colTitleMap[key];
+      // Fallback: format the key
+      return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
+    const formatValue = (val) => {
+      if (val === null || val === undefined || val === "") return "empty";
+      if (Array.isArray(val)) return val.join(", ") || "empty";
+      if (typeof val === "object") return JSON.stringify(val);
+      if (typeof val === "boolean") return val ? "Yes" : "No";
+      return String(val);
+    };
+
     // Log activity for changed fields
     if (prevItem) {
       const logPromises = [];
@@ -114,8 +148,9 @@ export const itemsApi = {
       if (clean.title !== undefined && clean.title !== prevItem.title) {
         logPromises.push(
           activityApi.logFieldChange({
-            item_id: id, field_name: "title",
-            old_value: prevItem.title, new_value: clean.title,
+            item_id: id, field_name: "Title",
+            old_value: formatValue(prevItem.title),
+            new_value: formatValue(clean.title),
           })
         );
       }
@@ -124,8 +159,20 @@ export const itemsApi = {
       if (clean.description !== undefined && clean.description !== prevItem.description) {
         logPromises.push(
           activityApi.logFieldChange({
-            item_id: id, field_name: "description",
-            old_value: prevItem.description || "", new_value: clean.description,
+            item_id: id, field_name: "Description",
+            old_value: formatValue(prevItem.description),
+            new_value: formatValue(clean.description),
+          })
+        );
+      }
+
+      // Check group change
+      if (clean.group_id !== undefined && clean.group_id !== prevItem.group_id) {
+        logPromises.push(
+          activityApi.logFieldChange({
+            item_id: id, field_name: "Group",
+            old_value: formatValue(prevItem.group_id),
+            new_value: formatValue(clean.group_id),
           })
         );
       }
@@ -134,11 +181,13 @@ export const itemsApi = {
       if (clean.data) {
         for (const [key, newVal] of Object.entries(clean.data)) {
           const oldVal = prevItem.data?.[key];
-          if (String(oldVal ?? "") !== String(newVal ?? "")) {
+          if (formatValue(oldVal) !== formatValue(newVal)) {
             logPromises.push(
               activityApi.logFieldChange({
-                item_id: id, field_name: key,
-                old_value: oldVal ?? "", new_value: newVal,
+                item_id: id,
+                field_name: getFieldLabel(key),
+                old_value: formatValue(oldVal),
+                new_value: formatValue(newVal),
               })
             );
           }

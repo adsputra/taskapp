@@ -4,6 +4,13 @@
  */
 import { createClient } from "@/lib/supabase/client";
 
+// Notify listeners when new activity is logged
+const notifyActivity = (itemId) => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("activity-updated", { detail: { itemId } }));
+  }
+};
+
 export const activityApi = {
   /**
    * Log an activity entry. Called after item updates.
@@ -26,6 +33,7 @@ export const activityApi = {
       .single();
 
     if (error) throw new Error("Failed to log activity: " + error.message);
+    notifyActivity(item_id);
     return data;
   },
 

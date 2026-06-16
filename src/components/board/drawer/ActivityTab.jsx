@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { activityApi } from "@/lib/api/activity";
 import {
   Edit3, Plus, Trash2, Paperclip,
@@ -37,11 +37,24 @@ const FIELD_LABELS = {
 };
 
 export default function ActivityTab({ task }) {
+  const queryClient = useQueryClient();
+
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ["activity", task?.id],
     queryFn: () => activityApi.listByItem(task.id),
     enabled: !!task?.id,
   });
+
+  // Listen for real-time activity updates and refetch
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.itemId === task?.id) {
+        queryClient.invalidateQueries({ queryKey: ["activity", task.id] });
+      }
+    };
+    window.addEventListener("activity-updated", handler);
+    return () => window.removeEventListener("activity-updated", handler);
+  }, [task?.id, queryClient]);
 
   // Filter out comments — they have their own tab
   const filtered = activities.filter((a) => a.action !== "commented");
@@ -83,7 +96,13 @@ export default function ActivityTab({ task }) {
   };
 
   const formatFieldName = (name) => {
-    return FIELD_LABELS[name] || name?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    if (!name) return "Field";
+    // Already formatted (new entries from API)
+    const lower = name.toLowerCase().replace(/ /g, "_");
+    if (FIELD_LABELS[lower]) return FIELD_LABELS[lower];
+    if (FIELD_LABELS[name]) return FIELD_LABELS[name];
+    // Fallback: capitalize first letter
+    return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
   return (

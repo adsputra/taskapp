@@ -82,7 +82,7 @@ export default function BoardPage({ boardId }) {
   });
 
   const itemUpdate = useMutation({
-    mutationFn: ({ id, updates, prevItem }) => itemsApi.update(id, updates, prevItem),
+    mutationFn: ({ id, updates, prevItem, columns }) => itemsApi.update(id, updates, prevItem, columns),
     onError: (err) => toast.error(err.message),
   });
 
@@ -155,12 +155,12 @@ export default function BoardPage({ boardId }) {
     queryClient.setQueryData(["items", boardId], (old = []) =>
       old.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
     );
-    itemUpdate.mutate({ id: itemId, updates, prevItem });
+    itemUpdate.mutate({ id: itemId, updates, prevItem, columns: board?.columns });
     // Also update selectedTask if it's the one being edited
     if (selectedTask?.id === itemId) {
       setSelectedTask((prev) => prev ? { ...prev, ...updates } : prev);
     }
-  }, [boardId, queryClient, itemUpdate, selectedTask]);
+  }, [boardId, queryClient, itemUpdate, selectedTask, board?.columns]);
 
   const handleDeleteItem = useCallback((itemId) => {
     itemDelete.mutate(itemId);
