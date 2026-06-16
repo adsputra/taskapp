@@ -5,7 +5,15 @@ export default function BudgetCell({ value, onUpdate, options }) {
   const [currentValue, setCurrentValue] = useState(value || 0);
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef(null);
-  const currencySymbol = options?.currency === 'ILS' ? '₪' : '$';
+
+  const getCurrencyConfig = () => {
+    const c = options?.currency;
+    if (c === 'ILS') return { prefix: '₪', decimals: 2 };
+    if (c === 'USD') return { prefix: '$', decimals: 2 };
+    // Default to IDR (Rupiah)
+    return { prefix: 'Rp ', decimals: 0 };
+  };
+  const { prefix, decimals } = getCurrencyConfig();
 
   useEffect(() => {
     setCurrentValue(value || 0);
@@ -50,7 +58,7 @@ export default function BudgetCell({ value, onUpdate, options }) {
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         className="h-full w-full p-1 border-none focus:ring-1 focus:ring-blue-500 bg-transparent text-sm"
-        step="0.01"
+        step={decimals === 0 ? "1" : "0.01"}
       />
     );
   }
@@ -60,7 +68,7 @@ export default function BudgetCell({ value, onUpdate, options }) {
       onClick={() => onUpdate && setIsEditing(true)} 
       className={`w-full h-full flex items-center justify-center text-sm text-[#323338] dark:text-slate-200 rounded ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50 dark:hover:bg-slate-700' : ''}`}
     >
-      {currencySymbol}{Number(currentValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {prefix}{Number(currentValue).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
     </div>
   );
 }
