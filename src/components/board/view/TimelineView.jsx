@@ -34,7 +34,7 @@ const getPriorityColor = (item, board) => {
 };
 
 /* ── Gantt Bar ── */
-const GanttBar = ({ item, board, dStart, dEnd, timelineStart, dayW, onClick }) => {
+const GanttBar = ({ item, board, dStart, dEnd, timelineStart, dayW, onClick, isSingleDate }) => {
   const offDays = Math.max(0, differenceInDays(dStart, timelineStart));
   let dur = differenceInDays(dEnd, dStart) + 1;
   if (dStart < timelineStart) dur = differenceInDays(dEnd, timelineStart) + 1;
@@ -47,9 +47,17 @@ const GanttBar = ({ item, board, dStart, dEnd, timelineStart, dayW, onClick }) =
   return (
     <div
       onClick={onClick}
-      className="absolute top-[8px] h-[28px] rounded-md flex items-center px-2.5 text-white text-xs font-medium truncate cursor-pointer shadow-sm hover:shadow-md hover:brightness-110 transition-all"
-      style={{ left: `${left}px`, width: `${width}px`, backgroundColor: color }}
-      title={`${item.title}\n${format(dStart, "MMM d")} – ${format(dEnd, "MMM d")}`}
+      className={`absolute top-[8px] h-[28px] rounded-md flex items-center px-2.5 text-xs font-medium truncate cursor-pointer shadow-sm hover:shadow-md hover:brightness-110 transition-all ${
+        isSingleDate ? 'opacity-70 border-2 border-dashed' : 'text-white'
+      }`}
+      style={{
+        left: `${left}px`,
+        width: `${width}px`,
+        backgroundColor: isSingleDate ? color + '20' : color,
+        borderColor: isSingleDate ? color : 'transparent',
+        color: isSingleDate ? color : 'white',
+      }}
+      title={`${item.title}\n${format(dStart, "MMM d")} – ${format(dEnd, "MMM d")}${isSingleDate ? ' (single date)' : ''}`}
     >
       <span className="truncate drop-shadow-sm">{item.title}</span>
     </div>
@@ -152,8 +160,20 @@ export default function TimelineView({ board, items, onSelectTask }) {
         const ve = isNaN(e.getTime()) ? s : e;
         const ds = s > ve ? ve : s;
         const de = s > ve ? s : ve;
-        const isRange = endColId && sStr && item.data?.[ec] && !isSameDay(s, ve);
-        return { item, dStart: ds, dEnd: de, isRange };
+
+        // Determine if it's a real range or single date
+        const hasTwoCols = !!endColId && !!sStr && !!item.data?.[ec];
+        const isTrueRange = hasTwoCols && !isSameDay(s, ve);
+
+        // For single-date items, create a 3-day bar ending on the date
+        let barStart = ds;
+        let barEnd = de;
+        if (!isTrueRange) {
+          barStart = addDays(ds, -2); // 3 days wide ending on the date
+          barEnd = ds;
+        }
+
+        return { item, dStart: barStart, dEnd: barEnd, isRange: true, isSingleDate: !isTrueRange };
       })
       .filter(Boolean);
   }, [items, dateColId, endColId]);
@@ -255,7 +275,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
           </div>
 
           {/* Rows */}
-          {displayItems.map(({ item, dStart, dEnd, isRange }) => {
+          {displayItems.map(({ item, dStart, dEnd, isRange, isSingleDate }) => {
             const priColor = getPriorityColor(item, board);
             return (
               <div
@@ -307,22 +327,14 @@ export default function TimelineView({ board, items, onSelectTask }) {
                     />
                   )}
 
-                  {/* Bar or Milestone */}
-                  {isRange ? (
-                    <GanttBar
-                      item={item} board={board}
-                      dStart={dStart} dEnd={dEnd}
-                      timelineStart={tStart} dayW={dayW}
-                      onClick={() => onSelectTask?.(item)}
-                    />
-                  ) : (
-                    <GanttMilestone
-                      item={item} board={board}
-                      date={dStart}
-                      timelineStart={tStart} dayW={dayW}
-                      onClick={() => onSelectTask?.(item)}
-                    />
-                  )}
+                  {/* Bar */}
+                  <GanttBar
+                    item={item} board={board}
+                    dStart={dStart} dEnd={dEnd}
+                    timelineStart={tStart} dayW={dayW}
+                    isSingleDate={isSingleDate}
+                    onClick={() => onSelectTask?.(item)}
+                  />
                 </div>
               </div>
             );
