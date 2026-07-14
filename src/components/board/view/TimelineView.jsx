@@ -380,13 +380,13 @@ export default function TimelineView({ board, items, onSelectTask }) {
 
       {/* ── Timeline Grid ── */}
       <div className="flex-1 overflow-x-auto overflow-y-auto relative bg-[#FAFBFC] dark:bg-slate-900/50">
-        <div style={{ minWidth: \`\${LEFT_W + totalW}px\` }} className="pb-12">
+        <div style={{ minWidth: `${LEFT_W + totalW}px` }} className="pb-12">
           {/* Timeline Headers */}
           <div className="sticky top-0 z-[5] bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 pt-2 shadow-sm">
             {/* Month/Year Row */}
             <div className="flex pl-[260px]">
               {monthsData.map((m, i) => (
-                <div key={i} className="text-xs font-semibold text-slate-800 dark:text-slate-200 pb-2 pl-4" style={{ width: \`\${m.count * dayW}px\` }}>
+                <div key={i} className="text-xs font-semibold text-slate-800 dark:text-slate-200 pb-2 pl-4" style={{ width: `${m.count * dayW}px` }}>
                   {m.label}
                 </div>
               ))}
@@ -396,7 +396,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
             <div className="flex">
               <div
                 className="flex-shrink-0 flex items-end pb-3 px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
-                style={{ width: \`\${LEFT_W}px\` }}
+                style={{ width: `${LEFT_W}px` }}
               >
                 Task
               </div>
@@ -406,12 +406,12 @@ export default function TimelineView({ board, items, onSelectTask }) {
                 return (
                   <div
                     key={day.toISOString()}
-                    className={\`flex-shrink-0 flex items-center justify-center border-l border-slate-100/60 dark:border-slate-800/60 pt-1 pb-3 relative \${
+                    className={`flex-shrink-0 flex items-center justify-center border-l border-slate-100/60 dark:border-slate-800/60 pt-1 pb-3 relative ${
                       weekend ? "bg-slate-50/50 dark:bg-slate-800/20" : ""
-                    }\`}
-                    style={{ width: \`\${dayW}px\` }}
+                    }`}
+                    style={{ width: `${dayW}px` }}
                   >
-                    <span className={\`text-[10px] font-semibold flex items-center gap-1 \${isTodayDate ? "text-[#7F63FF]" : weekend ? "text-slate-400" : "text-slate-600 dark:text-slate-300"}\`}>
+                    <span className={`text-[10px] font-semibold flex items-center gap-1 ${isTodayDate ? "text-[#7F63FF]" : weekend ? "text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
                       {zoom !== "month" && <span className="uppercase opacity-60 tracking-tighter">{format(day, "EEE").charAt(0)}</span>}
                       <span>{format(day, "d")}</span>
                     </span>
@@ -433,10 +433,10 @@ export default function TimelineView({ board, items, onSelectTask }) {
                 return (
                   <div
                     key={i}
-                    className={\`border-l border-slate-200/50 dark:border-slate-800/50 h-full \${
+                    className={`border-l border-slate-200/50 dark:border-slate-800/50 h-full ${
                       weekend ? "bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(0,0,0,0.02)_6px,rgba(0,0,0,0.02)_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,rgba(255,255,255,0.02)_6px,rgba(255,255,255,0.02)_12px)]" : ""
-                    }\`}
-                    style={{ width: \`\${dayW}px\` }}
+                    }`}
+                    style={{ width: `${dayW}px` }}
                   />
                 );
               })}
@@ -446,7 +446,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
             {showToday && (
               <div
                 className="absolute top-0 bottom-0 w-[2px] bg-[#7F63FF] z-10 pointer-events-none shadow-[0_0_8px_rgba(127,99,255,0.4)]"
-                style={{ left: \`\${LEFT_W + todayOff * dayW + dayW / 2}px\` }}
+                style={{ left: `${LEFT_W + todayOff * dayW + dayW / 2}px` }}
               >
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#7F63FF] ring-4 ring-white dark:ring-slate-900" />
               </div>
@@ -459,12 +459,12 @@ export default function TimelineView({ board, items, onSelectTask }) {
                   <div
                     key={item.id}
                     className="flex border-b border-slate-200/30 dark:border-slate-800/30 hover:bg-slate-100/40 dark:hover:bg-slate-800/20 transition-colors"
-                    style={{ height: \`\${ROW_H}px\` }}
+                    style={{ height: `${ROW_H}px` }}
                   >
                     {/* Task Title Cell */}
                     <div
                       className="flex-shrink-0 flex flex-col justify-center px-4 border-r border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm relative z-10 cursor-pointer"
-                      style={{ width: \`\${LEFT_W}px\` }}
+                      style={{ width: `${LEFT_W}px` }}
                       onClick={() => onSelectTask?.(item)}
                     >
                       <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate">
