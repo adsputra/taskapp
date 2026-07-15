@@ -2,45 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * Buat/verifikasi profile tanpa memanggil getUser() lagi.
- * Menerima user object dari caller untuk menghindari network call ganda.
- */
-async function ensureProfileFast(supabase, user) {
-  try {
-    // Cek apakah profile sudah ada
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (existing) return { ok: true };
-
-    // Buat profile baru
-    const fullName =
-      user.user_metadata?.full_name ||
-      user.email?.split("@")[0] ||
-      "User";
-
-    const { error: insertError } = await supabase.from("profiles").insert({
-      id: user.id,
-      full_name: fullName,
-      email: user.email,
-      avatar_url: user.user_metadata?.avatar_url || null,
-    });
-
-    if (insertError && insertError.code !== "23505") {
-      console.error("Insert profile error:", insertError);
-      return { error: insertError.message };
-    }
-
-    return { ok: true };
-  } catch (err) {
-    console.error("ensureProfileFast error:", err);
-    return { error: "Gagal membuat profile." };
-  }
-}
 
 /**
  * Login — server action.
@@ -64,8 +25,7 @@ export async function login(email, password) {
       return { error: "Gagal mendapatkan data user." };
     }
 
-    // Pakai user object dari response — tidak perlu getUser() lagi
-    await ensureProfileFast(supabase, data.user);
+
 
     return { ok: true };
   } catch (err) {
@@ -102,7 +62,6 @@ export async function signup(fullName, email, password) {
     }
 
     if (data?.session) {
-      await ensureProfileFast(supabase, data.user);
       return { ok: true };
     }
 
