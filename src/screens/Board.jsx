@@ -12,6 +12,7 @@ import {
   Plus, Search, Filter, Users, ArrowLeft,
   SortAsc, Eye, EyeOff, Group as GroupIcon,
 } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -98,10 +99,22 @@ export default function BoardPage({ boardId }) {
     onError: (err) => toast.error(err.message),
   });
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   // --- Local state ---
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItems, setSelectedItems] = useState(new Set());
-  const [currentView, setCurrentView] = useState("table");
+  
+  const viewParam = searchParams.get("view");
+  const currentView = viewParam || "table";
+
+  const handleViewChange = useCallback((view) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", view);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [router, pathname, searchParams]);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -296,7 +309,7 @@ export default function BoardPage({ boardId }) {
         <div className="sticky top-0 z-20 bg-[#F5F6F8] dark:bg-slate-950 pb-4">
           <BoardHeader board={board} items={items} itemsCount={items.length}
             selectedCount={selectedItems.size} currentView={currentView}
-            onViewChange={setCurrentView}
+            onViewChange={handleViewChange}
             onShowAnalytics={() => setShowAnalytics(true)}
             onShowIntegrations={() => setShowIntegrations(true)}
             onShowAutomations={() => setShowAutomations(true)}
