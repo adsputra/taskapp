@@ -382,10 +382,10 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   return (
     <div className="h-full">
       {/* Header with grouping selector */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-blue-100 dark:border-slate-700">
+      <div className="flex items-center justify-between mb-6 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <MoreHorizontal className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center">
+            <MoreHorizontal className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Kanban Board</h2>
