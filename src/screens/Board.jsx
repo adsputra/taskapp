@@ -1,10 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { boardsApi } from "@/lib/api/boards";
-import { itemsApi } from "@/lib/api/items";
-import { userApi } from "@/lib/api/user";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +8,8 @@ import {
   Plus, Search, Filter, Users, ArrowLeft,
   SortAsc, Eye, EyeOff, Group as GroupIcon,
 } from "lucide-react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
+import { useBoardState } from "@/hooks/useBoardState";
 
 import BoardHeader from "../components/board/BoardHeader";
 import GroupSection from "../components/board/GroupSection";
@@ -40,221 +35,31 @@ import TaskDetailDrawer from "../components/board/drawer/TaskDetailDrawer";
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 export default function BoardPage({ boardId }) {
-  const queryClient = useQueryClient();
-
-  // --- Queries ---
-  const { data: board, isLoading: boardLoading } = useQuery({
-    queryKey: ["board", boardId],
-    queryFn: () => boardsApi.get(boardId),
-    enabled: !!boardId,
-  });
-
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ["items", boardId],
-    queryFn: () => itemsApi.listByBoard(boardId),
-    enabled: !!boardId,
-  });
-
-  const isLoading = boardLoading || itemsLoading;
-
-  // --- Current user & role ---
-  const { data: currentUser } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => userApi.me(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const userRole = useMemo(() => {
-    if (!board || !currentUser) return null;
-    // Owner is always admin
-    if (board.user_id === currentUser.id) return "admin";
-    // Check board_members
-    const member = (board.board_members || []).find(
-      (m) => m.user_id === currentUser.id && m.status === "active"
-    );
-    return member?.role || null;
-  }, [board, currentUser]);
-
-  // --- Mutations ---
-  const itemCreate = useMutation({
-    mutationFn: (data) => itemsApi.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["items", boardId] }),
-    onError: (err) => toast.error(err.message),
-  });
-
-  const itemUpdate = useMutation({
-    mutationFn: ({ id, updates, prevItem, columns }) => itemsApi.update(id, updates, prevItem, columns),
-    onError: (err) => toast.error(err.message),
-  });
-
-  const itemDelete = useMutation({
-    mutationFn: (id) => itemsApi.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["items", boardId] }),
-    onError: (err) => toast.error(err.message),
-  });
-
-  const boardUpdate = useMutation({
-    mutationFn: ({ id, updates }) => boardsApi.update(id, updates),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["board", boardId] }),
-    onError: (err) => toast.error(err.message),
-  });
-
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  
-  // --- Local state ---
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedItems, setSelectedItems] = useState(new Set());
-  
-  const viewParam = searchParams.get("view");
-  const currentView = viewParam || "table";
-
-  const handleViewChange = useCallback((view) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("view", view);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [router, pathname, searchParams]);
-  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
-  const [showFilterPanel, setShowFilterPanel] = useState(false);
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [showPersonFilter, setShowPersonFilter] = useState(false);
-  const [showHideMenu, setShowHideMenu] = useState(false);
-  const [showGroupByMenu, setShowGroupByMenu] = useState(false);
-  const [showNewColumnModal, setShowNewColumnModal] = useState(false);
-  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showIntegrations, setShowIntegrations] = useState(false);
-  const [showAutomations, setShowAutomations] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [filters, setFilters] = useState({ status: [], people: [], priority: [] });
-  const [sortBy, setSortBy] = useState("order_index");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [hiddenColumns, setHiddenColumns] = useState(new Set());
-  const [selectedTask, setSelectedTask] = useState(null);
-
-  // --- Handlers ---
-  const handleAddItem = useCallback(async (groupId, title) => {
-    if (!boardId || !board) return;
-    const maxOrder = Math.max(0, ...items
-      .filter((i) => i.group_id === String(groupId))
-      .map((i) => i.order_index || 0));
-
-    const defaultData = {};
-    (board.columns || []).forEach((col) => {
-      if (col.id === "task") return;
-      switch (col.type) {
-        case "status": defaultData[col.id] = col.options?.choices?.[0]?.label || null; break;
-        case "priority": defaultData[col.id] = col.options?.choices?.[0]?.value || null; break;
-        case "dropdown": defaultData[col.id] = col.options?.choices?.[0]?.value || null; break;
-        case "checkbox": defaultData[col.id] = false; break;
-        case "tags": defaultData[col.id] = []; break;
-        case "number": defaultData[col.id] = null; break;
-        default: defaultData[col.id] = null;
-      }
-    });
-
-    itemCreate.mutate({
-      board_id: boardId,
-      group_id: String(groupId),
-      title,
-      order_index: maxOrder + 1,
-      data: defaultData,
-    });
-  }, [boardId, board, items, itemCreate]);
-
-  const handleUpdateItem = useCallback((itemId, updates, prevItem) => {
-    // Optimistic update
-    queryClient.setQueryData(["items", boardId], (old = []) =>
-      old.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
-    );
-    itemUpdate.mutate({ id: itemId, updates, prevItem, columns: board?.columns });
-    // Also update selectedTask if it's the one being edited
-    if (selectedTask?.id === itemId) {
-      setSelectedTask((prev) => prev ? { ...prev, ...updates } : prev);
-    }
-  }, [boardId, queryClient, itemUpdate, selectedTask, board?.columns]);
-
-  const handleDeleteItem = useCallback((itemId) => {
-    itemDelete.mutate(itemId);
-  }, [itemDelete]);
-
-  const handleReorderItems = useCallback(async (groupId, sourceIdx, destIdx) => {
-    const groupItems = items
-      .filter((i) => i.group_id === String(groupId))
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-    if (sourceIdx < 0 || sourceIdx >= groupItems.length ||
-        destIdx < 0 || destIdx >= groupItems.length) return;
-
-    const [moved] = groupItems.splice(sourceIdx, 1);
-    groupItems.splice(destIdx, 0, moved);
-
-    const reordered = groupItems.map((item, idx) => ({
-      ...item,
-      order_index: idx,
-    }));
-
-    // Optimistic
-    queryClient.setQueryData(["items", boardId], (old = []) => {
-      const other = old.filter((i) => i.group_id !== String(groupId));
-      return [...other, ...reordered].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-    });
-
-    try {
-      await itemsApi.reorder(groupId, reordered.map((i) => i.id));
-    } catch (err) {
-      toast.error("Gagal reorder: " + err.message);
-      queryClient.invalidateQueries({ queryKey: ["items", boardId] });
-    }
-  }, [boardId, items, queryClient]);
-
-  const handleAddColumn = useCallback((colData) => {
-    if (!board) return;
-    const newCol = { ...colData, id: colData.id || genId(), width: colData.width || 150 };
-    const updated = [...(board.columns || []), newCol];
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
-    setShowNewColumnModal(false);
-  }, [board, boardUpdate]);
-
-  const handleUpdateColumn = useCallback((colId, data) => {
-    if (!board) return;
-    const updated = (board.columns || []).map((c) =>
-      c.id === colId ? { ...c, ...data } : c
-    );
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
-  }, [board, boardUpdate]);
-
-  const handleDeleteColumn = useCallback((colId) => {
-    if (!board) return;
-    const updated = (board.columns || []).filter((c) => c.id !== colId);
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
-  }, [board, boardUpdate]);
-
-  const handleAddGroup = useCallback((groupData) => {
-    if (!board) return;
-    const newGroup = { ...groupData, id: genId(), collapsed: false };
-    boardUpdate.mutate({ id: board.id, updates: { groups: [...(board.groups || []), newGroup] } });
-    setShowNewGroupModal(false);
-  }, [board, boardUpdate]);
-
-  const handleDeleteGroup = useCallback((groupId) => {
-    if (!board || !window.confirm("Hapus group ini beserta semua task di dalamnya?")) return;
-    const updated = (board.groups || []).filter((g) => g.id !== groupId);
-    boardUpdate.mutate({ id: board.id, updates: { groups: updated } });
-    // Hapus semua item di group
-    items.filter((i) => i.group_id === String(groupId)).forEach((i) => itemDelete.mutate(i.id));
-  }, [board, boardUpdate, items, itemDelete]);
-
-  const handleHideColumnFromGroup = useCallback((groupId, colId) => {
-    if (!board) return;
-    const updated = (board.groups || []).map((g) => {
-      if (g.id !== groupId) return g;
-      const visible = g.visible_columns || (board.columns || []).map((c) => c.id);
-      return { ...g, visible_columns: visible.filter((id) => id !== colId) };
-    });
-    boardUpdate.mutate({ id: board.id, updates: { groups: updated } });
-  }, [board, boardUpdate]);
+  const {
+    board, items, isLoading, userRole,
+    currentView, setCurrentView,
+    searchQuery, setSearchQuery,
+    sortBy, sortDirection, setSort,
+    filters, setFilters,
+    hiddenColumns, setHiddenColumns,
+    selectedItems, setSelectedItems,
+    showNewTaskModal, setShowNewTaskModal,
+    showFilterPanel, setShowFilterPanel,
+    showSortMenu, setShowSortMenu,
+    showPersonFilter, setShowPersonFilter,
+    showHideMenu, setShowHideMenu,
+    showGroupByMenu, setShowGroupByMenu,
+    showNewColumnModal, setShowNewColumnModal,
+    showNewGroupModal, setShowNewGroupModal,
+    showAnalytics, setShowAnalytics,
+    showIntegrations, setShowIntegrations,
+    showAutomations, setShowAutomations,
+    showShare, setShowShare,
+    selectedTask, setSelectedTask,
+    handleAddItem, handleUpdateItem, handleDeleteItem, handleReorderItems,
+    handleAddColumn, handleUpdateColumn, handleDeleteColumn,
+    handleAddGroup, handleDeleteGroup, handleHideColumnFromGroup,
+  } = useBoardState(boardId);
 
   // --- Filter & sort ---
   const filteredItems = items.filter((item) => {
@@ -309,7 +114,7 @@ export default function BoardPage({ boardId }) {
         <div className="sticky top-0 z-20 bg-[#F5F6F8] dark:bg-slate-950 pb-4">
           <BoardHeader board={board} items={items} itemsCount={items.length}
             selectedCount={selectedItems.size} currentView={currentView}
-            onViewChange={handleViewChange}
+            onViewChange={setCurrentView}
             onShowAnalytics={() => setShowAnalytics(true)}
             onShowIntegrations={() => setShowIntegrations(true)}
             onShowAutomations={() => setShowAutomations(true)}
