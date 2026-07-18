@@ -259,7 +259,8 @@ export default function Sidebar() {
                 </div>
                 <ChevronRight className={`w-4 h-4 flex-shrink-0 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ${isCollapsed ? 'hidden' : 'block'}`} />
               </Link>
-            ))}
+              );
+            })}
             {boards.length === 0 && (
               <p className={`py-2 text-xs text-slate-400 dark:text-slate-600 italic transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0 overflow-hidden' : 'px-6 w-auto opacity-100'}`}>No recent boards</p>
             )}
