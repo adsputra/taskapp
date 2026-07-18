@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { boardsApi } from "@/lib/api/boards";
 import { userApi } from "@/lib/api/user";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,10 @@ import BoardCard from "../components/boards/BoardCard";
 
 export default function Boards() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  const isShared = filterParam === "shared";
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState(null);
@@ -45,14 +50,25 @@ export default function Boards() {
   const userId = user?.id;
 
   const filteredBoards = useMemo(() => {
-    if (!searchQuery) return boards;
-    const q = searchQuery.toLowerCase();
-    return boards.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.description?.toLowerCase().includes(q)
-    );
-  }, [searchQuery, boards]);
+    let result = boards;
+    if (user) {
+      if (isShared) {
+        result = result.filter(b => b.user_id !== user.id);
+      } else {
+        result = result.filter(b => b.user_id === user.id);
+      }
+    }
+    
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.description?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [searchQuery, boards, user, isShared]);
 
   const createMutation = useMutation({
     mutationFn: (data) => boardsApi.create(data),
@@ -103,20 +119,24 @@ export default function Boards() {
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Boards</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              {isShared ? "Shared with Me" : "My Boards"}
+            </h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="w-8 h-0.5 rounded-full bg-gradient-to-r from-blue-500 to-emerald-400" />
               <p className="text-sm text-slate-400 dark:text-slate-500">                {filteredBoards.length} board{filteredBoards.length !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm gap-2 shadow-sm transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            New Board
-          </Button>
+          {!isShared && (
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm gap-2 shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              New Board
+            </Button>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -214,19 +234,27 @@ export default function Boards() {
                   <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     <Folder className="w-9 h-9 text-slate-400 dark:text-slate-600" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm">
-                    <Plus className="w-3.5 h-3.5 text-white" />
-                  </div>
+                  {!isShared && (
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm">
+                      <Plus className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {searchQuery ? "No matching boards" : "No boards yet"}
+                  {searchQuery 
+                    ? "No matching boards" 
+                    : isShared 
+                      ? "No shared boards yet" 
+                      : "No boards yet"}
                 </h3>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mb-8 text-center max-w-sm">
                   {searchQuery
                     ? "Try a different search term."
-                    : "Create your first board to start organizing your work."}
+                    : isShared 
+                      ? "Boards that others share with you will appear here." 
+                      : "Create your first board to start organizing your work."}
                 </p>
-                {!searchQuery && (
+                {!searchQuery && !isShared && (
                   <Button
                     onClick={() => setShowCreateModal(true)}
                     className="h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm gap-2"

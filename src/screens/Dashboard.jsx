@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { boardsApi } from "@/lib/api/boards";
 import { itemsApi } from "@/lib/api/items";
@@ -14,8 +14,9 @@ import {
   Sparkles,
   Plus,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 import StatsOverview from "../components/dashboard/StatsOverview";
 import RecentBoards from "../components/dashboard/RecentBoards";
@@ -24,6 +25,7 @@ import QuickActions from "../components/dashboard/QuickActions";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  const containerRef = useRef(null);
 
   const { data: boards = [], isLoading: boardsLoading } = useQuery({
     queryKey: ["boards", "my"],
@@ -38,7 +40,7 @@ export default function Dashboard() {
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: () => userApi.me(),
-    staleTime: 0, // Selalu fetch fresh — hindari stale data setelah login/signup
+    staleTime: 0,
   });
 
   const isLoading = boardsLoading || itemsLoading;
@@ -77,84 +79,79 @@ export default function Dashboard() {
     month: "long",
   });
 
+  // GSAP Stagger Animation for Dashboard Cards
+  useGSAP(() => {
+    gsap.fromTo(".stagger-item", 
+      { opacity: 0, y: 30, scale: 0.98 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1, 
+        duration: 0.7, 
+        stagger: 0.1, 
+        ease: "power3.out",
+        delay: 0.15, // slight delay so it flows after the global template transition
+        clearProps: "all"
+      }
+    );
+  }, { scope: containerRef });
+
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
+    <div ref={containerRef} className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
         {/* ── Greeting ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 rounded-full bg-blue-500" />
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                  {getGreeting()},{" "}
-                  <span className="text-blue-600">
-                    {user?.full_name?.split(" ")[0] || "there"}
-                  </span>
-                  !
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {today} &middot;{" "}
-                  {pendingTasks > 0
-                    ? `${pendingTasks} task${pendingTasks > 1 ? "s" : ""} waiting`
-                    : "All caught up!"}
-                </p>
-              </div>
+        <div className="space-y-2 stagger-item">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 rounded-full bg-blue-500" />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                {getGreeting()},{" "}
+                <span className="text-blue-600">
+                  {user?.full_name?.split(" ")[0] || "there"}
+                </span>
+                !
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                {today} &middot;{" "}
+                {pendingTasks > 0
+                  ? `${pendingTasks} task${pendingTasks > 1 ? "s" : ""} waiting`
+                  : "All caught up!"}
+              </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* ── Stats ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
+        <div className="stagger-item">
           <StatsOverview boards={boards} items={items} isLoading={isLoading} />
-        </motion.div>
+        </div>
 
         {/* ── Main Grid ── */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           <div className="xl:col-span-3 space-y-6">
             {/* Recent Boards */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
+            <div className="stagger-item">
               <RecentBoards
                 boards={ownedBoards}
                 sharedBoards={sharedBoards}
                 isLoading={isLoading}
                 onCreateBoard={(data) => createBoard.mutate(data)}
               />
-            </motion.div>
+            </div>
           </div>
 
           <div className="space-y-6">
             {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.25 }}
-            >
+            <div className="stagger-item">
               <QuickActions
                 onCreateBoard={(data) => createBoard.mutate(data)}
               />
-            </motion.div>
+            </div>
 
             {/* Activity */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
+            <div className="stagger-item">
               <ActivityFeed items={items.slice(0, 5)} isLoading={isLoading} />
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

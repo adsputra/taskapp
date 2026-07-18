@@ -61,6 +61,32 @@ export const itemsApi = {
   },
 
   /**
+   * List my tasks across all accessible boards.
+   */
+  async listMyTasks(userEmail) {
+    const supabase = createClient();
+    
+    // RLS automatically handles board access
+    const { data, error } = await supabase
+      .from("board_items")
+      .select("*, board:boards(title, color)")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw new Error("Gagal memuat tugas saya: " + error.message);
+    if (!data) return [];
+
+    // Filter by assignee
+    return data.filter(item => {
+      const owner = item.data?.owner;
+      if (!owner) return false;
+      if (Array.isArray(owner)) {
+        return owner.includes(userEmail);
+      }
+      return owner === userEmail;
+    });
+  },
+
+  /**
    * Buat item baru.
    */
   async create({ board_id, group_id, title, order_index = 0, data = {}, parent_id, sprint_id, description }) {
