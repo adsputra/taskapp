@@ -12,6 +12,11 @@ export default function AppTemplate({ children }) {
   const containerRef = useRef(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  
+  // Hanya trigger animasi jika pathname atau filter utama berubah. 
+  // Ini mencegah animasi terpanggil saat mengetik di pencarian.
+  const filter = searchParams.get("filter") || "";
+  const animationKey = `${pathname}?filter=${filter}`;
 
   useGSAP(() => {
     document.body.style.overflowX = 'hidden'; // Keep horizontal hidden to prevent horizontal shake
@@ -20,24 +25,22 @@ export default function AppTemplate({ children }) {
     gsap.fromTo(containerRef.current, 
       { 
         opacity: 0, 
-        y: 40, 
-        scale: 0.96,
-        filter: "blur(12px)"
+        y: 20, 
+        scale: 0.98
       },
       {
         y: 0,
         scale: 1,
         opacity: 1,
-        filter: "blur(0px)",
-        duration: 0.85,
-        ease: "expo.out",
+        duration: 0.6,
+        ease: "power3.out",
         clearProps: "all",
         onComplete: () => {
           document.body.style.overflowY = 'auto';
         }
       }
     );
-  }, { scope: containerRef, dependencies: [pathname, searchParams] });
+  }, { scope: containerRef, dependencies: [animationKey] });
 
   return (
     <div ref={containerRef} className="h-full">

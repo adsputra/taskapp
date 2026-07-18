@@ -239,16 +239,20 @@ export default function Sidebar() {
             <Clock className="w-3.5 h-3.5" /> Recent
           </p>
           <div className="space-y-1 px-3">
-            {boards.slice(0, 3).map(board => (
-              <Link
-                key={board.id}
-                href={`/board/${board.id}`}
-                title={isCollapsed ? board.title : undefined}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`group relative flex items-center px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-300 overflow-hidden ${
-                  isCollapsed ? "justify-center w-11 h-11 mx-auto" : "justify-between"
-                } text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200`}
-              >
+            {boards.slice(0, 3).map(board => {
+              const isShared = user && board.user_id !== user.id;
+              const boardHref = `/boards/${board.id}${isShared ? '?filter=shared' : ''}`;
+              
+              return (
+                <Link
+                  key={board.id}
+                  href={boardHref}
+                  title={isCollapsed ? board.title : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`group relative flex items-center px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-300 overflow-hidden ${
+                    isCollapsed ? "justify-center w-11 h-11 mx-auto" : "justify-between"
+                  } text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200`}
+                >
                 <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center' : 'gap-3 truncate w-full'}`}>
                   <div className="w-3 h-3 flex-shrink-0 rounded-full shadow-sm" style={{ backgroundColor: board.color || "#0073EA" }} />
                   <span className={`truncate transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 absolute' : 'w-auto opacity-100 relative'}`}>{board.title}</span>

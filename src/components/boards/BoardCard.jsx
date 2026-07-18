@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) {
+export default function BoardCard({ board, viewMode, index, onDelete, onEdit, isShared }) {
   const handleDelete = (e) => {
     e.preventDefault(); 
     e.stopPropagation(); 
@@ -33,14 +33,16 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
   if (viewMode === "list") {
     return (
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
+        layout
+        initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.05 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ delay: index * 0.03, layout: { type: "spring", stiffness: 300, damping: 30 } }}
       >
         <Card className="group rounded-2xl shadow-md hover:shadow-lg dark:shadow-none dark:bg-slate-900 dark:border-slate-800 transition-all duration-200 overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <Link href={`/boards/${board.id}`} className="flex items-center gap-3 flex-grow min-w-0">
+              <Link href={`/boards/${board.id}${isShared ? '?filter=shared' : ''}`} className="flex items-center gap-3 flex-grow min-w-0">
                 <div
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: boardColor }}
@@ -103,15 +105,17 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
   // Grid View
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      layout
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.04, layout: { type: "spring", stiffness: 300, damping: 30 } }}
       className="h-full"
     >
       <Card 
         className="group h-full flex flex-col rounded-2xl shadow-md hover:shadow-lg dark:shadow-none dark:bg-slate-900 dark:border-slate-800 transition-all duration-200 overflow-hidden"
       >
-        <Link href={`/boards/${board.id}`} className="flex-grow block p-5">
+        <Link href={`/boards/${board.id}${isShared ? '?filter=shared' : ''}`} className="flex-grow block p-5">
           <div className="flex items-start justify-between mb-4">
             <div 
               className="w-10 h-10 rounded-xl flex items-center justify-center"

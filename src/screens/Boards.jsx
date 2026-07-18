@@ -277,19 +277,22 @@ export default function Boards() {
                   : "flex flex-col gap-2"
               }
             >
-              {filteredBoards.map((board, index) => (
-                <BoardCard
-                  key={board.id}
-                  board={board}
-                  viewMode={viewMode}
-                  index={index}
-                  onDelete={(id) => deleteMutation.mutate(id)}
-                  onEdit={(b) => {
-                    setEditingBoard(b);
-                    setShowEditModal(true);
-                  }}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredBoards.map((board, index) => (
+                  <BoardCard
+                    key={board.id}
+                    board={board}
+                    viewMode={viewMode}
+                    index={index}
+                    isShared={isShared}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onEdit={(b) => {
+                      setEditingBoard(b);
+                      setShowEditModal(true);
+                    }}
+                  />
+                ))}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
