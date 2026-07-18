@@ -62,6 +62,7 @@ export default function Sidebar() {
   const { data: boards = [] } = useQuery({
     queryKey: ["boards"],
     queryFn: () => boardsApi.list({ limit: 5 }),
+    staleTime: 60 * 1000, // 1 minute
   });
 
   useEffect(() => {
@@ -168,6 +169,7 @@ export default function Sidebar() {
             key={item.title}
             href={item.href}
             title={isCollapsed ? item.title : undefined}
+            prefetch={true}
             onClick={() => setMobileMenuOpen(false)}
             className={`group relative flex items-center px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-300 overflow-hidden ${
               isCollapsed ? "justify-center w-11 h-11 mx-auto" : "gap-3"
@@ -248,6 +250,7 @@ export default function Sidebar() {
                   key={board.id}
                   href={boardHref}
                   title={isCollapsed ? board.title : undefined}
+                  prefetch={true}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`group relative flex items-center px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-300 overflow-hidden ${
                     isCollapsed ? "justify-center w-11 h-11 mx-auto" : "justify-between"

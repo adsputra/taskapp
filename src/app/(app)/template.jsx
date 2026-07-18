@@ -32,8 +32,8 @@ export default function AppTemplate({ children }) {
         y: 0,
         scale: 1,
         opacity: 1,
-        duration: 0.6,
-        ease: "power3.out",
+        duration: 0.3,
+        ease: "power2.out",
         clearProps: "all",
         onComplete: () => {
           document.body.style.overflowY = 'auto';

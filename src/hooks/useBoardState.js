@@ -20,12 +20,14 @@ export function useBoardState(boardId) {
     queryKey: ["board", boardId],
     queryFn: () => boardsApi.get(boardId),
     enabled: !!boardId,
+    staleTime: 60 * 1000,
   });
 
   const { data: items = [], isLoading: itemsLoading } = useQuery({
     queryKey: ["items", boardId],
     queryFn: () => itemsApi.listByBoard(boardId),
     enabled: !!boardId,
+    staleTime: 60 * 1000,
   });
 
   const { data: currentUser } = useQuery({

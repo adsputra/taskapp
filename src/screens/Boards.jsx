@@ -39,6 +39,7 @@ export default function Boards() {
   const { data: boards = [], isLoading } = useQuery({
     queryKey: ["boards"],
     queryFn: () => boardsApi.list(),
+    staleTime: 60 * 1000,
   });
 
   const { data: user } = useQuery({
