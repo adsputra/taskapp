@@ -19,7 +19,15 @@ dist/
 npm-debug.log*
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
+
+# supabase (local only)
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
 
 # vercel
 .vercel
@@ -27,6 +35,3 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-#supabase
-supabase/migrations

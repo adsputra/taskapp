@@ -4,44 +4,59 @@
  */
 import { createClient } from "@/lib/supabase/client";
 import { fixMissingProfiles } from "@/app/actions/profile";
+import { apiError } from "./errors";
+import { assert, clampLimit, requireUuid } from "@/lib/validation";
+
+const MAX_COMMENT_LENGTH = 5000;
+const COMMENT_SELECT = "*, profiles(id, full_name, email, avatar_url)";
+
+function requireContent(content) {
+  assert(typeof content === "string" && content.trim().length > 0, "Komentar tidak boleh kosong.");
+  assert(content.length <= MAX_COMMENT_LENGTH, `Komentar maksimal ${MAX_COMMENT_LENGTH} karakter.`);
+  return content.trim();
+}
 
 export const commentsApi = {
   /**
    * List all comments for a task, ordered oldest first (chat-style).
    * Auto-fixes missing profiles via server action so names resolve correctly.
    */
-  async listByItem(itemId) {
+  async listByItem(itemId, { limit } = {}) {
+    requireUuid(itemId, "Item ID");
+    const pageSize = clampLimit(limit, { defaultLimit: 500, maxLimit: 1000 });
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("task_comments")
-      .select("*, profiles(id, full_name, email, avatar_url)")
+      .select(COMMENT_SELECT)
       .eq("item_id", itemId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(pageSize);
 
-    if (error) throw new Error("Failed to load comments: " + error.message);
+    if (error) throw apiError(error, "Failed to load comments.");
     const comments = data || [];
 
-    // Find comments whose profile data is missing or incomplete
     const missingUserIds = [
       ...new Set(
         comments
-          .filter((c) => !c.profiles || (!c.profiles.full_name && !c.profiles.email))
-          .map((c) => c.user_id)
+          .filter((comment) => !comment.profiles || (!comment.profiles.full_name && !comment.profiles.email))
+          .map((comment) => comment.user_id)
           .filter(Boolean)
       ),
-    ];
+    ].slice(0, 20);
 
     if (missingUserIds.length > 0) {
-      // Use server action to properly fix profiles (has access to auth.users)
+      // Server action verifies the caller may view these profiles.
       await fixMissingProfiles(missingUserIds);
 
-      // Re-fetch with profiles now populated
-      const { data: refreshed } = await supabase
+      const { data: refreshed, error: refreshError } = await supabase
         .from("task_comments")
-        .select("*, profiles(id, full_name, email, avatar_url)")
+        .select(COMMENT_SELECT)
         .eq("item_id", itemId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .limit(pageSize);
 
+      if (refreshError) throw apiError(refreshError, "Failed to load comments.");
       return refreshed || comments;
     }
 
@@ -52,16 +67,20 @@ export const commentsApi = {
    * Create a new comment.
    */
   async create({ item_id, content }) {
+    requireUuid(item_id, "Item ID");
+    const cleanContent = requireContent(content);
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Harus login untuk berkomentar.");
 
     const { data, error } = await supabase
       .from("task_comments")
-      .insert({ item_id, user_id: user.id, content })
-      .select("*, profiles(id, full_name, email, avatar_url)")
+      .insert({ item_id, user_id: user.id, content: cleanContent })
+      .select(COMMENT_SELECT)
       .single();
 
-    if (error) throw new Error("Failed to create comment: " + error.message);
+    if (error) throw apiError(error, "Failed to create comment.");
     return data;
   },
 
@@ -69,15 +88,21 @@ export const commentsApi = {
    * Update a comment (only own comments).
    */
   async update(id, { content }) {
+    requireUuid(id, "Comment ID");
+    const cleanContent = requireContent(content);
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("task_comments")
-      .update({ content })
+      .update({ content: cleanContent })
       .eq("id", id)
-      .select("*, profiles(id, full_name, email, avatar_url)")
+      .select(COMMENT_SELECT)
       .single();
 
-    if (error) throw new Error("Failed to update comment: " + error.message);
+    if (error) {
+      if (error.code === "PGRST116") throw new Error("Komentar tidak ditemukan atau bukan milikmu.");
+      throw apiError(error, "Failed to update comment.");
+    }
     return data;
   },
 
@@ -85,12 +110,13 @@ export const commentsApi = {
    * Delete a comment.
    */
   async delete(id) {
+    requireUuid(id, "Comment ID");
     const supabase = createClient();
     const { error } = await supabase
       .from("task_comments")
       .delete()
       .eq("id", id);
 
-    if (error) throw new Error("Failed to delete comment: " + error.message);
+    if (error) throw apiError(error, "Failed to delete comment.");
   },
 };

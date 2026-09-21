@@ -196,18 +196,27 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // Get available grouping options (hooks must run before any early return)
+  const statusColumnsDef = getStatusColumns(board);
+  const peopleColumnsDef = getPeopleColumns(board);
+
+  const canGroupByStatus = statusColumnsDef.length > 0;
+  const canGroupByPeople = peopleColumnsDef.length > 0;
+
+  // Derive effective groupBy — fallback when chosen grouping isn't available
+  useEffect(() => {
+    if (groupBy === 'status' && !canGroupByStatus && canGroupByPeople) {
+      setGroupBy('people');
+    } else if (groupBy === 'people' && !canGroupByPeople && canGroupByStatus) {
+      setGroupBy('status');
+    }
+  }, [groupBy, canGroupByStatus, canGroupByPeople]);
+
   if (!board) return (
     <div className="p-8 text-center text-gray-500">
       <div className="animate-pulse">Board data not available.</div>
     </div>
   );
-
-  // Get available grouping options
-  const statusColumnsDef = getStatusColumns(board);
-  const peopleColumnsDef = getPeopleColumns(board);
-  
-  const canGroupByStatus = statusColumnsDef.length > 0;
-  const canGroupByPeople = peopleColumnsDef.length > 0;
 
   if (!canGroupByStatus && !canGroupByPeople) {
     return (
@@ -219,15 +228,6 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
       </div>
     );
   }
-
-  // Derive effective groupBy — fallback when chosen grouping isn't available
-  useEffect(() => {
-    if (groupBy === 'status' && !canGroupByStatus && canGroupByPeople) {
-      setGroupBy('people');
-    } else if (groupBy === 'people' && !canGroupByPeople && canGroupByStatus) {
-      setGroupBy('status');
-    }
-  }, [groupBy, canGroupByStatus, canGroupByPeople]);
 
   const activeColumnDefinition = groupBy === 'status' 
     ? statusColumnsDef[0] 

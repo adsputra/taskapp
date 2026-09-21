@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { boardsApi } from "@/lib/api/boards";
-import { itemsApi } from "@/lib/api/items";
+import { analyticsApi } from "@/lib/api/analytics";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,6 @@ import {
   ArrowRight,
   LayoutDashboard,
 } from "lucide-react";
-import { subDays, isAfter, isBefore } from "date-fns";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -33,59 +32,29 @@ export default function AnalyticsPage() {
     queryFn: () => boardsApi.list(),
   });
 
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ["items", "all"],
-    queryFn: () => itemsApi.list(),
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ["analytics", selectedBoard, selectedTimeRange],
+    queryFn: () =>
+      analyticsApi.summary({
+        boardId: selectedBoard === "all" ? null : selectedBoard,
+        days: parseInt(selectedTimeRange, 10),
+      }),
   });
 
-  const isLoading = boardsLoading || itemsLoading;
+  const isLoading = boardsLoading || summaryLoading;
 
-  const filteredItems = items.filter((item) => {
-    if (selectedBoard !== "all" && item.board_id !== selectedBoard) return false;
-    const cutoffDate = subDays(new Date(), parseInt(selectedTimeRange));
-    return isAfter(new Date(item.updated_at), cutoffDate);
-  });
-
-  const filteredBoards =
-    selectedBoard === "all" ? boards : boards.filter((b) => b.id === selectedBoard);
-
-  const totalTasks = filteredItems.length;
-  const completedTasks = filteredItems.filter((item) => {
-    const board = boards.find((b) => b.id === item.board_id);
-    const statusCol = board?.columns?.find((c) => c.type === "status");
-    return item.data?.[statusCol?.id] === "Done";
-  }).length;
-  const completionRate =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const overdueTasks = filteredItems.filter((item) => {
-    const board = boards.find((b) => b.id === item.board_id);
-    const dateCol = board?.columns?.find((c) => c.type === "date");
-    const statusCol = board?.columns?.find((c) => c.type === "status");
-    const dueDate = item.data?.[dateCol?.id];
-    if (!dueDate || item.data?.[statusCol?.id] === "Done") return false;
-    return isBefore(new Date(dueDate), new Date());
-  }).length;
-
-  const boardStats = filteredBoards.map((board) => {
-    const boardItems = filteredItems.filter((i) => i.board_id === board.id);
-    const statusCol = board.columns?.find((c) => c.type === "status");
-    const done = boardItems.filter((i) => i.data?.[statusCol?.id] === "Done").length;
-    return {
-      ...board,
-      totalTasks: boardItems.length,
-      completedTasks: done,
-      completionRate: boardItems.length > 0 ? Math.round((done / boardItems.length) * 100) : 0,
-    };
-  });
-
-  const statusDistribution = {};
-  filteredItems.forEach((item) => {
-    const board = boards.find((b) => b.id === item.board_id);
-    const col = board?.columns?.find((c) => c.type === "status");
-    const status = item.data?.[col?.id] || "Not Started";
-    statusDistribution[status] = (statusDistribution[status] || 0) + 1;
-  });
+  const totals = summary?.totals || {
+    totalTasks: 0,
+    completedTasks: 0,
+    completionRate: 0,
+    overdueTasks: 0,
+    activeBoards: 0,
+  };
+  const totalTasks = totals.totalTasks;
+  const boardStats = summary?.boardStats || [];
+  const statusDistribution = Object.fromEntries(
+    (summary?.statusDistribution || []).map((entry) => [entry.status, entry.count])
+  );
 
   const statusColors = {
     Done: "#00C875",
@@ -105,7 +74,7 @@ export default function AnalyticsPage() {
     },
     {
       label: "Completion Rate",
-      value: `${completionRate}%`,
+      value: `${totals.completionRate}%`,
       icon: CheckCircle2,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
@@ -113,7 +82,7 @@ export default function AnalyticsPage() {
     },
     {
       label: "Overdue",
-      value: overdueTasks,
+      value: totals.overdueTasks,
       icon: Clock,
       color: "text-rose-600",
       bg: "bg-rose-50",
@@ -121,7 +90,7 @@ export default function AnalyticsPage() {
     },
     {
       label: "Active Boards",
-      value: filteredBoards.length,
+      value: totals.activeBoards,
       icon: Folder,
       color: "text-violet-600",
       bg: "bg-violet-50",

@@ -1,112 +1,216 @@
 /**
  * Items API — semua operasi CRUD untuk board_items.
- * v2 — added activity logging, subtask support, sprint filtering.
+ *
+ * v3 — production hardening:
+ * - validasi ID/field di boundary, allowlist field update
+ * - pagination default + batas maksimum di semua list
+ * - listMyTasks difilter di server (bukan fetch semua lalu filter di JS)
+ * - reorder lewat satu RPC (bukan N request)
+ * - activity log dikirim satu batch insert
  */
 import { createClient } from "@/lib/supabase/client";
 import { activityApi } from "./activity";
+import { apiError } from "./errors";
+import {
+  assert,
+  clampLimit,
+  isValidEmail,
+  isValidUuid,
+  parseSort,
+  requireNonEmptyString,
+  requirePlainObject,
+  requireUuid,
+  requireUuidArray,
+} from "@/lib/validation";
+
+const ITEM_SORT_FIELDS = ["updated_at", "created_at", "order_index", "title"];
+const ITEM_UPDATE_FIELDS = [
+  "title",
+  "description",
+  "order_index",
+  "group_id",
+  "data",
+  "parent_id",
+  "sprint_id",
+  "story_points",
+  "estimate_minutes",
+];
+
+function buildItemUpdates(updates) {
+  requirePlainObject(updates, "Perubahan item");
+  const clean = {};
+
+  for (const [key, value] of Object.entries(updates)) {
+    if (!ITEM_UPDATE_FIELDS.includes(key)) continue;
+    clean[key] = value;
+  }
+
+  if (clean.title !== undefined) {
+    clean.title = requireNonEmptyString(clean.title, { field: "Judul task", max: 300 });
+  }
+  if (clean.description !== undefined) {
+    assert(typeof clean.description === "string" && clean.description.length <= 20000, "Deskripsi terlalu panjang.");
+  }
+  if (clean.group_id !== undefined) {
+    assert(typeof clean.group_id === "string" && clean.group_id.length <= 100, "Group tidak valid.");
+  }
+  if (clean.order_index !== undefined) {
+    assert(Number.isInteger(clean.order_index) && clean.order_index >= 0, "Order tidak valid.");
+  }
+  if (clean.story_points !== undefined) {
+    assert(Number.isInteger(clean.story_points) && clean.story_points >= 0, "Story points tidak valid.");
+  }
+  if (clean.estimate_minutes !== undefined) {
+    assert(Number.isInteger(clean.estimate_minutes) && clean.estimate_minutes >= 0, "Estimasi tidak valid.");
+  }
+  if (clean.parent_id !== undefined && clean.parent_id !== null) {
+    requireUuid(clean.parent_id, "Parent ID");
+  }
+  if (clean.sprint_id !== undefined && clean.sprint_id !== null) {
+    requireUuid(clean.sprint_id, "Sprint ID");
+  }
+  if (clean.data !== undefined) {
+    requirePlainObject(clean.data, "Data item");
+  }
+
+  assert(Object.keys(clean).length > 0, "Tidak ada perubahan yang valid.");
+  return clean;
+}
 
 export const itemsApi = {
   /**
-   * List item untuk satu board atau semua board user.
+   * List item untuk satu board atau semua board user (RLS-scoped).
    */
   async list({ boardId, sort = "-updated_at", limit, sprintId, parentId } = {}) {
     const supabase = createClient();
-    const isDesc = sort.startsWith("-");
-    const field = isDesc ? sort.slice(1) : sort;
+    const { field, ascending } = parseSort(sort, ITEM_SORT_FIELDS);
+    const pageSize = clampLimit(limit, { defaultLimit: 1000, maxLimit: 5000 });
 
-    let query = supabase.from("board_items").select("*").order(field, { ascending: !isDesc });
+    let query = supabase
+      .from("board_items")
+      .select("*")
+      .order(field, { ascending })
+      .limit(pageSize);
 
-    if (boardId) query = query.eq("board_id", boardId);
-    if (sprintId) query = query.eq("sprint_id", sprintId);
+    if (boardId) query = query.eq("board_id", requireUuid(boardId, "Board ID"));
+    if (sprintId) query = query.eq("sprint_id", requireUuid(sprintId, "Sprint ID"));
     if (parentId !== undefined) {
-      query = parentId === null
-        ? query.is("parent_id", null)
-        : query.eq("parent_id", parentId);
+      if (parentId === null) {
+        query = query.is("parent_id", null);
+      } else {
+        query = query.eq("parent_id", requireUuid(parentId, "Parent ID"));
+      }
     }
-    if (limit) query = query.limit(limit);
 
     const { data, error } = await query;
-    if (error) throw new Error("Gagal memuat items: " + error.message);
+    if (error) throw apiError(error, "Gagal memuat items.");
     return data || [];
   },
 
   /**
    * List items untuk satu board, urut by order_index.
    */
-  async listByBoard(boardId) {
+  async listByBoard(boardId, { limit } = {}) {
+    requireUuid(boardId, "Board ID");
+    const pageSize = clampLimit(limit, { defaultLimit: 1000, maxLimit: 5000 });
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("board_items")
       .select("*")
       .eq("board_id", boardId)
-      .order("order_index", { ascending: true });
+      .order("order_index", { ascending: true })
+      .limit(pageSize);
 
-    if (error) throw new Error("Gagal memuat items: " + error.message);
+    if (error) throw apiError(error, "Gagal memuat items.");
     return data || [];
   },
 
   /**
    * List subtasks for a parent item.
    */
-  async listSubtasks(parentId) {
+  async listSubtasks(parentId, { limit } = {}) {
+    requireUuid(parentId, "Parent ID");
+    const pageSize = clampLimit(limit, { defaultLimit: 200, maxLimit: 500 });
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("board_items")
       .select("*")
       .eq("parent_id", parentId)
-      .order("order_index", { ascending: true });
+      .order("order_index", { ascending: true })
+      .limit(pageSize);
 
-    if (error) throw new Error("Failed to load subtasks: " + error.message);
+    if (error) throw apiError(error, "Failed to load subtasks.");
     return data || [];
   },
 
   /**
    * List my tasks across all accessible boards.
+   * Filters server-side (scalar owner string + array-owner containment)
+   * instead of downloading the whole table.
    */
-  async listMyTasks(userEmail) {
+  async listMyTasks(userEmail, { limit } = {}) {
+    assert(typeof userEmail === "string" && isValidEmail(userEmail), "Email user tidak valid.");
+    const pageSize = clampLimit(limit, { defaultLimit: 200, maxLimit: 500 });
+
     const supabase = createClient();
-    
-    // RLS automatically handles board access
-    const { data, error } = await supabase
-      .from("board_items")
-      .select("*, board:boards(title, color)")
-      .order("updated_at", { ascending: false });
+    const buildQuery = () =>
+      supabase
+        .from("board_items")
+        .select("*, board:boards(title, color)")
+        .order("updated_at", { ascending: false })
+        .limit(pageSize);
 
-    if (error) throw new Error("Gagal memuat tugas saya: " + error.message);
-    if (!data) return [];
+    const [scalarResult, arrayResult] = await Promise.all([
+      buildQuery().eq("data->>owner", userEmail),
+      buildQuery().contains("data", { owner: [userEmail] }),
+    ]);
 
-    // Filter by assignee
-    return data.filter(item => {
-      const owner = item.data?.owner;
-      if (!owner) return false;
-      if (Array.isArray(owner)) {
-        return owner.includes(userEmail);
-      }
-      return owner === userEmail;
-    });
+    if (scalarResult.error) throw apiError(scalarResult.error, "Gagal memuat tugas saya.");
+    if (arrayResult.error) throw apiError(arrayResult.error, "Gagal memuat tugas saya.");
+
+    const merged = new Map();
+    for (const item of [...(scalarResult.data || []), ...(arrayResult.data || [])]) {
+      merged.set(item.id, item);
+    }
+
+    return Array.from(merged.values()).sort(
+      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+    );
   },
 
   /**
    * Buat item baru.
    */
   async create({ board_id, group_id, title, order_index = 0, data = {}, parent_id, sprint_id, description }) {
-    const supabase = createClient();
+    requireUuid(board_id, "Board ID");
+    const cleanGroupId = group_id !== undefined && group_id !== null ? String(group_id) : "";
+    assert(cleanGroupId.length > 0 && cleanGroupId.length <= 100, "Group tidak valid.");
+    requireNonEmptyString(title, { field: "Judul task", max: 300 });
+    assert(Number.isInteger(order_index) && order_index >= 0, "Order tidak valid.");
+    requirePlainObject(data, "Data item");
+    if (parent_id) requireUuid(parent_id, "Parent ID");
+    if (sprint_id) requireUuid(sprint_id, "Sprint ID");
+    if (description !== undefined && description !== null) {
+      assert(typeof description === "string" && description.length <= 20000, "Deskripsi terlalu panjang.");
+    }
 
-    const insertData = { board_id, group_id: String(group_id), title, order_index, data };
+    const insertData = { board_id, group_id: cleanGroupId, title: title.trim(), order_index, data };
     if (parent_id) insertData.parent_id = parent_id;
     if (sprint_id) insertData.sprint_id = sprint_id;
     if (description) insertData.description = description;
 
+    const supabase = createClient();
     const { data: item, error } = await supabase
       .from("board_items")
       .insert(insertData)
       .select()
       .single();
 
-    if (error) throw new Error("Gagal membuat item: " + error.message);
+    if (error) throw apiError(error, "Gagal membuat item.");
 
-    // Log activity
-    activityApi.log({ item_id: item.id, action: "created", new_value: title }).catch(() => {});
+    activityApi.log({ item_id: item.id, action: "created", new_value: item.title }).catch(() => {});
 
     return item;
   },
@@ -119,13 +223,10 @@ export const itemsApi = {
    * @param {Array}  columns - board column definitions (for readable field names)
    */
   async update(id, updates, prevItem, columns) {
+    requireUuid(id, "Item ID");
+    const clean = buildItemUpdates(updates);
+
     const supabase = createClient();
-
-    const clean = { ...updates };
-    delete clean.id;
-    delete clean.board_id;
-    delete clean.created_at;
-
     const { data, error } = await supabase
       .from("board_items")
       .update(clean)
@@ -133,95 +234,15 @@ export const itemsApi = {
       .select()
       .single();
 
-    if (error) throw new Error("Gagal update item: " + error.message);
-
-    // Build column title lookup from column definitions
-    const colTitleMap = {};
-    if (columns) {
-      for (const col of columns) {
-        colTitleMap[col.id] = col.title || col.id;
+    if (error) {
+      if (error.code === "PGRST116") {
+        throw new Error("Task tidak ditemukan atau kamu tidak punya akses.");
       }
+      throw apiError(error, "Gagal update item.");
     }
 
-    const getFieldLabel = (key) => {
-      // Check built-in fields first
-      const builtins = {
-        title: "Title",
-        description: "Description",
-        order_index: "Order",
-        group_id: "Group",
-      };
-      if (builtins[key]) return builtins[key];
-      // Use column title if available
-      if (colTitleMap[key]) return colTitleMap[key];
-      // Fallback: format the key
-      return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    };
-
-    const formatValue = (val) => {
-      if (val === null || val === undefined || val === "") return "empty";
-      if (Array.isArray(val)) return val.join(", ") || "empty";
-      if (typeof val === "object") return JSON.stringify(val);
-      if (typeof val === "boolean") return val ? "Yes" : "No";
-      return String(val);
-    };
-
-    // Log activity for changed fields
     if (prevItem) {
-      const logPromises = [];
-
-      // Check title change
-      if (clean.title !== undefined && clean.title !== prevItem.title) {
-        logPromises.push(
-          activityApi.logFieldChange({
-            item_id: id, field_name: "Title",
-            old_value: formatValue(prevItem.title),
-            new_value: formatValue(clean.title),
-          })
-        );
-      }
-
-      // Check description change
-      if (clean.description !== undefined && clean.description !== prevItem.description) {
-        logPromises.push(
-          activityApi.logFieldChange({
-            item_id: id, field_name: "Description",
-            old_value: formatValue(prevItem.description),
-            new_value: formatValue(clean.description),
-          })
-        );
-      }
-
-      // Check group change
-      if (clean.group_id !== undefined && clean.group_id !== prevItem.group_id) {
-        logPromises.push(
-          activityApi.logFieldChange({
-            item_id: id, field_name: "Group",
-            old_value: formatValue(prevItem.group_id),
-            new_value: formatValue(clean.group_id),
-          })
-        );
-      }
-
-      // Check data field changes (status, priority, owner, etc.)
-      if (clean.data) {
-        for (const [key, newVal] of Object.entries(clean.data)) {
-          const oldVal = prevItem.data?.[key];
-          if (formatValue(oldVal) !== formatValue(newVal)) {
-            logPromises.push(
-              activityApi.logFieldChange({
-                item_id: id,
-                field_name: getFieldLabel(key),
-                old_value: formatValue(oldVal),
-                new_value: formatValue(newVal),
-              })
-            );
-          }
-        }
-      }
-
-      // Fire all logs in parallel (don't block the response)
-      Promise.all(logPromises).catch(() => {});
+      void logFieldChanges(id, clean, prevItem, columns);
     }
 
     return data;
@@ -231,9 +252,9 @@ export const itemsApi = {
    * Hapus item.
    */
   async delete(id) {
+    requireUuid(id, "Item ID");
     const supabase = createClient();
 
-    // Log activity before deletion (we need the item title)
     const { data: item } = await supabase
       .from("board_items")
       .select("id, title")
@@ -241,7 +262,7 @@ export const itemsApi = {
       .single();
 
     const { error } = await supabase.from("board_items").delete().eq("id", id);
-    if (error) throw new Error("Gagal menghapus item: " + error.message);
+    if (error) throw apiError(error, "Gagal menghapus item.");
 
     if (item) {
       activityApi.log({ item_id: id, action: "deleted", old_value: item.title }).catch(() => {});
@@ -249,17 +270,89 @@ export const itemsApi = {
   },
 
   /**
-   * Batch reorder — update order_index untuk banyak item sekaligus.
+   * Batch reorder — satu RPC atomik untuk semua item dalam satu group.
    */
   async reorder(groupId, orderedIds) {
+    const cleanGroupId = groupId !== undefined && groupId !== null ? String(groupId) : "";
+    assert(cleanGroupId.length > 0 && cleanGroupId.length <= 100, "Group tidak valid.");
+    requireUuidArray(orderedIds, { field: "Daftar item", max: 1000 });
+
     const supabase = createClient();
-    const updates = orderedIds.map((id, index) =>
-      supabase.from("board_items").update({ order_index: index }).eq("id", id)
-    );
-    const results = await Promise.all(updates);
-    const errors = results.filter((r) => r.error).map((r) => r.error);
-    if (errors.length > 0) {
-      throw new Error("Gagal reorder items: " + errors.map((e) => e.message).join(", "));
-    }
+    const { error } = await supabase.rpc("reorder_board_items", {
+      p_group_id: cleanGroupId,
+      p_item_ids: orderedIds,
+    });
+
+    if (error) throw apiError(error, "Gagal reorder items.");
   },
 };
+
+/**
+ * Build and send activity entries for changed fields in one insert.
+ */
+async function logFieldChanges(itemId, clean, prevItem, columns) {
+  const colTitleMap = {};
+  if (Array.isArray(columns)) {
+    for (const col of columns) {
+      if (col?.id) colTitleMap[col.id] = col.title || col.id;
+    }
+  }
+
+  const builtins = {
+    title: "Title",
+    description: "Description",
+    order_index: "Order",
+    group_id: "Group",
+  };
+
+  const getFieldLabel = (key) => {
+    if (builtins[key]) return builtins[key];
+    if (colTitleMap[key]) return colTitleMap[key];
+    return key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === "") return "empty";
+    if (Array.isArray(value)) return value.join(", ") || "empty";
+    if (typeof value === "object") return JSON.stringify(value);
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    return String(value);
+  };
+
+  const entries = [];
+
+  for (const field of ["title", "description", "group_id"]) {
+    if (clean[field] !== undefined && clean[field] !== prevItem[field]) {
+      entries.push({
+        item_id: itemId,
+        action: "updated",
+        field_name: getFieldLabel(field),
+        old_value: formatValue(prevItem[field]),
+        new_value: formatValue(clean[field]),
+      });
+    }
+  }
+
+  if (clean.data) {
+    for (const [key, newValue] of Object.entries(clean.data)) {
+      const oldValue = prevItem.data?.[key];
+      if (formatValue(oldValue) !== formatValue(newValue)) {
+        entries.push({
+          item_id: itemId,
+          action: "updated",
+          field_name: getFieldLabel(key),
+          old_value: formatValue(oldValue),
+          new_value: formatValue(newValue),
+        });
+      }
+    }
+  }
+
+  if (entries.length === 0) return;
+
+  try {
+    await activityApi.logMany(entries);
+  } catch {
+    // Audit logging is best-effort — never block the save on it.
+  }
+}
