@@ -245,18 +245,20 @@ function LoginForm() {
           </p>
 
           {/* Dev Tools */}
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={async () => {
-                await signOut();
-                window.location.reload();
-              }}
-              className="w-full text-center text-xs text-slate-400 hover:text-red-500 transition-colors py-2"
-            >
-              ⚠ Paksa hapus session (dev)
-            </button>
-          </div>
+          {process.env.NODE_ENV !== "production" && (
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={async () => {
+                  await signOut();
+                  window.location.reload();
+                }}
+                className="w-full text-center text-xs text-slate-400 hover:text-red-500 transition-colors py-2"
+              >
+                ⚠ Paksa hapus session (dev)
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
