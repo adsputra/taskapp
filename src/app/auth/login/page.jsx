@@ -24,7 +24,13 @@ function LoginForm() {
     return () => { if (prev && prev !== "light") setTheme(prev); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const redirectTo = searchParams.get("redirect") || "/";
+  const rawRedirect = searchParams.get("redirect");
+  const isSafeRelative =
+    Boolean(rawRedirect) &&
+    rawRedirect.startsWith("/") &&
+    !rawRedirect.startsWith("//") &&
+    !rawRedirect.includes("\\");
+  const redirectTo = isSafeRelative ? rawRedirect : "/boards";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -239,7 +245,10 @@ function LoginForm() {
           {/* Sign Up Link */}
           <p className="text-center text-slate-500 mt-8">
             Belum punya akun?{" "}
-            <Link href="/auth/signup" className="text-[#0073EA] font-semibold hover:text-[#0056B3] transition-colors">
+            <Link
+              href={isSafeRelative ? `/auth/signup?redirect=${encodeURIComponent(rawRedirect)}` : "/auth/signup"}
+              className="text-[#0073EA] font-semibold hover:text-[#0056B3] transition-colors"
+            >
               Daftar sekarang
             </Link>
           </p>

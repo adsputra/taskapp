@@ -94,6 +94,7 @@ tests/                          # Unit test (node:test)
    007_security_hardening.sql   ← wajib; mengaktifkan RLS board_members + RPC undangan
    008_private_attachments.sql  ← bucket task-attachments jadi private + Storage RLS
    009_analytics_rpc.sql        ← RPC agregasi analytics
+   010_member_delete_policies.sql ← policy DELETE untuk komentar & time tracking member
    ```
 
    Alternatif dengan Supabase CLI: jalankan `supabase init` terlebih dahulu, lalu `supabase db push`.

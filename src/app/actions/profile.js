@@ -69,7 +69,7 @@ export async function fixMissingProfiles(userIds) {
     if (userError || !user) return { error: "Tidak terautentikasi" };
 
     // Authorization: RLS on profiles/board_members only exposes rows the
-    // caller may see. Anything not returned is not eligible for repair.
+    // caller may see. Only IDs the caller is permitted to see are eligible.
     const allowed = new Set([user.id]);
 
     const { data: visibleProfiles, error: visibleError } = await supabase
@@ -96,15 +96,16 @@ export async function fixMissingProfiles(userIds) {
       if (row.user_id) allowed.add(row.user_id);
     }
 
-    const missing = uniqueIds.filter((id) => !allowed.has(id));
-    if (missing.length === 0) return { ok: true };
+    // Only process IDs that the caller is strictly AUTHORIZED to see
+    const eligible = uniqueIds.filter((id) => allowed.has(id));
+    if (eligible.length === 0) return { ok: true };
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (!serviceKey || !url) {
       // Fallback tanpa service role: hanya profile sendiri yang bisa diperbaiki.
-      if (missing.includes(user.id)) {
+      if (eligible.includes(user.id)) {
         const fullName =
           user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
         await supabase.from("profiles").upsert(
@@ -125,7 +126,7 @@ export async function fixMissingProfiles(userIds) {
     });
 
     let repaired = 0;
-    for (const uid of missing) {
+    for (const uid of eligible) {
       const { data: { user: target }, error } = await admin.auth.admin.getUserById(uid);
 
       if (error || !target) {

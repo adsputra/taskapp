@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { signup, signOut } from "@/app/actions/auth";
 import { Briefcase, MailCheck, AlertCircle, Loader2, LayoutGrid, Users, BarChart3 } from "lucide-react";
@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
 
@@ -22,6 +23,15 @@ export default function SignupPage() {
     setTheme("light");
     return () => { if (prev && prev !== "light") setTheme(prev); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rawRedirect = searchParams.get("redirect");
+  const isSafeRelative =
+    Boolean(rawRedirect) &&
+    rawRedirect.startsWith("/") &&
+    !rawRedirect.startsWith("//") &&
+    !rawRedirect.includes("\\");
+  const redirectTo = isSafeRelative ? rawRedirect : "/boards";
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +43,7 @@ export default function SignupPage() {
   const validateForm = () => {
     if (!fullName.trim()) { setError("Nama lengkap wajib diisi."); return false; }
     if (!email.trim()) { setError("Email wajib diisi."); return false; }
-    if (password.length < 6) { setError("Password minimal 6 karakter."); return false; }
+    if (password.length < 8) { setError("Password minimal 8 karakter."); return false; }
     return true;
   };
 
@@ -44,7 +54,7 @@ export default function SignupPage() {
         msg.includes("sudah terdaftar")) {
       return "Email ini sudah terdaftar. Silakan login.";
     }
-    if (msg.includes("password")) return "Password terlalu lemah. Gunakan minimal 6 karakter.";
+    if (msg.includes("password")) return "Password terlalu lemah. Gunakan minimal 8 karakter.";
     return message;
   };
 
@@ -71,7 +81,7 @@ export default function SignupPage() {
       }
 
       queryClient.invalidateQueries();
-      router.push("/");
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       console.error("Signup error:", err);
@@ -288,15 +298,15 @@ export default function SignupPage() {
               <Input 
                 id="password" 
                 type="password" 
-                placeholder="Buat password (min. 6 karakter)" 
+                placeholder="Buat password (min. 8 karakter)" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
-                minLength={6} 
+                minLength={8} 
                 autoComplete="new-password"
                 className="w-full h-12 px-4 rounded-xl border-slate-200 bg-white focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-all" 
               />
-              <p className="text-xs text-slate-400 mt-1.5">Minimal 6 karakter</p>
+              <p className="text-xs text-slate-400 mt-1.5">Minimal 8 karakter</p>
             </div>
 
             <Button 
@@ -317,7 +327,10 @@ export default function SignupPage() {
 
           <p className="text-center text-slate-500 mt-8">
             Sudah punya akun?{" "}
-            <Link href="/auth/login" className="text-[#0073EA] font-semibold hover:text-[#0056B3] transition-colors">
+            <Link
+              href={isSafeRelative ? `/auth/login?redirect=${encodeURIComponent(rawRedirect)}` : "/auth/login"}
+              className="text-[#0073EA] font-semibold hover:text-[#0056B3] transition-colors"
+            >
               Masuk
             </Link>
           </p>
@@ -339,5 +352,17 @@ export default function SignupPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-slate-200 border-t-[#0073EA]" />
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

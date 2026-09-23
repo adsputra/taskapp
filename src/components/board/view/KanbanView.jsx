@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, CalendarDays, MoreHorizontal, Users, List, Sparkles } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { format } from "date-fns";
+import { itemsApi } from "@/lib/api/items";
 
 import TaskEditModal from "../TaskEditModal";
 
@@ -305,12 +306,27 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
       const [reorderedItem] = currentItems.splice(source.index, 1);
       currentItems.splice(destination.index, 0, reorderedItem);
 
-      // Update order_index for all items in this column
-      currentItems.forEach((item, index) => 
-        onUpdateItem(item.id, { 
-          order_index: index,
-        })
-      );
+      // Update order_index: use atomic RPC if all items belong to the same group,
+      // otherwise only update items whose position actually changed.
+      const firstGroupId = currentItems[0]?.group_id;
+      const allSameGroup = firstGroupId && currentItems.every((i) => i.group_id === firstGroupId);
+
+      if (allSameGroup) {
+        itemsApi.reorder(firstGroupId, currentItems.map((i) => i.id)).catch((err) => {
+          console.error("Batch reorder failed, falling back to individual updates:", err);
+          currentItems.forEach((item, index) => {
+            if (item.order_index !== index) {
+              onUpdateItem(item.id, { order_index: index });
+            }
+          });
+        });
+      } else {
+        currentItems.forEach((item, index) => {
+          if (item.order_index !== index) {
+            onUpdateItem(item.id, { order_index: index });
+          }
+        });
+      }
     } else {
       // Moving between columns - this is where we change status/person
       const updatedData = { ...itemToMove.data };

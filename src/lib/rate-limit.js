@@ -88,13 +88,79 @@ export function createRateLimiter({
 }
 
 /**
- * Best-effort client IP extraction from a Headers-like object.
- * `x-forwarded-for` is set by Vercel/other proxies in front of Next.js.
+ * Simple format validator for IPv4 and IPv6 addresses.
+ */
+function isValidIp(ip) {
+  if (typeof ip !== "string") return false;
+  const trimmed = ip.trim();
+  const ipv4Parts = trimmed.split(".");
+  if (ipv4Parts.length === 4) {
+    const validOctets = ipv4Parts.every((octet) => {
+      if (!/^\d{1,3}$/.test(octet)) return false;
+      const num = Number(octet);
+      return num >= 0 && num <= 255 && (octet === "0" || !octet.startsWith("0"));
+    });
+    if (validOctets) return true;
+  }
+  if (/^[0-9a-fA-F:]{2,39}$/.test(trimmed) && trimmed.includes(":")) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Clean and normalize an IP candidate (strips surrounding spaces and ports).
+ */
+function cleanIp(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  let ip = raw.trim();
+  if (ip.startsWith("[") && ip.includes("]")) {
+    ip = ip.slice(1, ip.indexOf("]"));
+  } else if (ip.includes(".") && ip.includes(":")) {
+    ip = ip.split(":")[0];
+  }
+  return isValidIp(ip) ? ip : null;
+}
+
+/**
+ * Production-ready client IP extraction from a Headers-like object.
+ * Protects against X-Forwarded-For header spoofing (CWE-348) by:
+ * 1. Prioritizing trusted platform edge headers (Cloudflare, Vercel)
+ * 2. Checking trusted single-hop reverse proxy headers (X-Real-IP)
+ * 3. Inspecting the rightmost entry appended by the closest upstream proxy in X-Forwarded-For
+ * 4. Strictly validating IP format and stripping port numbers
  */
 export function getClientIp(headerStore) {
-  const forwarded = headerStore?.get?.("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return headerStore?.get?.("x-real-ip") || "unknown";
+  if (!headerStore) return "unknown";
+
+  const getHeader = (name) => {
+    if (typeof headerStore.get === "function") return headerStore.get(name);
+    return headerStore[name] || headerStore[name.toLowerCase()];
+  };
+
+  // 1. Cloudflare edge header
+  const cfIp = cleanIp(getHeader("cf-connecting-ip"));
+  if (cfIp) return cfIp;
+
+  // 2. Vercel edge/proxy headers
+  const vercelIp = cleanIp(getHeader("x-vercel-proxied-for") || getHeader("x-vercel-forwarded-for"));
+  if (vercelIp) return vercelIp;
+
+  // 3. X-Real-IP set by single-hop reverse proxies
+  const realIp = cleanIp(getHeader("x-real-ip"));
+  if (realIp) return realIp;
+
+  // 4. X-Forwarded-For (scan right-to-left to pick the closest verified proxy entry)
+  const forwarded = getHeader("x-forwarded-for");
+  if (forwarded && typeof forwarded === "string") {
+    const parts = forwarded.split(",").map((s) => s.trim()).filter(Boolean);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const candidate = cleanIp(parts[i]);
+      if (candidate) return candidate;
+    }
+  }
+
+  return "unknown";
 }
 
 const redisStore = createConfiguredRedisStore();
