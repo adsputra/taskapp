@@ -143,6 +143,26 @@ export const boardsApi = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Harus login untuk membuat board.");
 
+    // Pastikan profile user ada di tabel profiles agar foreign key (boards_user_id_fkey) tidak gagal
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+          avatar_url: user.user_metadata?.avatar_url || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      ).catch(() => {});
+    }
+
     const { data, error } = await supabase
       .from("boards")
       .insert({
@@ -157,7 +177,13 @@ export const boardsApi = {
       .select()
       .single();
 
-    if (error) throw apiError(error, "Gagal membuat board.");
+    if (error) {
+      throw apiError(error, "Gagal membuat board.", {
+        "23503": "Profil pengguna belum tersimpan di database. Silakan refresh atau perbarui profil Anda.",
+        "42501": "Tidak memiliki izin membuat board (aturan RLS database).",
+        "23505": "Board dengan data yang sama sudah ada.",
+      });
+    }
     return data;
   },
 

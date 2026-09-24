@@ -99,10 +99,12 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
 
       await onSubmit(boardData);
       setFormData({ title: '', description: '', color: '#0073EA', visibility: 'private' });
+      if (onClose) onClose();
     } catch (error) {
       console.error('Error creating board:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (

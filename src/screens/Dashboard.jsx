@@ -135,7 +135,7 @@ export default function Dashboard() {
                 boards={ownedBoards}
                 sharedBoards={sharedBoards}
                 isLoading={isLoading}
-                onCreateBoard={(data) => createBoard.mutate(data)}
+                onCreateBoard={(data) => createBoard.mutateAsync(data)}
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function Dashboard() {
             {/* Quick Actions */}
             <div className="stagger-item">
               <QuickActions
-                onCreateBoard={(data) => createBoard.mutate(data)}
+                onCreateBoard={(data) => createBoard.mutateAsync(data)}
               />
             </div>
 

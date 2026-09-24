@@ -302,7 +302,7 @@ export default function Boards() {
         <CreateBoardModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSubmit={(data) => createMutation.mutate(data)}
+          onSubmit={(data) => createMutation.mutateAsync(data)}
         />
 
         {editingBoard && (

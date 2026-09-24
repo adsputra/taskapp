@@ -54,14 +54,31 @@ export const userApi = {
       .single();
 
     if (profileError) {
-      // Profile belum ada — kembalikan data minimal dari auth
-      return {
+      // Profile belum ada — buat di database dan kembalikan data minimal dari auth
+      const fallbackProfile = {
         id: user.id,
         email: user.email,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
         avatar_url: user.user_metadata?.avatar_url || null,
         created_at: user.created_at,
       };
+
+      try {
+        await supabase.from("profiles").upsert(
+          {
+            id: user.id,
+            email: user.email,
+            full_name: fallbackProfile.full_name,
+            avatar_url: fallbackProfile.avatar_url,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+      } catch (_) {
+        // Abaikan jika database belum siap
+      }
+
+      return fallbackProfile;
     }
 
     return profile;
