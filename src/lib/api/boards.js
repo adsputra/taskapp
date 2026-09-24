@@ -140,8 +140,12 @@ export const boardsApi = {
     assert(Array.isArray(groups) && groups.length <= 200, "Group tidak valid.");
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Harus login untuk membuat board.");
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+
+    if (!session || !user) {
+      throw new Error("Sesi login telah kedaluwarsa. Silakan logout dan login kembali.");
+    }
 
     // Pastikan profile user ada di tabel profiles agar foreign key (boards_user_id_fkey) tidak gagal
     const { data: existingProfile } = await supabase
