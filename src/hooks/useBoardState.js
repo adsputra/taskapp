@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { boardsApi } from "@/lib/api/boards";
 import { itemsApi } from "@/lib/api/items";
 import { userApi } from "@/lib/api/user";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 // Helper to generate temporary IDs
@@ -15,19 +16,47 @@ export function useBoardState(boardId) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  // 1. Data Fetching (React Query)
+  // Unique client session ID to prevent reacting to self-broadcasts
+  const clientIdRef = useRef(null);
+  useEffect(() => {
+    if (!clientIdRef.current && typeof window !== "undefined") {
+      clientIdRef.current = window.crypto?.randomUUID?.() || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+    }
+  }, []);
+
+  const channelRef = useRef(null);
+
+  // Broadcast helper function for instant peer-to-peer websocket notification
+  const broadcastChange = useCallback((payload) => {
+    try {
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: "broadcast",
+          event: "board_change",
+          payload: { ...payload, senderId: clientIdRef.current },
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to broadcast board change:", e);
+    }
+  }, []);
+
+  // 1. Data Fetching (React Query with smart caching & window focus refetch)
   const { data: board, isLoading: boardLoading } = useQuery({
     queryKey: ["board", boardId],
     queryFn: () => boardsApi.get(boardId),
     enabled: !!boardId,
-    staleTime: 60 * 1000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: items = [], isLoading: itemsLoading } = useQuery({
     queryKey: ["items", boardId],
     queryFn: () => itemsApi.listByBoard(boardId),
     enabled: !!boardId,
-    staleTime: 60 * 1000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000, // Background heartbeat polling fallback
   });
 
   const { data: currentUser } = useQuery({
@@ -38,7 +67,104 @@ export function useBoardState(boardId) {
 
   const isLoading = boardLoading || itemsLoading;
 
-  // 2. Compute Role
+  // 2. Realtime Subscription (Supabase Broadcast + Postgres Changes)
+  useEffect(() => {
+    if (!boardId) return;
+
+    const supabase = createClient();
+    const channel = supabase.channel(`board-realtime:${boardId}`, {
+      config: {
+        broadcast: { ack: false, self: false },
+      },
+    });
+
+    // A. Broadcast from other users (ultra-fast peer sync <50ms)
+    channel.on(
+      "broadcast",
+      { event: "board_change" },
+      ({ payload }) => {
+        if (!payload || (clientIdRef.current && payload.senderId === clientIdRef.current)) return;
+
+        if (payload.type === "items") {
+          if (payload.action === "create" && payload.item) {
+            queryClient.setQueryData(["items", boardId], (old = []) => {
+              if (old.some((i) => i.id === payload.item.id)) return old;
+              return [...old, payload.item];
+            });
+          } else if (payload.action === "update" && payload.item) {
+            queryClient.setQueryData(["items", boardId], (old = []) =>
+              old.map((i) => (i.id === payload.item.id ? { ...i, ...payload.item } : i))
+            );
+          } else if (payload.action === "delete" && payload.itemId) {
+            queryClient.setQueryData(["items", boardId], (old = []) =>
+              old.filter((i) => i.id !== payload.itemId)
+            );
+          }
+          // Invalidate to guarantee full sync with server
+          queryClient.invalidateQueries({ queryKey: ["items", boardId] });
+        } else if (payload.type === "board") {
+          queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+        }
+      }
+    );
+
+    // B. Postgres changes (database-level CDC events)
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "board_items",
+        filter: `board_id=eq.${boardId}`,
+      },
+      (payload) => {
+        if (payload.eventType === "INSERT" && payload.new) {
+          queryClient.setQueryData(["items", boardId], (old = []) => {
+            if (old.some((i) => i.id === payload.new.id)) return old;
+            return [...old, payload.new];
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ["items", boardId] });
+      }
+    );
+
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "boards",
+        filter: `id=eq.${boardId}`,
+      },
+      () => {
+        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      }
+    );
+
+    channel.on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "board_members",
+        filter: `board_id=eq.${boardId}`,
+      },
+      () => {
+        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+        queryClient.invalidateQueries({ queryKey: ["board-members", boardId] });
+      }
+    );
+
+    channel.subscribe();
+    channelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+    };
+  }, [boardId, queryClient]);
+
+  // 3. Compute Role
   const userRole = useMemo(() => {
     if (!board || !currentUser) return null;
     if (board.user_id === currentUser.id) return "admin";
@@ -48,35 +174,50 @@ export function useBoardState(boardId) {
     return member?.role || null;
   }, [board, currentUser]);
 
-  // 3. Mutations
+  // 4. Mutations
   const itemCreate = useMutation({
     mutationFn: (data) => itemsApi.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["items", boardId] }),
+    onSuccess: (newItem) => {
+      queryClient.setQueryData(["items", boardId], (old = []) => {
+        if (old.some((i) => i.id === newItem.id)) return old;
+        return [...old, newItem];
+      });
+      queryClient.invalidateQueries({ queryKey: ["items", boardId] });
+      broadcastChange({ type: "items", action: "create", item: newItem });
+    },
     onError: (err) => toast.error(err.message),
   });
 
   const itemUpdate = useMutation({
     mutationFn: ({ id, updates, prevItem, columns }) => itemsApi.update(id, updates, prevItem, columns),
-    onError: (err, variables, context) => {
+    onSuccess: (updatedItem) => {
+      broadcastChange({ type: "items", action: "update", item: updatedItem });
+    },
+    onError: (err) => {
       toast.error(err.message);
-      // Revert optimistic update on error if needed
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
     },
   });
 
   const itemDelete = useMutation({
     mutationFn: (id) => itemsApi.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["items", boardId] }),
+    onSuccess: (_, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["items", boardId] });
+      broadcastChange({ type: "items", action: "delete", itemId: deletedId });
+    },
     onError: (err) => toast.error(err.message),
   });
 
   const boardUpdate = useMutation({
     mutationFn: ({ id, updates }) => boardsApi.update(id, updates),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["board", boardId] }),
+    onSuccess: (updatedBoard) => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      broadcastChange({ type: "board", action: "update", board: updatedBoard });
+    },
     onError: (err) => toast.error(err.message),
   });
 
-  // 4. URL State Management
+  // 5. URL State Management
   const updateUrlParams = useCallback((updates) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
@@ -113,7 +254,6 @@ export function useBoardState(boardId) {
   const setSearchQuery = (search) => updateUrlParams({ search });
   const setSort = (sort, dir) => updateUrlParams({ sort, dir });
   const setFilters = (newFilters) => {
-    // If it's a function (like previous state update), we need to resolve it
     if (typeof newFilters === "function") {
       newFilters = newFilters(filters);
     }
@@ -125,7 +265,7 @@ export function useBoardState(boardId) {
   };
   const setHiddenColumns = (newHiddenSet) => updateUrlParams({ hide: Array.from(newHiddenSet) });
 
-  // 5. Local State (Modals)
+  // 6. Local State (Modals)
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -139,9 +279,24 @@ export function useBoardState(boardId) {
   const [showIntegrations, setShowIntegrations] = useState(false);
   const [showAutomations, setShowAutomations] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
 
-  // 6. Action Handlers
+  // Selected task state automatically synced with latest items data
+  const [selectedTaskRaw, setSelectedTaskRaw] = useState(null);
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskRaw) return null;
+    const fromItems = items.find((i) => i.id === selectedTaskRaw.id);
+    return fromItems ? { ...selectedTaskRaw, ...fromItems } : selectedTaskRaw;
+  }, [items, selectedTaskRaw]);
+
+  const setSelectedTask = useCallback((taskOrUpdater) => {
+    if (typeof taskOrUpdater === "function") {
+      setSelectedTaskRaw((prev) => taskOrUpdater(prev));
+    } else {
+      setSelectedTaskRaw(taskOrUpdater);
+    }
+  }, []);
+
+  // 7. Action Handlers
   const handleAddItem = useCallback(async (groupId, title) => {
     if (!boardId || !board) return;
     const maxOrder = Math.max(0, ...items
@@ -172,7 +327,7 @@ export function useBoardState(boardId) {
   }, [boardId, board, items, itemCreate]);
 
   const handleUpdateItem = useCallback((itemId, updates, prevItem) => {
-    // Optimistic update
+    // Optimistic update locally
     queryClient.setQueryData(["items", boardId], (old = []) =>
       old.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
     );
@@ -180,7 +335,9 @@ export function useBoardState(boardId) {
     if (selectedTask?.id === itemId) {
       setSelectedTask((prev) => prev ? { ...prev, ...updates } : prev);
     }
-  }, [boardId, queryClient, itemUpdate, selectedTask, board?.columns]);
+    // Instant peer broadcast
+    broadcastChange({ type: "items", action: "update", item: { id: itemId, ...updates } });
+  }, [boardId, queryClient, itemUpdate, selectedTask, board?.columns, broadcastChange, setSelectedTask]);
 
   const handleDeleteItem = useCallback((itemId) => {
     itemDelete.mutate(itemId);
@@ -209,11 +366,12 @@ export function useBoardState(boardId) {
 
     try {
       await itemsApi.reorder(groupId, reordered.map((i) => i.id));
+      broadcastChange({ type: "items", action: "reorder", groupId });
     } catch (err) {
       toast.error("Gagal reorder: " + err.message);
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
     }
-  }, [boardId, items, queryClient]);
+  }, [boardId, items, queryClient, broadcastChange]);
 
   const handleAddColumn = useCallback((colData) => {
     if (!board) return;
@@ -262,20 +420,17 @@ export function useBoardState(boardId) {
   }, [board, boardUpdate]);
 
   return {
-    // Data
     board,
     items,
     isLoading,
     userRole,
     
-    // URL States
     currentView, setCurrentView,
     searchQuery, setSearchQuery,
     sortBy, sortDirection, setSort,
     filters, setFilters,
     hiddenColumns, setHiddenColumns,
 
-    // Local States
     selectedItems, setSelectedItems,
     showNewTaskModal, setShowNewTaskModal,
     showFilterPanel, setShowFilterPanel,
@@ -291,7 +446,6 @@ export function useBoardState(boardId) {
     showShare, setShowShare,
     selectedTask, setSelectedTask,
 
-    // Actions
     handleAddItem,
     handleUpdateItem,
     handleDeleteItem,

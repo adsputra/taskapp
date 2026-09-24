@@ -33,7 +33,7 @@ const COLUMN_DEFAULT_WIDTH = {
   number: 130,
   status: 130,
   priority: 130,
-  date: 140,
+  date: 150,
   people: 150,
   dropdown: 150,
   checkbox: 80,
