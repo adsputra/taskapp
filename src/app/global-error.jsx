@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
@@ -27,12 +28,12 @@ export default function GlobalError({ error, reset }) {
             >
               Muat Ulang
             </button>
-            <a
+            <Link
               href="/boards"
               className="inline-flex items-center justify-center rounded-xl h-11 px-5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
             >
               Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </body>

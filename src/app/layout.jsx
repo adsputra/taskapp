@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Tuesday.com — Task Management",
+  title: "Tuesday — Task Management",
   description: "Manage your projects and workflows",
 };
 

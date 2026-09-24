@@ -202,7 +202,7 @@ export default function Sidebar() {
               <Briefcase className="w-4.5 h-4.5 text-white" />
             </div>
             <span className={`font-bold text-slate-800 dark:text-slate-100 tracking-tight transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 overflow-hidden absolute' : 'text-xl w-auto opacity-100 relative'}`}>
-              TaskApp
+              Tuesday
             </span>
           </Link>
           
@@ -323,7 +323,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <Briefcase className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-slate-800 dark:text-slate-100 text-xl tracking-tight">TaskApp</span>
+          <span className="font-bold text-slate-800 dark:text-slate-100 text-xl tracking-tight">Tuesday</span>
         </Link>
         <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setMobileMenuOpen(true)}>
           <Menu className="w-6 h-6" />

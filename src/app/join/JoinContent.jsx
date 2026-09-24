@@ -64,7 +64,7 @@ export default function JoinContent() {
             <div className="w-10 h-10 bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] rounded-xl flex items-center justify-center shadow-md">
               <Briefcase className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-[#323338] text-2xl">Tuesday.com</span>
+            <span className="font-bold text-[#323338] text-2xl">Tuesday</span>
           </Link>
         </div>
 
@@ -129,7 +129,7 @@ export default function JoinContent() {
             </div>
           )}
         </div>
-        <p className="text-center text-xs text-[#676879] mt-4">© {new Date().getFullYear()} Tuesday.com</p>
+        <p className="text-center text-xs text-[#676879] mt-4">© {new Date().getFullYear()} Tuesday</p>
       </div>
     </div>
   );

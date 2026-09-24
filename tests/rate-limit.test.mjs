@@ -131,13 +131,49 @@ test("configured redis store requires both env vars and a valid URL", () => {
   );
 });
 
-test("getClientIp prefers the first x-forwarded-for entry", () => {
+test("getClientIp prioritizes trusted platform headers over spoofable headers", () => {
+  // Cloudflare priority
+  const cfHeaders = new Map([
+    ["cf-connecting-ip", "198.51.100.1"],
+    ["x-vercel-proxied-for", "198.51.100.2"],
+    ["x-real-ip", "198.51.100.3"],
+    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
+  ]);
+  assert.equal(getClientIp({ get: (k) => cfHeaders.get(k) }), "198.51.100.1");
+
+  // Vercel priority over x-real-ip & x-forwarded-for
+  const vercelHeaders = new Map([
+    ["x-vercel-proxied-for", "198.51.100.2"],
+    ["x-real-ip", "198.51.100.3"],
+    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
+  ]);
+  assert.equal(getClientIp({ get: (k) => vercelHeaders.get(k) }), "198.51.100.2");
+
+  // X-Real-IP priority over x-forwarded-for
+  const realIpHeaders = new Map([
+    ["x-real-ip", "198.51.100.3"],
+    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
+  ]);
+  assert.equal(getClientIp({ get: (k) => realIpHeaders.get(k) }), "198.51.100.3");
+});
+
+test("getClientIp prevents X-Forwarded-For spoofing by selecting the rightmost verified entry", () => {
+  // Client prepends a spoofed IP (203.0.113.7), while the proxy appends the true client IP (70.41.3.18)
   const headers = new Map([
     ["x-forwarded-for", "203.0.113.7, 70.41.3.18"],
-    ["x-real-ip", "10.0.0.1"],
   ]);
-  const headerStore = { get: (key) => headers.get(key) };
+  assert.equal(getClientIp({ get: (k) => headers.get(k) }), "70.41.3.18");
+});
 
-  assert.equal(getClientIp(headerStore), "203.0.113.7");
+test("getClientIp strips ports and rejects malformed values", () => {
+  // IPv4 with port
+  assert.equal(getClientIp({ get: (k) => (k === "x-real-ip" ? "192.0.2.1:8080" : null) }), "192.0.2.1");
+
+  // IPv6 bracketed with port
+  assert.equal(getClientIp({ get: (k) => (k === "x-real-ip" ? "[2001:db8::1]:8080" : null) }), "2001:db8::1");
+
+  // Malformed / non-IP values fall back to unknown
+  assert.equal(getClientIp({ get: (k) => (k === "x-forwarded-for" ? "invalid-ip, 999.999.999.999" : null) }), "unknown");
   assert.equal(getClientIp({ get: () => null }), "unknown");
+  assert.equal(getClientIp(null), "unknown");
 });

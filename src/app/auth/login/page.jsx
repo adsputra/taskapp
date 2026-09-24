@@ -111,7 +111,7 @@ function LoginForm() {
             <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
               <Briefcase className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-white text-2xl">Tuesday.com</span>
+            <span className="font-bold text-white text-2xl">Tuesday</span>
           </Link>
 
           {/* Hero Content */}
@@ -147,7 +147,7 @@ function LoginForm() {
 
           {/* Footer */}
           <p className="text-white/50 text-sm">
-            &copy; {new Date().getFullYear()} Tuesday.com. All rights reserved.
+            &copy; {new Date().getFullYear()} Tuesday. All rights reserved.
           </p>
         </div>
       </motion.div>
@@ -166,7 +166,7 @@ function LoginForm() {
               <div className="w-10 h-10 bg-[#0073EA] rounded-xl flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-slate-800 text-xl">Tuesday.com</span>
+              <span className="font-bold text-slate-800 text-xl">Tuesday</span>
             </Link>
           </div>
 
