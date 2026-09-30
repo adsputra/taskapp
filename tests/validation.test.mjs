@@ -7,9 +7,12 @@ import {
   parseSort,
   passwordError,
   requireNonEmptyString,
+  requireUuid,
   requireUuidArray,
+  safeRedirectPath,
   sanitizeFilename,
   validateUploadFile,
+  ValidationError,
 } from "../src/lib/validation.js";
 
 test("isValidEmail accepts normal addresses and rejects malformed ones", () => {
@@ -93,4 +96,29 @@ test("requireUuidArray rejects non-UUID members and oversized batches", () => {
   assert.throws(() => requireUuidArray([]), /tidak boleh kosong/);
   assert.throws(() => requireUuidArray(["nope"]), /tidak valid/);
   assert.throws(() => requireUuidArray([uuid, uuid], { max: 1 }), /maksimal 1/);
+});
+
+test("assert throws ValidationError so callers can tell user-facing messages apart", () => {
+  assert.throws(() => requireUuid("nope", "Board ID"), (error) => error instanceof ValidationError);
+  assert.ok(new ValidationError("x") instanceof Error);
+});
+
+test("safeRedirectPath keeps same-origin paths and rejects every off-site form", () => {
+  assert.equal(safeRedirectPath("/join?token=abc"), "/join?token=abc");
+  assert.equal(safeRedirectPath("/boards/1#top"), "/boards/1#top");
+
+  for (const attack of [
+    "//evil.com",
+    "/\\evil.com",
+    "/\t/evil.com", // tab is stripped by the URL parser → //evil.com
+    "/\n/evil.com",
+    "/.//evil.com", // normalizes to //evil.com
+    "https://evil.com",
+    "javascript:alert(1)",
+    "",
+    null,
+  ]) {
+    assert.equal(safeRedirectPath(attack), "/boards", JSON.stringify(attack));
+  }
+  assert.equal(safeRedirectPath("//evil.com", "/"), "/");
 });

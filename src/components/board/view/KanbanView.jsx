@@ -398,7 +398,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   return (
     <div className="h-full">
       {/* Header with grouping selector */}
-      <div className="flex items-center justify-between mb-6 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center">
             <MoreHorizontal className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -439,14 +439,14 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
 
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-6 overflow-x-auto p-2 pb-8">
+        <div className="flex gap-4 xl:gap-6 overflow-x-auto p-2 pb-8">
           {columnsData.map((column, columnIndex) => (
             <Droppable key={column.id} droppableId={column.id}>
               {(provided, snapshot) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`w-80 flex-shrink-0 rounded-2xl p-2 transition-all duration-300 bg-white dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
+                  className={`flex-1 basis-0 min-w-[272px] max-w-[420px] rounded-2xl p-2 transition-all duration-300 bg-white dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
                   style={{ 
                     background: snapshot.isDraggingOver 
                       ? `linear-gradient(135deg, ${column.color}20 0%, ${column.color}10 100%)`

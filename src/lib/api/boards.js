@@ -290,6 +290,9 @@ export const boardsApi = {
 
     if (error) {
       if (error.code === "28000") throw new Error("Harus login untuk menerima undangan.");
+      if (error.code === "42501") {
+        throw new Error("Undangan ini untuk email lain. Login dengan akun yang diundang.");
+      }
       throw apiError(error, "Gagal menerima undangan.");
     }
     if (!data) throw new Error("Undangan tidak ditemukan atau sudah kadaluarsa.");

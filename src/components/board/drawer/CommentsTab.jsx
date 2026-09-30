@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { commentsApi } from "@/lib/api/comments";
 import { activityApi } from "@/lib/api/activity";
-import { fixMissingProfiles } from "@/app/actions/profile";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Send, Edit3, Trash2, X, Check, AtSign } from "lucide-react";
@@ -20,7 +19,6 @@ export default function CommentsTab({ task, userRole, board }) {
   const [userIdReady, setUserIdReady] = useState(false);
   const textareaRef = useRef(null);
   const commentsEndRef = useRef(null);
-  const profilesFixedRef = useRef(false);
   const queryClient = useQueryClient();
 
   const isViewer = userRole === "viewer";
@@ -39,58 +37,6 @@ export default function CommentsTab({ task, userRole, board }) {
     queryFn: () => commentsApi.listByItem(task.id),
     enabled: !!task?.id,
   });
-
-  // Auto-fix profiles with missing data (runs once per mount)
-  useEffect(() => {
-    if (!comments.length || profilesFixedRef.current) return;
-    const missingIds = comments
-      .filter((c) => !c.profiles || (!c.profiles.email && !c.profiles.full_name))
-      .map((c) => c.user_id)
-      .filter(Boolean);
-    const unique = [...new Set(missingIds)];
-    if (unique.length > 0) {
-      profilesFixedRef.current = true;
-      fixMissingProfiles(unique)
-        .then((result) => {
-          // Re-fetch comments after fixing profiles
-          queryClient.invalidateQueries({ queryKey: ["comments", task?.id] });
-          // If only partial fix (no service role key), allow retry next time
-          if (result?.partial) {
-            profilesFixedRef.current = false;
-          }
-        })
-        .catch(() => {
-          // Allow retry on error
-          profilesFixedRef.current = false;
-        });
-    }
-  }, [comments, task?.id, queryClient]);
-
-  // Realtime — listen for new/edited/deleted comments from other users
-  useEffect(() => {
-    if (!task?.id) return;
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`comments:${task.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "task_comments",
-          filter: `item_id=eq.${task.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["comments", task.id] });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [task?.id, queryClient]);
 
   const createComment = useMutation({
     mutationFn: (text) => commentsApi.create({ item_id: task.id, content: text }),

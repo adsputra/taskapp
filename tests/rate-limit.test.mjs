@@ -131,49 +131,46 @@ test("configured redis store requires both env vars and a valid URL", () => {
   );
 });
 
-test("getClientIp prioritizes trusted platform headers over spoofable headers", () => {
-  // Cloudflare priority
-  const cfHeaders = new Map([
+const headersOf = (entries) => {
+  const map = new Map(entries);
+  return { get: (key) => map.get(key) ?? null };
+};
+
+test("getClientIp ignores forgeable platform headers unless configured as trusted", () => {
+  // A client can send cf-connecting-ip / x-real-ip itself; rotating them
+  // must not yield a fresh rate-limit bucket.
+  const spoofed = headersOf([
     ["cf-connecting-ip", "198.51.100.1"],
-    ["x-vercel-proxied-for", "198.51.100.2"],
+    ["x-vercel-forwarded-for", "198.51.100.2"],
     ["x-real-ip", "198.51.100.3"],
-    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
-  ]);
-  assert.equal(getClientIp({ get: (k) => cfHeaders.get(k) }), "198.51.100.1");
-
-  // Vercel priority over x-real-ip & x-forwarded-for
-  const vercelHeaders = new Map([
-    ["x-vercel-proxied-for", "198.51.100.2"],
-    ["x-real-ip", "198.51.100.3"],
-    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
-  ]);
-  assert.equal(getClientIp({ get: (k) => vercelHeaders.get(k) }), "198.51.100.2");
-
-  // X-Real-IP priority over x-forwarded-for
-  const realIpHeaders = new Map([
-    ["x-real-ip", "198.51.100.3"],
-    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
-  ]);
-  assert.equal(getClientIp({ get: (k) => realIpHeaders.get(k) }), "198.51.100.3");
-});
-
-test("getClientIp prevents X-Forwarded-For spoofing by selecting the rightmost verified entry", () => {
-  // Client prepends a spoofed IP (203.0.113.7), while the proxy appends the true client IP (70.41.3.18)
-  const headers = new Map([
     ["x-forwarded-for", "203.0.113.7, 70.41.3.18"],
   ]);
-  assert.equal(getClientIp({ get: (k) => headers.get(k) }), "70.41.3.18");
+  assert.equal(getClientIp(spoofed, ""), "70.41.3.18");
+});
+
+test("getClientIp reads only the configured trusted header", () => {
+  const headers = headersOf([
+    ["cf-connecting-ip", "198.51.100.1"],
+    ["x-vercel-forwarded-for", "198.51.100.2"],
+    ["x-forwarded-for", "1.1.1.1, 2.2.2.2"],
+  ]);
+  assert.equal(getClientIp(headers, "x-vercel-forwarded-for"), "198.51.100.2");
+  assert.equal(getClientIp(headers, "CF-Connecting-IP"), "198.51.100.1");
+  // Trusted header missing: do not fall back to forgeable ones.
+  assert.equal(getClientIp(headers, "x-real-ip"), "unknown");
+});
+
+test("getClientIp takes the rightmost X-Forwarded-For entry by default", () => {
+  // Client prepends a spoofed IP; the proxy appends the real one.
+  assert.equal(getClientIp(headersOf([["x-forwarded-for", "203.0.113.7, 70.41.3.18"]]), ""), "70.41.3.18");
+  // An invalid rightmost entry is not skipped in favour of client-written ones.
+  assert.equal(getClientIp(headersOf([["x-forwarded-for", "203.0.113.7, garbage"]]), ""), "unknown");
 });
 
 test("getClientIp strips ports and rejects malformed values", () => {
-  // IPv4 with port
-  assert.equal(getClientIp({ get: (k) => (k === "x-real-ip" ? "192.0.2.1:8080" : null) }), "192.0.2.1");
-
-  // IPv6 bracketed with port
-  assert.equal(getClientIp({ get: (k) => (k === "x-real-ip" ? "[2001:db8::1]:8080" : null) }), "2001:db8::1");
-
-  // Malformed / non-IP values fall back to unknown
-  assert.equal(getClientIp({ get: (k) => (k === "x-forwarded-for" ? "invalid-ip, 999.999.999.999" : null) }), "unknown");
-  assert.equal(getClientIp({ get: () => null }), "unknown");
+  assert.equal(getClientIp(headersOf([["x-real-ip", "192.0.2.1:8080"]]), "x-real-ip"), "192.0.2.1");
+  assert.equal(getClientIp(headersOf([["x-real-ip", "[2001:db8::1]:8080"]]), "x-real-ip"), "2001:db8::1");
+  assert.equal(getClientIp(headersOf([["x-forwarded-for", "invalid-ip, 999.999.999.999"]]), ""), "unknown");
+  assert.equal(getClientIp(headersOf([]), ""), "unknown");
   assert.equal(getClientIp(null), "unknown");
 });

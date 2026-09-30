@@ -52,8 +52,19 @@ export function passwordError(password) {
   return null;
 }
 
+/**
+ * Thrown for bad user input. Its message is written for the end user,
+ * so callers may show it; any other Error is internal and must not be.
+ */
+export class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}
+
 export function assert(condition, message) {
-  if (!condition) throw new Error(message);
+  if (!condition) throw new ValidationError(message);
 }
 
 export function requireNonEmptyString(value, { field = "Nilai", max = 500 } = {}) {
@@ -135,4 +146,28 @@ export function validateUploadFile(file) {
     return "Tipe file tidak diizinkan.";
   }
   return null;
+}
+
+/**
+ * Resolve a user-supplied post-login redirect to a same-origin path.
+ *
+ * Prefix checks alone are bypassable: browsers strip tab/newline while
+ * parsing, so "/\t/evil.com" becomes "//evil.com". Parse it the way the
+ * browser will and only accept a result on our own origin.
+ */
+export function safeRedirectPath(raw, fallback = "/boards") {
+  if (typeof raw !== "string" || !raw.startsWith("/")) return fallback;
+
+  const base = "https://same-origin.invalid";
+  let url;
+  try {
+    url = new URL(raw, base);
+  } catch {
+    return fallback;
+  }
+  if (url.origin !== base) return fallback;
+
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  // "/.//evil.com" normalizes to "//evil.com" — protocol-relative again.
+  return path.startsWith("//") ? fallback : path;
 }

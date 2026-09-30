@@ -36,8 +36,6 @@ export default function Sidebar() {
   const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false); // New state for desktop collapse
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
   // Load collapsed state from localStorage on mount
@@ -58,34 +56,18 @@ export default function Sidebar() {
     });
   };
 
-  // Fetch boards for recent section
+  // Own key: the Boards page caches the full list under ["boards"], and a
+  // shared key let this 5-item list overwrite it.
   const { data: boards = [] } = useQuery({
-    queryKey: ["boards"],
+    queryKey: ["boards", "recent"],
     queryFn: () => boardsApi.list({ limit: 5 }),
     staleTime: 60 * 1000, // 1 minute
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchUser() {
-      try {
-        const data = await userApi.me();
-        if (!cancelled) {
-          setUser(data);
-          setLoading(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setUser(null);
-          setLoading(false);
-        }
-      }
-    }
-    fetchUser();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: user = null, isLoading: loading } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => userApi.me(),
+  });
 
   const userInitial = user?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U";
   const userName = user?.full_name || user?.email?.split("@")[0] || "Guest";

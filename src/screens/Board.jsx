@@ -174,7 +174,7 @@ export default function BoardPage({ boardId }) {
                     {showSortMenu && (
                       <SortMenu sortBy={sortBy} sortDirection={sortDirection}
                         columns={board.columns}
-                        onChange={(f, d) => { setSortBy(f); setSortDirection(d); }}
+                        onChange={setSort}
                         onClose={() => setShowSortMenu(false)} />
                     )}
                   </div>

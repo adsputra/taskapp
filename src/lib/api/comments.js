@@ -3,7 +3,6 @@
  * Joins with profiles to get user display info.
  */
 import { createClient } from "@/lib/supabase/client";
-import { fixMissingProfiles } from "@/app/actions/profile";
 import { apiError } from "./errors";
 import { assert, clampLimit, requireUuid } from "@/lib/validation";
 
@@ -19,7 +18,8 @@ function requireContent(content) {
 export const commentsApi = {
   /**
    * List all comments for a task, ordered oldest first (chat-style).
-   * Auto-fixes missing profiles via server action so names resolve correctly.
+   * Repairs missing author profiles (RPC, scoped to people the caller
+   * shares a board with) so names resolve correctly.
    */
   async listByItem(itemId, { limit } = {}) {
     requireUuid(itemId, "Item ID");
@@ -46,8 +46,10 @@ export const commentsApi = {
     ].slice(0, 20);
 
     if (missingUserIds.length > 0) {
-      // Server action verifies the caller may view these profiles.
-      await fixMissingProfiles(missingUserIds);
+      const { data: repaired, error: repairError } = await supabase.rpc("repair_missing_profiles", {
+        p_user_ids: missingUserIds,
+      });
+      if (repairError || !repaired) return comments;
 
       const { data: refreshed, error: refreshError } = await supabase
         .from("task_comments")

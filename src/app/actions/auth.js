@@ -7,6 +7,7 @@ import { incrementCounter } from "@/lib/metrics";
 import { getClientIp, authRateLimiter, authAccountRateLimiter } from "@/lib/rate-limit";
 import { getRequestId } from "@/lib/request-context";
 import {
+  ValidationError,
   isValidEmail,
   passwordError,
   requireNonEmptyString,
@@ -123,8 +124,9 @@ export async function signup(fullName, email, password) {
     }
 
     if (data?.user?.identities?.length === 0) {
+      // Same answer as a fresh signup: never reveal which emails exist.
       incrementCounter("taskapp_auth_signup_total", { result: "duplicate" });
-      return { error: "Email ini sudah terdaftar." };
+      return { ok: true, emailConfirmationRequired: true };
     }
 
     incrementCounter("taskapp_auth_signup_total", { result: "ok" });
@@ -135,9 +137,10 @@ export async function signup(fullName, email, password) {
 
     return { ok: true, emailConfirmationRequired: true };
   } catch (err) {
+    if (err instanceof ValidationError) return { error: err.message };
     incrementCounter("taskapp_auth_signup_total", { result: "error" });
     logger.error("signup failed", { requestId: await getRequestId(), detail: err?.message });
-    return { error: err?.message || "Terjadi kesalahan server." };
+    return { error: "Terjadi kesalahan server." };
   }
 }
 

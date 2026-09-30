@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -15,31 +16,20 @@ import { motion } from "framer-motion";
 
 export default function CalendarModal({ isOpen, onClose }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [items, setItems] = useState([]);
-  const [boards, setBoards] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCalendarData();
-    }
-  }, [isOpen]);
-
-  const loadCalendarData = async () => {
-    setIsLoading(true);
-    try {
-      const [itemsData, boardsData] = await Promise.all([
-        itemsApi.list({ sort: "-updated_at" }),
-        boardsApi.list({ sort: "-updated_at" })
-      ]);
-      setItems(itemsData);
-      setBoards(boardsData);
-    } catch (error) {
-      console.error("Error loading calendar data:", error);
-    }
-    setIsLoading(false);
-  };
+  // React Query (not local state) so RealtimeSync keeps the calendar live.
+  const { data: items = [], isLoading: itemsLoading } = useQuery({
+    queryKey: ["items", "calendar"],
+    queryFn: () => itemsApi.list({ sort: "-updated_at" }),
+    enabled: isOpen,
+  });
+  const { data: boards = [], isLoading: boardsLoading } = useQuery({
+    queryKey: ["boards", "calendar"],
+    queryFn: () => boardsApi.list({ sort: "-updated_at" }),
+    enabled: isOpen,
+  });
+  const isLoading = itemsLoading || boardsLoading;
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -47,25 +48,22 @@ const ROLE_BADGE_CLASS = {
 export default function ShareBoardModal({ isOpen, onClose, board }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("editor");
-  const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [editingMemberId, setEditingMemberId] = useState(null);
 
-  useEffect(() => {
-    if (isOpen && board?.id) {
-      loadMembers();
-    }
-  }, [isOpen, board?.id]);
+  const queryClient = useQueryClient();
+  const membersKey = ["board-members", board?.id];
 
-  const loadMembers = async () => {
-    try {
-      const data = await boardsApi.listMembers(board.id);
-      setMembers(data || []);
-    } catch (err) {
-      console.error("Failed to load members:", err);
-    }
-  };
+  // Shared with PeopleCell; RealtimeSync refreshes it on board_members changes.
+  const { data: members = [] } = useQuery({
+    queryKey: membersKey,
+    queryFn: () => boardsApi.listMembers(board.id),
+    enabled: isOpen && !!board?.id,
+  });
+
+  const loadMembers = () => queryClient.invalidateQueries({ queryKey: membersKey });
+  const setMembers = (update) => queryClient.setQueryData(membersKey, (prev = []) => update(prev));
 
   const handleShare = async () => {
     if (!email.trim() || !email.includes("@")) return;

@@ -123,14 +123,20 @@ function cleanIp(raw) {
 }
 
 /**
- * Production-ready client IP extraction from a Headers-like object.
- * Protects against X-Forwarded-For header spoofing (CWE-348) by:
- * 1. Prioritizing trusted platform edge headers (Cloudflare, Vercel)
- * 2. Checking trusted single-hop reverse proxy headers (X-Real-IP)
- * 3. Inspecting the rightmost entry appended by the closest upstream proxy in X-Forwarded-For
- * 4. Strictly validating IP format and stripping port numbers
+ * Client IP for rate limiting, from a Headers-like object.
+ *
+ * Any request header can be forged by the client unless the proxy in
+ * front of the app overwrites it. Trusting a header the platform does
+ * NOT set (e.g. `cf-connecting-ip` on Vercel) lets an attacker rotate it
+ * and get a fresh rate-limit bucket per request (CWE-348). So:
+ *
+ * - TRUSTED_IP_HEADER set (recommended): read only that header — the one
+ *   your edge always overwrites, e.g. `x-vercel-forwarded-for` on Vercel,
+ *   `cf-connecting-ip` behind Cloudflare, `x-real-ip` behind nginx.
+ * - Unset: use the RIGHTMOST `x-forwarded-for` entry, i.e. the address
+ *   appended by the closest proxy — correct behind exactly one proxy.
  */
-export function getClientIp(headerStore) {
+export function getClientIp(headerStore, trustedHeader = process.env.TRUSTED_IP_HEADER) {
   if (!headerStore) return "unknown";
 
   const getHeader = (name) => {
@@ -138,26 +144,20 @@ export function getClientIp(headerStore) {
     return headerStore[name] || headerStore[name.toLowerCase()];
   };
 
-  // 1. Cloudflare edge header
-  const cfIp = cleanIp(getHeader("cf-connecting-ip"));
-  if (cfIp) return cfIp;
+  const headerName = typeof trustedHeader === "string" ? trustedHeader.trim().toLowerCase() : "";
+  if (headerName) {
+    // Overwriting edges write a single address; if it is a list, the
+    // first entry is the one the edge recorded for the client.
+    const value = getHeader(headerName);
+    const first = typeof value === "string" ? value.split(",")[0] : null;
+    return cleanIp(first) || "unknown";
+  }
 
-  // 2. Vercel edge/proxy headers
-  const vercelIp = cleanIp(getHeader("x-vercel-proxied-for") || getHeader("x-vercel-forwarded-for"));
-  if (vercelIp) return vercelIp;
-
-  // 3. X-Real-IP set by single-hop reverse proxies
-  const realIp = cleanIp(getHeader("x-real-ip"));
-  if (realIp) return realIp;
-
-  // 4. X-Forwarded-For (scan right-to-left to pick the closest verified proxy entry)
   const forwarded = getHeader("x-forwarded-for");
-  if (forwarded && typeof forwarded === "string") {
-    const parts = forwarded.split(",").map((s) => s.trim()).filter(Boolean);
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const candidate = cleanIp(parts[i]);
-      if (candidate) return candidate;
-    }
+  if (typeof forwarded === "string") {
+    const parts = forwarded.split(",").map((part) => part.trim()).filter(Boolean);
+    const closest = cleanIp(parts[parts.length - 1]);
+    if (closest) return closest;
   }
 
   return "unknown";

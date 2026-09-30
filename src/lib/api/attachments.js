@@ -7,7 +7,7 @@
  *   (legacy rows may still contain a public URL; both are handled).
  * - Reads return a short-lived signed URL in `file_url` so the UI can
  *   render/preview without ever exposing a permanent public link.
- * - Access is enforced by Storage RLS (see migration 008).
+ * - Access is enforced by Storage RLS (see supabase/schema.sql §10).
  */
 import { createClient } from "@/lib/supabase/client";
 import { apiError } from "./errors";
@@ -154,14 +154,17 @@ export const attachmentsApi = {
 
     const { data: record, error: fetchError } = await supabase
       .from("task_attachments")
-      .select("file_url")
+      .select("item_id, file_url")
       .eq("id", id)
       .single();
 
     if (fetchError) throw apiError(fetchError, "Failed to find attachment.");
 
+    // Only remove an object stored under this attachment's own item
+    // (<board_id>/<item_id>/...). A row pointing elsewhere must never make
+    // a privileged user delete a file on another board.
     const storagePath = resolveStoragePath(record.file_url);
-    if (storagePath) {
+    if (storagePath && storagePath.split("/")[1] === record.item_id) {
       const { error: removeError } = await supabase.storage.from(BUCKET).remove([storagePath]);
       if (removeError) throw apiError(removeError, "Failed to delete file.");
     }

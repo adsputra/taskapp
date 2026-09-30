@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { boardsApi } from "@/lib/api/boards";
+import { signOut } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, ArrowRight, Briefcase } from "lucide-react";
 import Link from "next/link";
@@ -48,8 +49,10 @@ export default function JoinContent() {
     }
   };
 
-  const handleLoginAndAccept = () => {
-    router.push(`/auth/login?redirect=/join?token=${token}`);
+  const handleLoginAndAccept = async () => {
+    // Logged-in users are bounced away from /auth, so end this session first.
+    await signOut();
+    router.push(`/auth/login?redirect=${encodeURIComponent(`/join?token=${token}`)}`);
   };
 
   const goToBoard = () => {
@@ -107,9 +110,16 @@ export default function JoinContent() {
                   </div>
                 </div>
               </div>
-              <Button onClick={handleAccept} disabled={accepting} className="w-full bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 font-medium">
-                {accepting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menerima...</>) : "✅ Terima Undangan"}
-              </Button>
+              {invite.email_matches === false ? (
+                <p className="text-sm text-[#E2445C] bg-[#E2445C]/10 rounded-xl p-3 mb-2">
+                  Undangan ini dikirim ke email lain. Login dengan akun yang diundang untuk bergabung.
+                </p>
+              ) : (
+                <Button onClick={handleAccept} disabled={accepting} className="w-full bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 font-medium">
+                  {accepting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menerima...</>) : "✅ Terima Undangan"}
+                </Button>
+              )}
+              {error && <p className="text-sm text-[#E2445C] mt-3 text-center">{error}</p>}
               <p className="text-center text-xs text-[#676879] mt-4">
                 Bukan akun yang tepat?{" "}
                 <button onClick={handleLoginAndAccept} className="text-[#0073EA] font-medium hover:underline">Login dengan akun lain</button>

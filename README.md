@@ -40,7 +40,7 @@ src/
 │   ├── rate-limit.js           # In-memory rate limiter
 │   └── validation.js           # Validasi input (pure functions)
 └── proxy.js                    # Middleware: refresh sesi, proteksi route, rate limit, fail-closed
-supabase/migrations/            # Migrasi SQL (schema, RLS, RPC)
+supabase/schema.sql             # Seluruh database: tabel, RLS, RPC, storage, realtime
 tests/                          # Unit test (node:test)
 ```
 
@@ -73,35 +73,24 @@ tests/                          # Unit test (node:test)
    |---|---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | ya | URL project Supabase |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ya | Anon/public key (aman untuk browser) |
-   | `SUPABASE_SERVICE_ROLE_KEY` | tidak | Server-only, dipakai untuk repair profil legacy. **Jangan pernah** diekspos ke client |
    | `LOG_LEVEL` | tidak | `debug` \| `info` \| `warn` \| `error` (default `info`) |
+   | `TRUSTED_IP_HEADER` | disarankan | Header IP klien yang **selalu ditimpa** edge (Vercel: `x-vercel-forwarded-for`, Cloudflare: `cf-connecting-ip`). Kosong = entri paling kanan `X-Forwarded-For` |
    | `UPSTASH_REDIS_REST_URL` | tidak | Rate limiting lintas instance; tanpa ini fallback ke in-memory |
    | `UPSTASH_REDIS_REST_TOKEN` | tidak | Token Upstash Redis REST |
    | `METRICS_TOKEN` | tidak | Bearer token untuk `GET /api/metrics`; bila kosong endpoint 404 |
 
-3. **Jalankan migrasi database**
+3. **Siapkan database**
 
-   Repository ini belum menyertakan `supabase/config.toml`, jadi cara termudah adalah membuka **Supabase Dashboard → SQL Editor** dan menjalankan file di `supabase/migrations/` **secara berurutan**:
+   Seluruh database ada di satu file: `supabase/schema.sql` (tabel, constraint, RLS, column privileges, RPC, bucket Storage private, publikasi Realtime). Buka **Supabase Dashboard → SQL Editor**, tempel isi file, lalu **Run**.
 
-   ```
-   001_schema.sql
-   002_board_sharing.sql
-   003_full_rebuild.sql
-   003_restrict_editor_insert.sql
-   004_jira_features.sql
-   005_fix_profiles_rls.sql
-   006_auth_trigger.sql
-   007_security_hardening.sql   ← wajib; mengaktifkan RLS board_members + RPC undangan
-   008_private_attachments.sql  ← bucket task-attachments jadi private + Storage RLS
-   009_analytics_rpc.sql        ← RPC agregasi analytics
-   010_member_delete_policies.sql ← policy DELETE untuk komentar & time tracking member
-   ```
+   File ini idempotent dan non-destruktif (tanpa `DROP TABLE`): aman untuk project baru **dan** untuk database lama yang dibangun dari migrasi `001`–`011` sebelumnya — semua policy lama di tabel aplikasi dihapus lalu dibuat ulang dari file ini. Jalankan ulang setiap kali `schema.sql` berubah.
 
-   Alternatif dengan Supabase CLI: jalankan `supabase init` terlebih dahulu, lalu `supabase db push`.
+   Constraint batas data ditambahkan `NOT VALID` agar baris legacy tidak menggagalkan upgrade; setelah data lama dibersihkan, jalankan `ALTER TABLE ... VALIDATE CONSTRAINT ...`.
 
-4. **Attachment storage** (opsional, sudah diurus migrasi)
+4. **Realtime & Storage** (sudah diurus `schema.sql`)
 
-   Migrasi `008_private_attachments.sql` membuat bucket **private** `task-attachments` beserta policy Storage-nya (hanya owner/member board yang bisa baca; admin/editor bisa menulis) plus limit ukuran 10 MB dan whitelist MIME di level Storage. Tidak perlu setup manual.
+   - Semua tabel yang dibaca UI masuk publikasi `supabase_realtime`. Klien berlangganan lewat `postgres_changes`, yang tunduk pada RLS — tiap user hanya menerima event untuk baris yang boleh ia baca.
+   - Bucket **private** `task-attachments` dengan Storage RLS (member board bisa baca; owner/admin/editor bisa menulis), limit 10 MB, whitelist MIME.
 
 5. **Jalankan aplikasi**
 
@@ -174,7 +163,7 @@ Semua akses data dari client melewati `src/lib/api/*`:
 ## Testing
 
 ```bash
-npm test        # 21 unit test (validation, rate limiter + Redis store, metrics)
+npm test        # unit test (validation, redirect aman, rate limiter + Redis store, metrics)
 npm run lint    # 0 errors (warning React Compiler dibiarkan terlihat)
 npm run build   # verifikasi build production
 ```
@@ -183,9 +172,9 @@ npm run build   # verifikasi build production
 
 ## Checklist Deploy
 
-1. Set environment variable di platform hosting (`NEXT_PUBLIC_*`, `SUPABASE_SERVICE_ROLE_KEY`, `UPSTASH_REDIS_REST_*`, `METRICS_TOKEN`).
-2. Pastikan seluruh migrasi sudah dijalankan (terutama `007`, `008`, `009`).
-3. Pastikan `SUPABASE_SERVICE_ROLE_KEY` hanya tersedia di server (jangan pakai prefix `NEXT_PUBLIC_`).
+1. Set environment variable di platform hosting (`NEXT_PUBLIC_*`, `TRUSTED_IP_HEADER`, `UPSTASH_REDIS_REST_*`, `METRICS_TOKEN`).
+2. Jalankan `supabase/schema.sql` terbaru di SQL Editor.
+3. Aplikasi tidak lagi memakai `SUPABASE_SERVICE_ROLE_KEY` — hapus dari environment hosting.
 4. Arahkan health check load balancer ke `/api/health`.
 5. Scrape `/api/metrics` dengan header `Authorization: Bearer $METRICS_TOKEN` (Prometheus/VictoriaMetrics/Grafana Agent).
 

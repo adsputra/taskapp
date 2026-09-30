@@ -9,6 +9,7 @@ import { login, signOut } from "@/app/actions/auth";
 import { Briefcase, AlertCircle, Loader2, CheckCircle2, LayoutGrid, Users, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { safeRedirectPath } from "@/lib/validation";
 import { motion } from "framer-motion";
 
 function LoginForm() {
@@ -24,13 +25,8 @@ function LoginForm() {
     return () => { if (prev && prev !== "light") setTheme(prev); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rawRedirect = searchParams.get("redirect");
-  const isSafeRelative =
-    Boolean(rawRedirect) &&
-    rawRedirect.startsWith("/") &&
-    !rawRedirect.startsWith("//") &&
-    !rawRedirect.includes("\\");
-  const redirectTo = isSafeRelative ? rawRedirect : "/boards";
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"));
+  const hasCustomRedirect = redirectTo !== "/boards";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -246,7 +242,7 @@ function LoginForm() {
           <p className="text-center text-slate-500 mt-8">
             Belum punya akun?{" "}
             <Link
-              href={isSafeRelative ? `/auth/signup?redirect=${encodeURIComponent(rawRedirect)}` : "/auth/signup"}
+              href={hasCustomRedirect ? `/auth/signup?redirect=${encodeURIComponent(redirectTo)}` : "/auth/signup"}
               className="text-[#0073EA] font-semibold hover:text-[#0056B3] transition-colors"
             >
               Daftar sekarang
