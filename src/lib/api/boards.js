@@ -155,16 +155,20 @@ export const boardsApi = {
       .maybeSingle();
 
     if (!existingProfile) {
-      await supabase.from("profiles").upsert(
-        {
-          id: user.id,
-          email: user.email,
-          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-          avatar_url: user.user_metadata?.avatar_url || null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      ).catch(() => {});
+      try {
+        await supabase.from("profiles").upsert(
+          {
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+            avatar_url: user.user_metadata?.avatar_url || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+      } catch {
+        // ignore error if profile cannot be auto-created
+      }
     }
 
     const { data, error } = await supabase
@@ -259,7 +263,11 @@ export const boardsApi = {
     }
 
     // Auto-update visibility board to 'shared'
-    await supabase.from("boards").update({ visibility: "shared" }).eq("id", boardId).catch(() => {});
+    try {
+      await supabase.from("boards").update({ visibility: "shared" }).eq("id", boardId);
+    } catch {
+      // ignore
+    }
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return { ...data, shareLink: `${origin}/join?token=${token}` };
@@ -325,7 +333,11 @@ export const boardsApi = {
       .eq("board_id", boardId);
 
     if (count === 0) {
-      await supabase.from("boards").update({ visibility: "private" }).eq("id", boardId).catch(() => {});
+      try {
+        await supabase.from("boards").update({ visibility: "private" }).eq("id", boardId);
+      } catch {
+        // ignore
+      }
     }
   },
 
