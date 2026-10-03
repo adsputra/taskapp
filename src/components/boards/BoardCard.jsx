@@ -29,6 +29,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
   };
 
   const boardColor = board.color || '#3B82F6';
+  const isBoardShared = isShared || board.visibility === 'shared';
 
   if (viewMode === "list") {
     return (
@@ -60,17 +61,17 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
                 <Badge 
                   variant="outline" 
                   className={`border-none text-xs px-2 py-0.5 rounded-full ${
-                    board.visibility === 'private' 
-                      ? 'bg-rose-100 text-rose-700' 
-                      : 'bg-emerald-100 text-emerald-700'
+                    isBoardShared 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-rose-100 text-rose-700'
                   }`}
                 >
-                  {board.visibility === 'private' ? (
-                    <Lock className="w-2.5 h-2.5 mr-1" />
-                  ) : (
+                  {isBoardShared ? (
                     <Globe className="w-2.5 h-2.5 mr-1" />
+                  ) : (
+                    <Lock className="w-2.5 h-2.5 mr-1" />
                   )}
-                  {board.visibility}
+                  {isBoardShared ? 'shared' : 'private'}
                 </Badge>
                 <div className="text-right hidden sm:block">
                   <p className="text-xs text-slate-400">
@@ -129,17 +130,17 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
             <Badge 
               variant="outline" 
               className={`border-none text-xs px-2.5 py-1 rounded-full ${
-                board.visibility === 'private' 
-                  ? 'bg-rose-100 text-rose-700' 
-                  : 'bg-emerald-100 text-emerald-700'
+                isBoardShared 
+                  ? 'bg-emerald-100 text-emerald-700' 
+                  : 'bg-rose-100 text-rose-700'
               }`}
             >
-              {board.visibility === 'private' ? (
-                <Lock className="w-3 h-3 mr-1.5" />
-              ) : (
+              {isBoardShared ? (
                 <Globe className="w-3 h-3 mr-1.5" />
+              ) : (
+                <Lock className="w-3 h-3 mr-1.5" />
               )}
-              {board.visibility}
+              {isBoardShared ? 'shared' : 'private'}
             </Badge>
           </div>
           

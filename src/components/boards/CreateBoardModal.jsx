@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, Globe } from "lucide-react";
 
 const colorOptions = [
   { name: 'Ocean Blue', value: '#0073EA' },
@@ -22,8 +20,7 @@ const colorOptions = [
   { name: 'Teal', value: '#00D9FF' }
 ];
 
-export default function CreateBoardModal({ isOpen, onClose, onSubmit, teamRole = "owner" }) {
-  const canCreateShared = teamRole === "owner" || teamRole === "admin";
+export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -163,37 +160,6 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit, teamRole =
                 />
               ))}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Visibility</Label>
-            <Select
-              value={formData.visibility}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, visibility: value }))}
-            >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4" />
-                    <span>Private</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="shared" disabled={!canCreateShared}>
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    <span>Shared {!canCreateShared ? "(Owner/Admin only)" : ""}</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {!canCreateShared && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                Board bersama (Shared) hanya dapat dibuat oleh Team Owner atau Admin.
-              </p>
-            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

@@ -76,6 +76,8 @@ export default function ShareBoardModal({ isOpen, onClose, board }) {
       setShareLink(result.shareLink);
       setEmail("");
       await loadMembers();
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board", board?.id] });
       toast.success(`Invite sent to ${email}`);
     } catch (err) {
       toast.error(err.message);
@@ -87,6 +89,8 @@ export default function ShareBoardModal({ isOpen, onClose, board }) {
     try {
       await boardsApi.unshare(board.id, memberId);
       await loadMembers();
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board", board?.id] });
       toast.success("Access removed");
     } catch (err) {
       toast.error(err.message);

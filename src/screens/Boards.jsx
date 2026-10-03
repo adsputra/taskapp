@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { boardsApi } from "@/lib/api/boards";
 import { userApi } from "@/lib/api/user";
-import { teamApi } from "@/lib/api/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -17,7 +16,6 @@ import {
   Folder,
   BarChart,
   X,
-  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -25,7 +23,6 @@ import { toast } from "sonner";
 import CreateBoardModal from "../components/boards/CreateBoardModal";
 import EditBoardModal from "../components/boards/EditBoardModal";
 import BoardCard from "../components/boards/BoardCard";
-import ManageTeamModal from "../components/boards/ManageTeamModal";
 
 export default function Boards() {
   const queryClient = useQueryClient();
@@ -35,7 +32,6 @@ export default function Boards() {
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
@@ -50,18 +46,6 @@ export default function Boards() {
     queryKey: ["user"],
     queryFn: () => userApi.me(),
     staleTime: 5 * 1000,
-  });
-
-  const { data: teamData } = useQuery({
-    queryKey: ["team-members"],
-    queryFn: () => teamApi.listMembers(),
-    staleTime: 30 * 1000,
-  });
-
-  const { data: myTeamRole } = useQuery({
-    queryKey: ["my-team-role"],
-    queryFn: () => teamApi.getMyRole(),
-    staleTime: 30 * 1000,
   });
 
   const userId = user?.id;
@@ -145,60 +129,15 @@ export default function Boards() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Team Avatar Stack & Manage Team button */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowTeamModal(true)}
-                className="flex items-center -space-x-2 hover:opacity-90 transition-opacity p-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                title="Kelola Tim & Anggota"
-              >
-                {/* Team Owner Avatar */}
-                <div className="w-8 h-8 rounded-full bg-[#0073EA] text-white flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-slate-900 shadow-sm">
-                  {teamData?.owner?.fullName?.[0]?.toUpperCase() || teamData?.owner?.email?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "A"}
-                </div>
-                {/* Active Members */}
-                {teamData?.members?.filter(m => m.status === "active").slice(0, 2).map((m, idx) => (
-                  <div
-                    key={m.id || idx}
-                    className="w-8 h-8 rounded-full bg-[#00C875] text-white flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-slate-900 shadow-sm"
-                  >
-                    {(m.profile?.fullName || m.email)?.[0]?.toUpperCase()}
-                  </div>
-                ))}
-                {(teamData?.members?.filter(m => m.status === "active")?.length || 0) > 2 && (
-                  <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] font-bold ring-2 ring-white dark:ring-slate-900 shadow-sm">
-                    +{teamData.members.filter(m => m.status === "active").length - 2}
-                  </div>
-                )}
-              </button>
-
-              <Button
-                variant="outline"
-                onClick={() => setShowTeamModal(true)}
-                className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium gap-2 shadow-sm transition-all"
-              >
-                <Users className="w-4 h-4 text-[#0073EA]" />
-                <span className="hidden sm:inline">Team</span>
-                {teamData?.members?.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-[#0073EA] dark:text-blue-300 rounded-full text-xs font-semibold">
-                    {1 + teamData.members.length}
-                  </span>
-                )}
-              </Button>
-            </div>
-
-            {!isShared && (
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm gap-2 shadow-sm transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                New Board
-              </Button>
-            )}
-          </div>
+          {!isShared && (
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm gap-2 shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              New Board
+            </Button>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -364,16 +303,6 @@ export default function Boards() {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onSubmit={(data) => createMutation.mutateAsync(data)}
-          teamRole={myTeamRole?.role}
-        />
-
-        <ManageTeamModal
-          isOpen={showTeamModal}
-          onClose={() => setShowTeamModal(false)}
-          onTeamUpdated={() => {
-            queryClient.invalidateQueries({ queryKey: ["team-members"] });
-            queryClient.invalidateQueries({ queryKey: ["boards"] });
-          }}
         />
 
         {editingBoard && (

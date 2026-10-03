@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, Globe } from "lucide-react";
 
 const colorOptions = [
   { name: 'Ocean Blue', value: '#0073EA' },
@@ -118,32 +116,6 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
                 />
               ))}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Visibility</Label>
-            <Select
-              value={formData.visibility}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, visibility: value }))}
-            >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4" />
-                    <span>Private</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="shared">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    <span>Shared</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <DialogFooter className="pt-4">

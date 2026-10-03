@@ -258,6 +258,9 @@ export const boardsApi = {
       });
     }
 
+    // Auto-update visibility board to 'shared'
+    await supabase.from("boards").update({ visibility: "shared" }).eq("id", boardId).catch(() => {});
+
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return { ...data, shareLink: `${origin}/join?token=${token}` };
   },
@@ -314,6 +317,16 @@ export const boardsApi = {
       .eq("board_id", boardId);
 
     if (error) throw apiError(error, "Gagal menghapus akses.");
+
+    // Jika sudah tidak ada anggota lain, kembalikan status board ke 'private'
+    const { count } = await supabase
+      .from("board_members")
+      .select("*", { count: "exact", head: true })
+      .eq("board_id", boardId);
+
+    if (count === 0) {
+      await supabase.from("boards").update({ visibility: "private" }).eq("id", boardId).catch(() => {});
+    }
   },
 
   // =============================================

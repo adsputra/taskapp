@@ -73,48 +73,23 @@ export default function BoardHeader({
         </div>
         {/* Action Buttons — icon-only on mobile */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {board?.visibility === "shared" ? (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled
-                className="sm:hidden h-9 w-9 rounded-lg border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 opacity-80 cursor-not-allowed"
-                title="Board ini otomatis dibagikan ke seluruh tim"
-              >
-                <Globe className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                disabled
-                className="hidden sm:inline-flex rounded-lg h-9 px-3 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs font-medium text-emerald-700 dark:text-emerald-400 opacity-90 cursor-not-allowed"
-                title="Board ini otomatis dibagikan ke seluruh tim"
-              >
-                <Globe className="w-3.5 h-3.5 mr-1.5 text-emerald-600 dark:text-emerald-400" />
-                Shared with Team
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                className="sm:hidden h-9 w-9 rounded-lg border-[#E1E5F3] dark:border-slate-700 text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
-                onClick={onShowShare}
-                title="Share board ini"
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden sm:inline-flex rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
-                onClick={onShowShare}
-              >
-                <Share2 className="w-4 h-4 mr-1.5" />
-                Share
-              </Button>
-            </>
-          )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="sm:hidden h-9 w-9 rounded-lg border-[#E1E5F3] dark:border-slate-700 text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
+            onClick={onShowShare}
+            title="Share board"
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="hidden sm:inline-flex rounded-lg h-9 px-3 border-[#E1E5F3] dark:border-slate-700 text-sm text-[#323338] dark:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
+            onClick={onShowShare}
+          >
+            <Share2 className="w-4 h-4 mr-1.5" />
+            Share
+          </Button>
           <Button
             variant="outline"
             size="icon"
