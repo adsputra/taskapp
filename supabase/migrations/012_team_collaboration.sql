@@ -26,6 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_team_members_token ON public.team_members(token);
 -- Enable RLS on team_members
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS team_members_select ON public.team_members;
 CREATE POLICY team_members_select ON public.team_members
   FOR SELECT TO authenticated
   USING (
