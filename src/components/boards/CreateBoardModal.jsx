@@ -22,7 +22,8 @@ const colorOptions = [
   { name: 'Teal', value: '#00D9FF' }
 ];
 
-export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
+export default function CreateBoardModal({ isOpen, onClose, onSubmit, teamRole = "owner" }) {
+  const canCreateShared = teamRole === "owner" || teamRole === "admin";
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -180,14 +181,19 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
                     <span>Private</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="shared">
+                <SelectItem value="shared" disabled={!canCreateShared}>
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4" />
-                    <span>Shared</span>
+                    <span>Shared {!canCreateShared ? "(Owner/Admin only)" : ""}</span>
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
+            {!canCreateShared && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                Board bersama (Shared) hanya dapat dibuat oleh Team Owner atau Admin.
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
