@@ -1567,7 +1567,8 @@ BEGIN
 
   SELECT id INTO v_existing_user FROM public.profiles WHERE lower(email) = v_clean_email;
 
-  v_token := encode(gen_random_bytes(24), 'hex');
+  -- Generate secure token using native gen_random_uuid
+  v_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
 
   INSERT INTO public.team_members (owner_id, user_id, email, role, status, token)
   VALUES (v_owner_id, v_existing_user, v_clean_email, p_role, 'pending', v_token)

@@ -277,8 +277,8 @@ BEGIN
   -- Check if user already exists
   SELECT id INTO v_existing_user FROM public.profiles WHERE lower(email) = v_clean_email;
 
-  -- Generate token
-  v_token := encode(gen_random_bytes(24), 'hex');
+  -- Generate secure token using native gen_random_uuid
+  v_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
 
   -- Insert or update pending invite
   INSERT INTO public.team_members (owner_id, user_id, email, role, status, token)
