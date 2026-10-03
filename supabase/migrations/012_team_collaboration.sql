@@ -113,6 +113,24 @@ AS $$
       );
 $$;
 
+-- 2b. Refresh boards policies to ensure INSERT ... RETURNING * succeeds without 42501 error
+DROP POLICY IF EXISTS boards_select ON public.boards;
+CREATE POLICY boards_select ON public.boards FOR SELECT TO authenticated
+  USING (user_id = (SELECT auth.uid()) OR public.can_read_board(id));
+
+DROP POLICY IF EXISTS boards_insert ON public.boards;
+CREATE POLICY boards_insert ON public.boards FOR INSERT TO authenticated
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+DROP POLICY IF EXISTS boards_update ON public.boards;
+CREATE POLICY boards_update ON public.boards FOR UPDATE TO authenticated
+  USING (user_id = (SELECT auth.uid()) OR public.can_admin_board(id))
+  WITH CHECK (user_id = (SELECT auth.uid()) OR public.can_admin_board(id));
+
+DROP POLICY IF EXISTS boards_delete ON public.boards;
+CREATE POLICY boards_delete ON public.boards FOR DELETE TO authenticated
+  USING (user_id = (SELECT auth.uid()));
+
 -- 3. RPC: get_user_team_role
 CREATE OR REPLACE FUNCTION public.get_user_team_role()
 RETURNS jsonb
