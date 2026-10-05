@@ -102,13 +102,13 @@ export default function DateCell({ value, onUpdate }) {
               disabled={!onUpdate}
               className={cn(
                 "group inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-150",
-                "text-[#676879] dark:text-slate-400 bg-[#F5F6F8] hover:bg-[#E1E5F3] dark:bg-slate-800 dark:hover:bg-slate-700",
-                "border border-dashed border-[#D0D4E4] hover:border-[#0073EA] dark:border-slate-700 dark:hover:border-blue-500",
-                "hover:text-[#0073EA] dark:hover:text-blue-400 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95",
+                "text-muted-foreground bg-muted hover:bg-accent ",
+                "border border-dashed border-border hover:border-primary ",
+                "hover:text-primary cursor-pointer shadow-2xs hover:shadow-xs active:scale-95",
                 !onUpdate && "cursor-default opacity-60 pointer-events-none"
               )}
             >
-              <CalendarIcon className="w-3.5 h-3.5 text-[#676879] group-hover:text-[#0073EA] dark:text-slate-400 dark:group-hover:text-blue-400 transition-colors shrink-0" />
+              <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               <span className="whitespace-nowrap">Set date</span>
             </button>
           ) : (
@@ -118,23 +118,23 @@ export default function DateCell({ value, onUpdate }) {
               className={cn(
                 "group relative inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95",
                 isOverdue
-                  ? "bg-[#E2445C]/10 text-[#E2445C] border border-[#E2445C]/30 hover:bg-[#E2445C]/20 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50"
+                  ? "bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50"
                   : isDueToday
                   ? "bg-amber-500/10 text-amber-600 border border-amber-500/30 hover:bg-amber-500/20 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/50"
                   : isDueTomorrow
-                  ? "bg-[#0073EA]/10 text-[#0073EA] border border-[#0073EA]/30 hover:bg-[#0073EA]/20 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50"
-                  : "bg-slate-100/90 text-[#323338] border border-slate-200/80 hover:bg-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700",
+                  ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 dark:bg-blue-950/40 dark:border-blue-800/50"
+                  : "bg-slate-100/90 text-foreground border border-slate-200/80 hover:bg-slate-200/80 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700",
                 !onUpdate && "cursor-default opacity-80 pointer-events-none"
               )}
             >
               {isOverdue && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E2445C] shrink-0 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 animate-pulse" />
               )}
               {isDueToday && (
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
               )}
               {!isOverdue && !isDueToday && (
-                <CalendarIcon className="w-3.5 h-3.5 text-[#676879] dark:text-slate-400 shrink-0" />
+                <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               )}
               <span className="whitespace-nowrap">{displayDateText}</span>
 
@@ -149,7 +149,7 @@ export default function DateCell({ value, onUpdate }) {
                       handleClear(e);
                     }
                   }}
-                  className="opacity-0 group-hover:opacity-100 -mr-1 ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-all text-[#676879] hover:text-[#E2445C] dark:text-slate-400"
+                  className="opacity-0 group-hover:opacity-100 -mr-1 ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-all text-muted-foreground hover:text-destructive"
                   title="Clear date"
                 >
                   <X className="w-3 h-3" />
@@ -161,37 +161,37 @@ export default function DateCell({ value, onUpdate }) {
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-[280px] p-3 bg-white dark:bg-slate-900 border border-[#E1E5F3] dark:border-slate-800 rounded-xl shadow-xl z-50 text-slate-800 dark:text-slate-100"
+        className="w-[280px] p-3 bg-card border border-border rounded-xl shadow-xl z-50 text-foreground "
         align="center"
         sideOffset={6}
       >
         {/* Quick Presets */}
-        <div className="grid grid-cols-4 gap-1 mb-2.5 pb-2.5 border-b border-[#E1E5F3] dark:border-slate-800">
+        <div className="grid grid-cols-4 gap-1 mb-2.5 pb-2.5 border-b border-border">
           <button
             type="button"
             onClick={() => handleSelectDate(new Date())}
-            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-slate-100 hover:bg-[#0073EA] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0073EA] text-slate-700 dark:text-slate-300 transition-colors text-center"
+            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-muted hover:bg-primary hover:text-white dark:hover:bg-primary text-foreground transition-colors text-center"
           >
             Today
           </button>
           <button
             type="button"
             onClick={() => handleSelectDate(addDays(new Date(), 1))}
-            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-slate-100 hover:bg-[#0073EA] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0073EA] text-slate-700 dark:text-slate-300 transition-colors text-center"
+            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-muted hover:bg-primary hover:text-white dark:hover:bg-primary text-foreground transition-colors text-center"
           >
             Tomorrow
           </button>
           <button
             type="button"
             onClick={() => handleSelectDate(addDays(new Date(), 7))}
-            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-slate-100 hover:bg-[#0073EA] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0073EA] text-slate-700 dark:text-slate-300 transition-colors text-center"
+            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-muted hover:bg-primary hover:text-white dark:hover:bg-primary text-foreground transition-colors text-center"
           >
             +1 Week
           </button>
           <button
             type="button"
             onClick={() => handleSelectDate(addDays(new Date(), 14))}
-            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-slate-100 hover:bg-[#0073EA] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0073EA] text-slate-700 dark:text-slate-300 transition-colors text-center"
+            className="px-1.5 py-1 text-[11px] font-medium rounded-md bg-muted hover:bg-primary hover:text-white dark:hover:bg-primary text-foreground transition-colors text-center"
           >
             +2 Weeks
           </button>
@@ -202,18 +202,18 @@ export default function DateCell({ value, onUpdate }) {
           <button
             type="button"
             onClick={() => setViewingMonth(subMonths(viewingMonth, 1))}
-            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#676879] dark:text-slate-300 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
             title="Previous month"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-xs font-semibold text-[#323338] dark:text-slate-100">
+          <span className="text-xs font-semibold text-foreground">
             {format(viewingMonth, 'MMMM yyyy')}
           </span>
           <button
             type="button"
             onClick={() => setViewingMonth(addMonths(viewingMonth, 1))}
-            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#676879] dark:text-slate-300 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
             title="Next month"
           >
             <ChevronRight className="w-4 h-4" />
@@ -223,7 +223,7 @@ export default function DateCell({ value, onUpdate }) {
         {/* Weekday Labels */}
         <div className="grid grid-cols-7 gap-1 text-center mb-1">
           {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-            <div key={day} className="text-[10px] font-semibold text-[#676879] dark:text-slate-400 py-0.5">
+            <div key={day} className="text-[10px] font-semibold text-muted-foreground py-0.5">
               {day}
             </div>
           ))}
@@ -244,12 +244,12 @@ export default function DateCell({ value, onUpdate }) {
                 className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all mx-auto",
                   isSelected
-                    ? "bg-[#0073EA] text-white font-semibold shadow-xs hover:bg-[#0060c0]"
+                    ? "bg-primary text-white font-semibold shadow-xs hover:bg-primary/90"
                     : isTodayDate
-                    ? "ring-1.5 ring-[#0073EA] text-[#0073EA] dark:text-blue-400 font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                    ? "ring-1.5 ring-primary text-primary font-semibold hover:bg-blue-50 dark:hover:bg-blue-950/40"
                     : isCurrentMonth
-                    ? "text-[#323338] dark:text-slate-200 hover:bg-[#E1E5F3]/70 dark:hover:bg-slate-800"
-                    : "text-[#A2A4B2] dark:text-slate-600 hover:bg-slate-100/50 dark:hover:bg-slate-800/40"
+                    ? "text-foreground hover:bg-accent/70 "
+                    : "text-subtle-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/40"
                 )}
               >
                 {format(day, 'd')}
@@ -259,18 +259,18 @@ export default function DateCell({ value, onUpdate }) {
         </div>
 
         {/* Footer */}
-        <div className="mt-2.5 pt-2 border-t border-[#E1E5F3] dark:border-slate-800 flex items-center justify-between text-xs">
+        <div className="mt-2.5 pt-2 border-t border-border flex items-center justify-between text-xs">
           {parsedDate ? (
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#E2445C] hover:bg-[#E2445C]/10 rounded-md transition-colors"
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               <span>Clear date</span>
             </button>
           ) : (
-            <span className="text-[11px] text-[#676879] dark:text-slate-400 pl-1">
+            <span className="text-[11px] text-muted-foreground pl-1">
               Select date
             </span>
           )}
@@ -278,7 +278,7 @@ export default function DateCell({ value, onUpdate }) {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="px-2 py-1 text-xs font-medium text-[#676879] dark:text-slate-400 hover:text-[#323338] dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors ml-auto"
+            className="px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors ml-auto"
           >
             Close
           </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,24 +22,14 @@ const colorOptions = [
 ];
 
 export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    color: '#0073EA',
-    visibility: 'private'
-  });
+  // Rendered with key={board.id}, so this initial state is per board.
+  // Visibility is not editable: the database derives it from members.
+  const [formData, setFormData] = useState(() => ({
+    title: board?.title || '',
+    description: board?.description || '',
+    color: board?.color || '#2563EB',
+  }));
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (board) {
-      setFormData({
-        title: board.title || '',
-        description: board.description || '',
-        color: board.color || '#0073EA',
-        visibility: board.visibility || 'private'
-      });
-    }
-  }, [board]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,7 +52,7 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Edit Board: {board.title}
           </DialogTitle>
           <DialogDescription>
@@ -72,7 +62,7 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-[#323338] font-medium">
+            <Label htmlFor="title" className="text-foreground font-medium">
               Board Title *
             </Label>
             <Input
@@ -80,13 +70,13 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Enter board title..."
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border h-12 focus:ring-2 focus:ring-primary/20"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#323338] font-medium">
+            <Label htmlFor="description" className="text-foreground font-medium">
               Description
             </Label>
             <Textarea
@@ -94,12 +84,12 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="What's this board about?"
-              className="rounded-xl border-[#E1E5F3] min-h-20 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border min-h-20 focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Board Color</Label>
+            <Label className="text-foreground font-medium">Board Color</Label>
             <div className="flex gap-2 flex-wrap">
               {colorOptions.map((color) => (
                 <button
@@ -108,7 +98,7 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
                   onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
                   className={`w-8 h-8 rounded-lg border-2 transition-all ${
                     formData.color === color.value 
-                      ? 'border-[#323338] scale-110' 
+                      ? 'border-foreground scale-110' 
                       : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: color.value }}
@@ -130,7 +120,7 @@ export default function EditBoardModal({ isOpen, onClose, onSubmit, board }) {
             <Button
               type="submit"
               disabled={!formData.title.trim() || isSubmitting}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-medium"
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </Button>

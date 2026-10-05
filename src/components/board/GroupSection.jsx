@@ -70,21 +70,33 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
               setIsEditing(false);
             }
           }}
-          className="text-xs font-semibold text-[#323338] dark:text-slate-200 bg-white dark:bg-slate-800 border border-[#0073EA] rounded px-1 py-0.5 focus:outline-none w-full text-center"
+          className="text-xs font-semibold text-foreground bg-card border border-primary rounded px-1 py-0.5 focus:outline-none w-full text-center"
           autoFocus
         />
       ) : (
-        <span
-          className={`text-xs font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wide truncate ${isAdmin ? "cursor-pointer hover:text-[#323338] dark:hover:text-slate-200" : ""}`}
-          onClick={() => isAdmin && setIsEditing(true)}
-        >
-          {column.title}
-        </span>
+        isAdmin ? (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            title="Rename column"
+            className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {column.title}
+          </button>
+        ) : (
+          <span className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {column.title}
+          </span>
+        )
       )}
       {isAdmin && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="absolute right-1 opacity-0 group-hover:opacity-100 text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 transition-opacity p-0.5 rounded hover:bg-white/80 dark:hover:bg-slate-700">
+          <button
+            type="button"
+            aria-label={`Options for column ${column.title}`}
+            className="absolute right-1 rounded p-0.5 text-subtle-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
+          >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
@@ -95,7 +107,7 @@ const ColumnHeader = ({ column, onUpdateColumn, onDeleteColumn, onHideColumn, us
           </DropdownMenuItem>
           {column.id !== "task" && (
             <DropdownMenuItem
-              className="text-red-600"
+              className="text-destructive focus:text-destructive"
               onClick={() => onDeleteColumn(column.id)}
             >
               <Trash2 className="w-3.5 h-3.5 mr-2" />
@@ -163,7 +175,7 @@ const ItemRow = ({
         return <BudgetCell {...cellProps} />;
       default:
         return (
-          <div className="px-3 py-2 text-sm text-[#676879] dark:text-slate-400">
+          <div className="px-3 py-2 text-sm text-muted-foreground">
             {String(value ?? "")}
           </div>
         );
@@ -172,29 +184,36 @@ const ItemRow = ({
 
   const isSelected = selectedItems?.has(item.id);
 
+  const rowTone = isSelected ? "bg-accent" : "bg-card group-hover/row:bg-muted";
+
   return (
     <div
-      className={`flex items-center border-b border-[#E1E5F3] dark:border-slate-800 hover:bg-[#F5F6F8]/50 dark:hover:bg-slate-800/50 transition-colors ${
-        isSelected ? "bg-[#0073EA]/5 dark:bg-[#0073EA]/10" : ""
+      className={`group/row flex items-center border-b border-border transition-colors ${
+        isSelected ? "bg-accent" : "bg-card hover:bg-muted"
       }`}
     >
-      {/* Drag Handle + Checkbox */}
-      <div className="shrink-0 flex items-center gap-2 px-2 w-[60px] h-[44px]">
-        <input
-          type="checkbox"
-          checked={isSelected || false}
-          onChange={(e) => onSelectItem?.(item.id, e.target.checked)}
-          className="w-4 h-4 rounded border-gray-300 text-[#0073EA] focus:ring-[#0073EA]"
-        />
-      </div>
-      {/* Task Title */}
-      <div className="flex-1 min-w-[160px] px-3 h-[44px] flex items-center">
-        <span
-          className="text-sm text-[#323338] dark:text-slate-200 font-medium truncate block cursor-pointer hover:text-[#0073EA] dark:hover:text-blue-400 transition-colors"
-          onClick={() => onSelectTask?.(item)}
-        >
-          {item.title}
-        </span>
+      {/* Checkbox + title stay pinned while the columns scroll sideways. */}
+      <div
+        className={`sticky left-0 z-10 flex h-[44px] shrink-0 items-center border-r border-border/60 transition-colors ${rowTone}`}
+      >
+        <div className="flex w-[48px] shrink-0 items-center justify-center">
+          <input
+            type="checkbox"
+            checked={isSelected || false}
+            onChange={(e) => onSelectItem?.(item.id, e.target.checked)}
+            aria-label={`Select ${item.title}`}
+            className="h-4 w-4 rounded border-border accent-primary"
+          />
+        </div>
+        <div className="flex h-full w-[168px] items-center pr-3 sm:w-[260px]">
+          <button
+            type="button"
+            onClick={() => onSelectTask?.(item)}
+            className="block truncate text-left text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            {item.title}
+          </button>
+        </div>
       </div>
       {/* Dynamic Columns */}
       {columns
@@ -208,7 +227,7 @@ const ItemRow = ({
             {renderCell(column)}
           </div>
         ))}
-      <div className="shrink-0 w-[40px]" />
+      <div className="min-w-[40px] flex-1" />
     </div>
   );
 };
@@ -233,6 +252,8 @@ export default function GroupSection({
   userRole,
   onSelectTask,
 }) {
+  const canEdit = userRole === "admin" || userRole === "editor";
+  const canAdmin = userRole === "admin";
   const [collapsed, setCollapsed] = useState(group.collapsed || false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -250,41 +271,40 @@ export default function GroupSection({
   };
 
   return (
-    <div className="border-b border-[#E1E5F3] dark:border-slate-800 last:border-b-0">
+    <div className="border-b border-border last:border-b-0">
       {/* Group Header */}
-      <div
-        className="flex items-center gap-3 px-4 py-3 bg-[#F5F6F8] dark:bg-slate-800/80 border-b border-[#E1E5F3] dark:border-slate-800 cursor-pointer"
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <button className="text-[#676879] dark:text-slate-400 hover:text-[#323338] dark:hover:text-slate-200">
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
+      <div className="flex items-center gap-3 border-b border-border bg-muted px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-expanded={!collapsed}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <span className="text-muted-foreground">
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </span>
+          <span
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: group.color || "#2563EB" }}
+            aria-hidden
+          />
+          <span className="truncate text-sm font-semibold text-foreground">{group.title}</span>
+          <span className="text-xs text-subtle-foreground">({items.length})</span>
         </button>
-        <div
-          className="w-3 h-3 rounded-full flex-shrink-0"
-          style={{ backgroundColor: group.color || "#0073EA" }}
-        />
-        <span className="font-semibold text-[#323338] dark:text-slate-200 text-sm">
-          {group.title}
-        </span>
-        <span className="text-xs text-[#A0A0A0] dark:text-slate-500">({items.length})</span>
-        <div className="flex-1" />
-        {userRole === "admin" && (
+        {canAdmin && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 p-1 rounded hover:bg-white/50 dark:hover:bg-slate-700"
-              onClick={(e) => e.stopPropagation()}
+              type="button"
+              aria-label={`Options for group ${group.title}`}
+              className="rounded p-1 text-subtle-foreground hover:bg-accent hover:text-foreground"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              className="text-red-600"
+              className="text-destructive focus:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
                 onDeleteGroup(group.id);
@@ -299,15 +319,17 @@ export default function GroupSection({
       </div>
 
       {!collapsed && (
-        <div className="overflow-x-auto">
-          <div className="min-w-[600px]">
+        <div className="overflow-x-auto scroll-themed">
+          <div className="w-max min-w-full">
             {/* Column Headers */}
-            <div className="flex items-center border-b border-[#E1E5F3] dark:border-slate-800 bg-white dark:bg-slate-900">
-              <div className="shrink-0 w-[60px] h-[40px] px-2" />
-              <div className="flex-1 min-w-[160px] px-3 h-[40px] flex items-center">
-                <span className="text-xs font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wide">
-                  Task
-                </span>
+            <div className="flex items-center border-b border-border bg-card">
+              <div className="sticky left-0 z-10 flex h-[40px] shrink-0 items-center border-r border-border/60 bg-card">
+                <div className="w-[48px] shrink-0" />
+                <div className="flex w-[168px] items-center pr-3 sm:w-[260px]">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Task
+                  </span>
+                </div>
               </div>
               {columns
                 .filter((col) => col.id !== "task")
@@ -328,12 +350,14 @@ export default function GroupSection({
                     />
                   </div>
                 ))}
-              <div className="shrink-0 w-[40px]">
-                {userRole === "admin" && (
+              <div className="min-w-[40px] flex-1">
+                {canAdmin && (
                 <button
+                  type="button"
                   onClick={() => onAddColumn?.()}
-                  className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-[#0073EA] dark:hover:text-blue-400 hover:bg-[#0073EA]/5 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                  className="p-2 text-subtle-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                   title="Add column"
+                  aria-label="Add column"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -348,11 +372,11 @@ export default function GroupSection({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-white dark:bg-slate-900"
+                    className="bg-card"
                   >
                     {items.length === 0 && !isLoading && (
-                      <div className="px-4 py-8 text-center text-[#A0A0A0] dark:text-slate-500 text-sm">
-                        No tasks in this group. Click + to add one.
+                      <div className="sticky left-0 w-[min(100vw-3rem,40rem)] px-4 py-8 text-center text-subtle-foreground text-sm">
+                        No tasks in this group yet.
                       </div>
                     )}
                     {items.map((item, index) => (
@@ -386,9 +410,8 @@ export default function GroupSection({
                     {provided.placeholder}
 
                     {/* Add Task Row */}
-                    {userRole === "admin" && (isAdding ? (
-                      <div className="flex items-center px-4 py-2 border-t border-[#E1E5F3] dark:border-slate-800">
-                        <div className="shrink-0 w-[60px]" />
+                    {canEdit && (isAdding ? (
+                      <div className="sticky left-0 flex w-[min(100vw-3rem,40rem)] items-center px-4 py-2 border-t border-border">
                         <div className="flex-1 min-w-[160px]">
                           <input
                             value={newTaskTitle}
@@ -401,7 +424,8 @@ export default function GroupSection({
                               }
                             }}
                             placeholder="Enter task title..."
-                            className="w-full text-sm border border-[#0073EA] dark:bg-slate-800 dark:text-slate-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
+                            aria-label="New task title"
+                            className="w-full rounded border border-primary bg-card px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
                             autoFocus
                           />
                         </div>
@@ -409,7 +433,7 @@ export default function GroupSection({
                           size="sm"
                           onClick={handleAddTask}
                           disabled={!newTaskTitle.trim()}
-                          className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-8 px-3 text-xs ml-2"
+                          className="bg-primary hover:bg-primary/90 text-white rounded-lg h-8 px-3 text-xs ml-2"
                         >
                           Add
                         </Button>
@@ -420,16 +444,17 @@ export default function GroupSection({
                             setNewTaskTitle("");
                             setIsAdding(false);
                           }}
-                          className="text-[#676879] dark:text-slate-400 h-8 px-2 ml-1 text-xs"
+                          className="text-muted-foreground h-8 px-2 ml-1 text-xs"
                         >
                           Cancel
                         </Button>
                       </div>
                     ) : (
-                      <div className="px-4 py-2 border-t border-[#E1E5F3] dark:border-slate-800">
+                      <div className="sticky left-0 w-fit px-4 py-2">
                         <button
+                          type="button"
                           onClick={() => setIsAdding(true)}
-                          className="flex items-center gap-2 text-sm text-[#0073EA] dark:text-blue-400 hover:text-[#0056B3] dark:hover:text-blue-300 font-medium px-2 py-1 rounded hover:bg-[#0073EA]/5 dark:hover:bg-blue-900/30 transition-colors"
+                          className="flex items-center gap-2 rounded px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary/80"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Task

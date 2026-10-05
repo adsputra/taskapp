@@ -97,21 +97,21 @@ export default function Dashboard() {
   }, { scope: containerRef });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
+    <div ref={containerRef} className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
         {/* ── Greeting ── */}
         <div className="space-y-2 stagger-item">
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-8 rounded-full bg-blue-500" />
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                 {getGreeting()},{" "}
                 <span className="text-blue-600">
                   {user?.full_name?.split(" ")[0] || "there"}
                 </span>
                 !
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {today} &middot;{" "}
                 {pendingTasks > 0
                   ? `${pendingTasks} task${pendingTasks > 1 ? "s" : ""} waiting`

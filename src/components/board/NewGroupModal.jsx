@@ -37,18 +37,18 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#323338]">Add New Group</DialogTitle>
+          <DialogTitle className="text-foreground">Add New Group</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div>
-            <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
               Group Name
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter group name..."
-              className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+              className="rounded-lg border-border focus:ring-primary"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSubmit();
               }}
@@ -56,7 +56,7 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
               Color
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -66,7 +66,7 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
                   onClick={() => setColor(c)}
                   className={`w-8 h-8 rounded-lg transition-all ${
                     color === c
-                      ? "ring-2 ring-offset-2 ring-[#0073EA] scale-110"
+                      ? "ring-2 ring-offset-2 ring-primary scale-110"
                       : "hover:scale-105"
                   }`}
                   style={{ backgroundColor: c }}
@@ -78,14 +78,14 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
             <Button
               variant="outline"
               onClick={onClose}
-              className="rounded-lg border-[#E1E5F3]"
+              className="rounded-lg border-border"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={!title.trim()}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+              className="bg-primary hover:bg-primary/90 text-white rounded-lg"
             >
               Add Group
             </Button>

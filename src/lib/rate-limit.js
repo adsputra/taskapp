@@ -182,3 +182,10 @@ export const requestRateLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   store: redisStore,
 });
+
+// Invitation emails go to third parties: cap them per inviting user.
+export const inviteRateLimiter = createRateLimiter({
+  limit: 30,
+  windowMs: 60 * 60 * 1000,
+  store: redisStore,
+});

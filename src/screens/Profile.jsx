@@ -15,11 +15,6 @@ import {
   Edit3,
   Save,
   X,
-  Lock,
-  Eye,
-  EyeOff,
-  Bell,
-  BellOff,
   Folder,
   Clock,
   ChevronRight,
@@ -28,10 +23,14 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import AppearanceSettings from "@/components/profile/AppearanceSettings";
+import PasswordSettings from "@/components/profile/PasswordSettings";
+import MfaSettings from "@/components/profile/MfaSettings";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "settings", label: "Settings & security", icon: Settings },
   { id: "activity", label: "Activity", icon: Activity },
 ];
 
@@ -46,7 +45,7 @@ export default function Profile() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
 
         {/* ── Header Card ── */}
@@ -54,7 +53,7 @@ export default function Profile() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+          className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden"
         >
           {/* Cover gradient */}
           <div className="h-24 sm:h-32 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 relative">
@@ -65,7 +64,7 @@ export default function Profile() {
           <div className="px-6 pb-6 -mt-12 sm:-mt-14 relative">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               {/* Avatar */}
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-blue-600 border-4 border-white dark:border-slate-900 shadow-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-blue-600 border-4 border-card shadow-lg flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-3xl sm:text-4xl select-none">
                   {isLoading
                     ? "…"
@@ -77,16 +76,16 @@ export default function Profile() {
 
               {/* Name + meta */}
               <div className="flex-1 pb-1">
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground ">
                   {isLoading ? "Loading…" : user?.full_name || "Guest"}
                 </h1>
                 <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                  <span className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground ">
                     <Mail className="w-3.5 h-3.5" />
                     {user?.email || "—"}
                   </span>
                   {user?.created_at && (
-                    <span className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground ">
                       <Calendar className="w-3.5 h-3.5" />
                       Joined{" "}
                       {new Date(user.created_at).toLocaleDateString("en-US", {
@@ -106,10 +105,10 @@ export default function Profile() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
-          className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+          className="bg-card rounded-2xl shadow-sm border border-border "
         >
           {/* Tab nav */}
-          <div className="flex border-b border-slate-200 dark:border-slate-700">
+          <div className="flex border-b border-border ">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -145,7 +144,7 @@ export default function Profile() {
                 <ProfileTab key="profile" user={user} isLoading={isLoading} />
               )}
               {activeTab === "settings" && (
-                <SettingsTab key="settings" user={user} />
+                <SettingsTab key="settings" />
               )}
               {activeTab === "activity" && (
                 <ActivityTab key="activity" user={user} />
@@ -198,7 +197,7 @@ function ProfileTab({ user, isLoading }) {
     >
       {/* Full Name */}
       <div className="space-y-2">
-        <Label className="text-slate-600 dark:text-slate-400 font-medium text-xs uppercase tracking-wide">
+        <Label className="text-muted-foreground font-medium text-xs uppercase tracking-wide">
           Full Name
         </Label>
         {editing ? (
@@ -207,7 +206,7 @@ function ProfileTab({ user, isLoading }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              className="flex-1 h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-blue-500/20 focus:border-blue-400"
+              className="flex-1 h-11 rounded-xl border-border bg-muted focus:ring-blue-500/20 focus:border-blue-400"
               autoFocus
             />
             <Button
@@ -224,14 +223,14 @@ function ProfileTab({ user, isLoading }) {
             <Button
               variant="outline"
               onClick={() => setEditing(false)}
-              className="rounded-xl h-11 px-4 border-slate-200 dark:border-slate-700"
+              className="rounded-xl h-11 px-4 border-border "
             >
               <X className="w-4 h-4" />
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700">
-            <span className="text-slate-800 dark:text-slate-100 font-medium">
+          <div className="flex items-center justify-between bg-muted rounded-xl px-4 py-3 border border-border ">
+            <span className="text-foreground font-medium">
               {user?.full_name || "—"}
             </span>
             <button
@@ -246,16 +245,16 @@ function ProfileTab({ user, isLoading }) {
 
       {/* Email (read-only) */}
       <div className="space-y-2">
-        <Label className="text-slate-600 dark:text-slate-400 font-medium text-xs uppercase tracking-wide">
+        <Label className="text-muted-foreground font-medium text-xs uppercase tracking-wide">
           Email Address
         </Label>
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-3 bg-muted rounded-xl px-4 py-3 border border-border ">
           <Mail className="w-4 h-4 text-slate-400" />
-          <span className="text-slate-800 dark:text-slate-100 font-medium">
+          <span className="text-foreground font-medium">
             {user?.email || "—"}
           </span>
         </div>
-        <p className="text-xs text-slate-400 dark:text-slate-500 pl-1">
+        <p className="text-xs text-subtle-foreground pl-1">
           Email cannot be changed
         </p>
       </div>
@@ -263,12 +262,12 @@ function ProfileTab({ user, isLoading }) {
       {/* Member since */}
       {user?.created_at && (
         <div className="space-y-2">
-          <Label className="text-slate-600 dark:text-slate-400 font-medium text-xs uppercase tracking-wide">
+          <Label className="text-muted-foreground font-medium text-xs uppercase tracking-wide">
             Member Since
           </Label>
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-3 bg-muted rounded-xl px-4 py-3 border border-border ">
             <Calendar className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-800 dark:text-slate-100 font-medium">
+            <span className="text-foreground font-medium">
               {new Date(user.created_at).toLocaleDateString("en-US", {
                 day: "numeric",
                 month: "long",
@@ -285,37 +284,7 @@ function ProfileTab({ user, isLoading }) {
 /* ════════════════════════════════════════════════
    SETTINGS TAB
    ════════════════════════════════════════════════ */
-function SettingsTab({ user }) {
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-
-  const changePwMutation = useMutation({
-    mutationFn: () => userApi.changePassword(currentPw, newPw),
-    onSuccess: () => {
-      setCurrentPw("");
-      setNewPw("");
-      setConfirmPw("");
-      toast.success("Password changed successfully!");
-    },
-    onError: (err) => toast.error(err.message || "Failed to change password"),
-  });
-
-  const handleChangePassword = () => {
-    if (!currentPw || !newPw) return toast.error("Please fill in all fields");
-    if (newPw.length < 6) return toast.error("Password must be at least 6 characters");
-    if (newPw !== confirmPw) return toast.error("Passwords do not match");
-    changePwMutation.mutate();
-  };
-
-  const togglePwVisibility = (field) =>
-    setShowPasswords((p) => ({ ...p, [field]: !p[field] }));
-
+function SettingsTab() {
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -324,146 +293,12 @@ function SettingsTab({ user }) {
       transition={{ duration: 0.2 }}
       className="space-y-8"
     >
-      {/* Change Password */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Change Password
-          </h3>
-        </div>
-
-        {/* Current Password */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Current Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showPasswords.current ? "text" : "password"}
-              value={currentPw}
-              onChange={(e) => setCurrentPw(e.target.value)}
-              className="h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pr-11 focus:ring-blue-500/20 focus:border-blue-400"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              onClick={() => togglePwVisibility("current")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              {showPasswords.current ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* New Password */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            New Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showPasswords.new ? "text" : "password"}
-              value={newPw}
-              onChange={(e) => setNewPw(e.target.value)}
-              className="h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pr-11 focus:ring-blue-500/20 focus:border-blue-400"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              onClick={() => togglePwVisibility("new")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              {showPasswords.new ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Confirm New Password */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Confirm New Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showPasswords.confirm ? "text" : "password"}
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-              className="h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pr-11 focus:ring-blue-500/20 focus:border-blue-400"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              onClick={() => togglePwVisibility("confirm")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              {showPasswords.confirm ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <Button
-          onClick={handleChangePassword}
-          disabled={changePwMutation.isPending}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-11 px-6 font-medium"
-        >
-          {changePwMutation.isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving…
-            </>
-          ) : (
-            "Change Password"
-          )}
-        </Button>
+      <AppearanceSettings />
+      <div className="border-t border-border pt-6">
+        <PasswordSettings />
       </div>
-
-      {/* Notification preferences */}
-      <div className="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-6">
-        <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Notifications
-          </h3>
-        </div>
-
-        <div className="space-y-3">
-          {[
-            { label: "Email notifications", desc: "Get updates via email", defaultChecked: true },
-            { label: "Push notifications", desc: "Browser push alerts", defaultChecked: false },
-          ].map((pref) => (
-            <div
-              key={pref.label}
-              className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700"
-            >
-              <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {pref.label}
-                </p>
-                <p className="text-xs text-slate-400">{pref.desc}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  defaultChecked={pref.defaultChecked}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-slate-300 dark:bg-slate-600 rounded-full peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-4" />
-              </label>
-            </div>
-          ))}
-        </div>
+      <div className="border-t border-border pt-6">
+        <MfaSettings />
       </div>
     </motion.div>
   );
@@ -478,15 +313,7 @@ function ActivityTab({ user }) {
     queryFn: () => userApi.getRecentBoards(20),
   });
 
-  const timeSince = (date) => {
-    const diff = Date.now() - new Date(date).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return `${days}d ago`;
-  };
+  const timeSince = (date) => formatDistanceToNow(new Date(date), { addSuffix: true });
 
   return (
     <motion.div
@@ -497,10 +324,10 @@ function ActivityTab({ user }) {
       className="space-y-4"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <h3 className="text-sm font-semibold text-foreground ">
           Your Boards
         </h3>
-        <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+        <span className="text-xs text-slate-400 bg-muted px-2 py-1 rounded-full">
           {boards.length} board{boards.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -510,14 +337,14 @@ function ActivityTab({ user }) {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-14 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
+              className="h-14 bg-muted rounded-xl animate-pulse"
             />
           ))}
         </div>
       ) : boards.length === 0 ? (
         <div className="text-center py-12">
           <Folder className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             No boards yet
           </p>
           <Link
@@ -533,7 +360,7 @@ function ActivityTab({ user }) {
             <Link
               key={board.id}
               href={`/boards/${board.id}`}
-              className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 transition-colors group"
+              className="flex items-center gap-3 bg-muted hover:bg-muted rounded-xl px-4 py-3 border border-border transition-colors group"
             >
               {/* Board color dot */}
               <div
@@ -547,7 +374,7 @@ function ActivityTab({ user }) {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {board.title}
                 </p>
                 <p className="text-xs text-slate-400 flex items-center gap-1">
@@ -572,7 +399,7 @@ function Skeleton() {
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-2">
           <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
-          <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          <div className="h-12 bg-muted rounded-xl animate-pulse" />
         </div>
       ))}
     </div>

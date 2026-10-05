@@ -61,17 +61,17 @@ export default function AnalyticsPanel({ board, items, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-6 border-b border-border flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Board Analytics</h2>
-            <p className="text-gray-600">Insights and statistics for {board?.title}</p>
+            <h2 className="text-2xl font-bold text-foreground">Board Analytics</h2>
+            <p className="text-muted-foreground">Insights and statistics for {board?.title}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full"
+            className="text-subtle-foreground hover:text-muted-foreground text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-muted rounded-full"
           >
             ×
           </button>
@@ -142,7 +142,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                           <span className="font-medium">{status}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">{count} tasks</span>
+                          <span className="text-sm text-muted-foreground">{count} tasks</span>
                           <Badge variant="outline">{percentage}%</Badge>
                         </div>
                       </div>
@@ -191,13 +191,13 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                   {Object.entries(priorityStats).map(([priority, count]) => {
                     const priorityChoice = priorityColumn?.options?.choices?.find(c => c.label === priority);
                     return (
-                      <div key={priority} className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div key={priority} className="text-center p-4 bg-muted rounded-lg">
                         <div 
                           className="w-4 h-4 rounded-full mx-auto mb-2"
                           style={{ backgroundColor: priorityChoice?.color || '#gray' }}
                         />
                         <div className="text-2xl font-bold">{count}</div>
-                        <div className="text-sm text-gray-600">{priority}</div>
+                        <div className="text-sm text-muted-foreground">{priority}</div>
                       </div>
                     );
                   })}
@@ -218,9 +218,9 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardContent>
                 <div className="space-y-3">
                   {recentActivity.map(item => (
-                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-gray-50 rounded">
+                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded">
                       <div className="font-medium text-sm truncate">{item.title}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Updated {format(new Date(item.updated_at), 'MMM d, HH:mm')}
                       </div>
                     </div>
@@ -233,7 +233,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
           {/* Empty State */}
           {items.length === 0 && (
             <Card className="md:col-span-3 text-center p-8">
-              <div className="text-gray-500">
+              <div className="text-muted-foreground">
                 <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium mb-2">No Data Available</h3>
                 <p>Add some tasks to your board to see analytics</p>

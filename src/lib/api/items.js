@@ -6,16 +6,16 @@
  * - pagination default + batas maksimum di semua list
  * - listMyTasks difilter di server (bukan fetch semua lalu filter di JS)
  * - reorder lewat satu RPC (bukan N request)
- * - activity log dikirim satu batch insert
+ * - activity log & notifikasi ditulis trigger database (tidak bisa
+ *   dipalsukan atau dilewati dari browser)
  */
 import { createClient } from "@/lib/supabase/client";
-import { activityApi } from "./activity";
+import { notifyActivityChanged } from "./activity";
 import { apiError } from "./errors";
 import {
   assert,
   clampLimit,
   isValidEmail,
-  isValidUuid,
   parseSort,
   requireNonEmptyString,
   requirePlainObject,
@@ -35,6 +35,12 @@ const ITEM_UPDATE_FIELDS = [
   "story_points",
   "estimate_minutes",
 ];
+
+// Raised by the board_items_check_refs trigger.
+const ITEM_ERROR_MESSAGES = {
+  "23514": "Parent atau sprint harus berasal dari board yang sama.",
+  "42501": "Kamu tidak punya izin untuk perubahan ini.",
+};
 
 function buildItemUpdates(updates) {
   requirePlainObject(updates, "Perubahan item");
@@ -208,21 +214,18 @@ export const itemsApi = {
       .select()
       .single();
 
-    if (error) throw apiError(error, "Gagal membuat item.");
+    if (error) throw apiError(error, "Gagal membuat item.", ITEM_ERROR_MESSAGES);
 
-    activityApi.log({ item_id: item.id, action: "created", new_value: item.title }).catch(() => {});
-
+    if (parent_id) notifyActivityChanged(parent_id);
     return item;
   },
 
   /**
-   * Update item with activity logging.
+   * Update item. The audit trail is written by the database trigger.
    * @param {string} id - item ID
    * @param {object} updates - fields to update
-   * @param {object} prevItem - previous item data (for diff logging)
-   * @param {Array}  columns - board column definitions (for readable field names)
    */
-  async update(id, updates, prevItem, columns) {
+  async update(id, updates) {
     requireUuid(id, "Item ID");
     const clean = buildItemUpdates(updates);
 
@@ -238,13 +241,10 @@ export const itemsApi = {
       if (error.code === "PGRST116") {
         throw new Error("Task tidak ditemukan atau kamu tidak punya akses.");
       }
-      throw apiError(error, "Gagal update item.");
+      throw apiError(error, "Gagal update item.", ITEM_ERROR_MESSAGES);
     }
 
-    if (prevItem) {
-      void logFieldChanges(id, clean, prevItem, columns);
-    }
-
+    notifyActivityChanged(id);
     return data;
   },
 
@@ -254,18 +254,12 @@ export const itemsApi = {
   async delete(id) {
     requireUuid(id, "Item ID");
     const supabase = createClient();
-
-    const { data: item } = await supabase
-      .from("board_items")
-      .select("id, title")
-      .eq("id", id)
-      .single();
-
-    const { error } = await supabase.from("board_items").delete().eq("id", id);
+    // .select() so RLS-filtered deletes (non-admins) surface as errors
+    // instead of silently doing nothing.
+    const { data, error } = await supabase.from("board_items").delete().eq("id", id).select("id");
     if (error) throw apiError(error, "Gagal menghapus item.");
-
-    if (item) {
-      activityApi.log({ item_id: id, action: "deleted", old_value: item.title }).catch(() => {});
+    if (!data || data.length === 0) {
+      throw new Error("Hanya admin board yang bisa menghapus task.");
     }
   },
 
@@ -286,73 +280,3 @@ export const itemsApi = {
     if (error) throw apiError(error, "Gagal reorder items.");
   },
 };
-
-/**
- * Build and send activity entries for changed fields in one insert.
- */
-async function logFieldChanges(itemId, clean, prevItem, columns) {
-  const colTitleMap = {};
-  if (Array.isArray(columns)) {
-    for (const col of columns) {
-      if (col?.id) colTitleMap[col.id] = col.title || col.id;
-    }
-  }
-
-  const builtins = {
-    title: "Title",
-    description: "Description",
-    order_index: "Order",
-    group_id: "Group",
-  };
-
-  const getFieldLabel = (key) => {
-    if (builtins[key]) return builtins[key];
-    if (colTitleMap[key]) return colTitleMap[key];
-    return key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-  };
-
-  const formatValue = (value) => {
-    if (value === null || value === undefined || value === "") return "empty";
-    if (Array.isArray(value)) return value.join(", ") || "empty";
-    if (typeof value === "object") return JSON.stringify(value);
-    if (typeof value === "boolean") return value ? "Yes" : "No";
-    return String(value);
-  };
-
-  const entries = [];
-
-  for (const field of ["title", "description", "group_id"]) {
-    if (clean[field] !== undefined && clean[field] !== prevItem[field]) {
-      entries.push({
-        item_id: itemId,
-        action: "updated",
-        field_name: getFieldLabel(field),
-        old_value: formatValue(prevItem[field]),
-        new_value: formatValue(clean[field]),
-      });
-    }
-  }
-
-  if (clean.data) {
-    for (const [key, newValue] of Object.entries(clean.data)) {
-      const oldValue = prevItem.data?.[key];
-      if (formatValue(oldValue) !== formatValue(newValue)) {
-        entries.push({
-          item_id: itemId,
-          action: "updated",
-          field_name: getFieldLabel(key),
-          old_value: formatValue(oldValue),
-          new_value: formatValue(newValue),
-        });
-      }
-    }
-  }
-
-  if (entries.length === 0) return;
-
-  try {
-    await activityApi.logMany(entries);
-  } catch {
-    // Audit logging is best-effort — never block the save on it.
-  }
-}

@@ -32,33 +32,33 @@ export default function MyTasksPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-slate-950 p-6 md:p-10">
+    <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
               <CheckSquare className="w-8 h-8 text-blue-600" /> My Tasks
             </h1>
             <p className="text-slate-500 mt-2">View and manage all tasks assigned to you across different boards.</p>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+          <div className="flex bg-muted rounded-lg p-1">
             {["all", "pending", "completed"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilterStatus(f)}
                 className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${
                   filterStatus === f
-                    ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100"
+                    ? "bg-card shadow-sm text-slate-800 dark:text-slate-100"
                     : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >
@@ -71,13 +71,13 @@ export default function MyTasksPage() {
         {/* Tasks List */}
         <div className="space-y-4">
           {filteredTasks.length === 0 ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div className="text-center py-20 bg-card rounded-2xl border border-border ">
               <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckSquare className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">No tasks found</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No tasks found</h3>
               <p className="text-slate-500 max-w-sm mx-auto">
-                You don't have any tasks assigned to you right now. Take a break!
+                You don&apos;t have any tasks assigned to you right now. Take a break!
               </p>
             </div>
           ) : (
@@ -87,7 +87,7 @@ export default function MyTasksPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 key={task.id} 
-                className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow group flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="bg-card rounded-xl p-5 border border-border hover:shadow-md transition-shadow group flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -100,7 +100,7 @@ export default function MyTasksPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">{task.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground line-clamp-1">{task.title}</h3>
                   <div className="flex items-center gap-4 mt-3 text-sm text-slate-500">
                     {task.board && (
                       <div className="flex items-center gap-1.5">

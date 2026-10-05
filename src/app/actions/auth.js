@@ -1,7 +1,9 @@
 "use server";
 
 import { headers } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteOrigin } from "@/lib/site-url";
 import { logger } from "@/lib/logger";
 import { incrementCounter } from "@/lib/metrics";
 import { getClientIp, authRateLimiter, authAccountRateLimiter } from "@/lib/rate-limit";
@@ -74,7 +76,13 @@ export async function login(email, password) {
     }
 
     incrementCounter("taskapp_auth_login_total", { result: "ok" });
-    return { ok: true };
+
+    // A verified MFA factor means this aal1 session must be stepped up
+    // before the database will serve any data (see mfa_satisfied()).
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const mfaRequired = aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2";
+
+    return { ok: true, mfaRequired };
   } catch (err) {
     incrementCounter("taskapp_auth_login_total", { result: "error" });
     logger.error("login failed", { requestId: await getRequestId(), detail: err?.message });
@@ -155,5 +163,117 @@ export async function signOut() {
   } catch (err) {
     logger.error("signOut failed", { requestId: await getRequestId(), detail: err?.message });
     return { error: "Gagal sign out." };
+  }
+}
+
+/**
+ * Forgot password — sends a recovery link. Always answers the same way so
+ * the form cannot be used to discover which emails have an account.
+ */
+export async function requestPasswordReset(email) {
+  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+  const genericOk = { ok: true };
+
+  try {
+    if (!isValidEmail(cleanEmail)) return { error: "Email tidak valid." };
+
+    const rateLimitError = await enforceAuthRateLimit("reset", cleanEmail);
+    if (rateLimitError) return { error: rateLimitError };
+
+    const origin = await getSiteOrigin({ allowRequestOrigin: true });
+    if (!origin) return { error: "Server tidak dikonfigurasi." };
+
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`,
+    });
+
+    if (error) {
+      incrementCounter("taskapp_auth_reset_total", { result: "rejected" });
+      logger.warn("password reset rejected", { requestId: await getRequestId(), code: error.code });
+      if (error.status === 429) return { error: RATE_LIMIT_MESSAGE };
+      return genericOk;
+    }
+
+    incrementCounter("taskapp_auth_reset_total", { result: "ok" });
+    return genericOk;
+  } catch (err) {
+    logger.error("password reset failed", { requestId: await getRequestId(), detail: err?.message });
+    return { error: "Terjadi kesalahan server." };
+  }
+}
+
+/**
+ * Set a new password for the signed-in user (recovery link or settings).
+ */
+export async function updatePassword(newPassword) {
+  try {
+    const passwordIssue = passwordError(newPassword);
+    if (passwordIssue) return { error: passwordIssue };
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Sesi tidak valid. Minta link reset baru." };
+
+    const rateLimitError = await enforceAuthRateLimit("update_password", user.id);
+    if (rateLimitError) return { error: rateLimitError };
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      logger.warn("password update rejected", { requestId: await getRequestId(), code: error.code });
+      if (error.code === "same_password") return { error: "Password baru harus berbeda dari yang lama." };
+      if (error.code === "insufficient_aal") return { error: "Verifikasi kode MFA terlebih dahulu." };
+      if (error.code === "weak_password") return { error: "Password terlalu lemah." };
+      return { error: "Gagal mengganti password." };
+    }
+
+    incrementCounter("taskapp_auth_password_change_total", { result: "ok" });
+    return { ok: true };
+  } catch (err) {
+    logger.error("password update failed", { requestId: await getRequestId(), detail: err?.message });
+    return { error: "Terjadi kesalahan server." };
+  }
+}
+
+/**
+ * Change password from settings: re-verifies the current password on the
+ * server (rate limited) instead of in the browser.
+ */
+export async function changePassword(currentPassword, newPassword) {
+  try {
+    if (typeof currentPassword !== "string" || currentPassword.length === 0) {
+      return { error: "Password saat ini wajib diisi." };
+    }
+    const passwordIssue = passwordError(newPassword);
+    if (passwordIssue) return { error: passwordIssue };
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { error: "Sesi tidak valid. Silakan login ulang." };
+
+    const rateLimitError = await enforceAuthRateLimit("change_password", user.id);
+    if (rateLimitError) return { error: rateLimitError };
+
+    // Verify with a throwaway client so the user's cookies are untouched,
+    // then revoke the extra session it created.
+    const verifier = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const { error: verifyError } = await verifier.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (verifyError) {
+      incrementCounter("taskapp_auth_password_change_total", { result: "wrong_current" });
+      return { error: "Password saat ini salah." };
+    }
+    await verifier.auth.signOut({ scope: "local" }).catch(() => {});
+
+    return updatePassword(newPassword);
+  } catch (err) {
+    logger.error("password change failed", { requestId: await getRequestId(), detail: err?.message });
+    return { error: "Terjadi kesalahan server." };
   }
 }

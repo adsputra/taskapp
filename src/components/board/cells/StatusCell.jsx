@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
+import { readableTextOn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function StatusCell({ value, column, onUpdate }) {
@@ -55,8 +56,8 @@ export default function StatusCell({ value, column, onUpdate }) {
       onClick={() => onUpdate && setIsEditing(true)}
     >
       <Badge
-        className={`border-none text-white font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
-        style={{ backgroundColor: currentChoice.color }}
+        className={`border-none font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
+        style={{ backgroundColor: currentChoice.color, color: readableTextOn(currentChoice.color) }}
       >
         {currentChoice.label}
       </Badge>

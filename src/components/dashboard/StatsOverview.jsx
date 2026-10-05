@@ -9,7 +9,7 @@ const statItems = [
     label: "Boards",
     icon: Folder,
     color: "text-blue-600",
-    bg: "bg-blue-50",
+    bg: "bg-blue-500/10",
     ring: "ring-blue-600/10",
   },
   {
@@ -17,7 +17,7 @@ const statItems = [
     label: "Completed",
     icon: CheckCircle2,
     color: "text-emerald-600",
-    bg: "bg-emerald-50",
+    bg: "bg-emerald-500/10",
     ring: "ring-emerald-600/10",
   },
   {
@@ -25,7 +25,7 @@ const statItems = [
     label: "Pending",
     icon: Clock,
     color: "text-amber-600",
-    bg: "bg-amber-50",
+    bg: "bg-amber-500/10",
     ring: "ring-amber-600/10",
   },
   {
@@ -33,7 +33,7 @@ const statItems = [
     label: "Completion",
     icon: TrendingUp,
     color: "text-violet-600",
-    bg: "bg-violet-50",
+    bg: "bg-violet-500/10",
     ring: "ring-violet-600/10",
   },
 ];
@@ -63,7 +63,7 @@ export default function StatsOverview({ boards, items, isLoading }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 * i }}
         >
-          <div className="relative group bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-md hover:shadow-lg dark:shadow-none dark:border dark:border-slate-800 transition-colors duration-300">
+          <div className="relative group bg-card rounded-2xl p-5 shadow-md hover:shadow-lg dark:shadow-none dark:border dark:border-slate-800 transition-colors duration-300">
             <div className="flex items-center justify-between mb-3">
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg} dark:bg-opacity-20 ${s.color} ring-1 ${s.ring}`}
@@ -73,13 +73,13 @@ export default function StatsOverview({ boards, items, isLoading }) {
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <p className="text-xs font-medium text-subtle-foreground uppercase tracking-wider">
                 {s.label}
               </p>
               {isLoading ? (
                 <Skeleton className="h-7 w-16 rounded bg-slate-200 dark:bg-slate-700" />
               ) : (
-                <p className={`text-2xl font-bold text-slate-800 dark:text-slate-100 tabular-nums`}>
+                <p className={`text-2xl font-bold text-foreground tabular-nums`}>
                   {values[s.key]}
                 </p>
               )}

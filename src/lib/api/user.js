@@ -1,15 +1,11 @@
 /**
  * User API — session & profile operations.
  * Digunakan oleh client components (NavBar, Dashboard, dll).
+ * Ganti password ada di server action `changePassword` (rate-limited).
  */
 import { createClient } from "@/lib/supabase/client";
 import { apiError } from "./errors";
-import {
-  assert,
-  clampLimit,
-  passwordError,
-  requireNonEmptyString,
-} from "@/lib/validation";
+import { assert, clampLimit, isValidUuid, requireNonEmptyString } from "@/lib/validation";
 
 const PROFILE_UPDATE_FIELDS = ["full_name", "avatar_url"];
 
@@ -116,29 +112,22 @@ export const userApi = {
   },
 
   /**
-   * Change password for the current user.
+   * Public profile fields for a set of users (RLS: only people you share
+   * a board with are visible).
    */
-  async changePassword(currentPassword, newPassword) {
-    if (typeof currentPassword !== "string" || currentPassword.length === 0) {
-      throw new Error("Password saat ini wajib diisi.");
-    }
-    const passwordIssue = passwordError(newPassword);
-    if (passwordIssue) throw new Error(passwordIssue);
+  async profilesByIds(ids) {
+    const unique = [...new Set((ids || []).filter(Boolean))].slice(0, 200);
+    if (unique.length === 0) return [];
+    unique.forEach((id) => assert(isValidUuid(id), "User ID tidak valid."));
 
     const supabase = createClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, avatar_url")
+      .in("id", unique);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Not authenticated");
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
-    if (signInError) throw new Error("Password saat ini salah.");
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) throw apiError(error, "Gagal mengganti password.");
-    return { ok: true };
+    if (error) throw apiError(error, "Gagal memuat profil.");
+    return data || [];
   },
 
   /**

@@ -6,8 +6,8 @@ export default function JoinPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
-          <Loader2 className="w-10 h-10 text-[#0073EA] animate-spin" />
+        <div className="min-h-screen bg-muted flex items-center justify-center">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
         </div>
       }
     >

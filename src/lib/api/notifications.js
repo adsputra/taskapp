@@ -1,15 +1,12 @@
 /**
- * Notifications API — CRUD for in-app notifications.
- * Uses existing `read` column (not `is_read`).
+ * Notifications API — read/mark/delete the current user's notifications.
+ *
+ * Notifications are created by database triggers (assignments, comments,
+ * mentions, automations, invitations); RLS only exposes your own rows.
  */
 import { createClient } from "@/lib/supabase/client";
 import { apiError } from "./errors";
-import {
-  assert,
-  clampLimit,
-  requireNonEmptyString,
-  requireUuid,
-} from "@/lib/validation";
+import { clampLimit, requireUuid } from "@/lib/validation";
 
 export const notificationsApi = {
   /**
@@ -73,31 +70,6 @@ export const notificationsApi = {
       .eq("read", false);
 
     if (error) throw apiError(error, "Failed to mark all read.");
-  },
-
-  /**
-   * Create a notification. RLS only allows notifying yourself
-   * (cross-user notifications must come from DB triggers).
-   */
-  async create({ user_id, board_id, item_id, actor_id, type, title, message }) {
-    requireUuid(user_id, "User ID");
-    requireNonEmptyString(title, { field: "Judul", max: 200 });
-    if (board_id) requireUuid(board_id, "Board ID");
-    if (item_id) requireUuid(item_id, "Item ID");
-    if (actor_id) requireUuid(actor_id, "Actor ID");
-    if (message !== undefined && message !== null) {
-      assert(typeof message === "string" && message.length <= 2000, "Pesan maksimal 2000 karakter.");
-    }
-
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("notifications")
-      .insert({ user_id, board_id, item_id, actor_id, type, title, message })
-      .select()
-      .single();
-
-    if (error) throw apiError(error, "Failed to create notification.");
-    return data;
   },
 
   /**

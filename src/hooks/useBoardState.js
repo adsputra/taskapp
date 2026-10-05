@@ -6,8 +6,8 @@ import { itemsApi } from "@/lib/api/items";
 import { userApi } from "@/lib/api/user";
 import { toast } from "sonner";
 
-// Helper to generate temporary IDs
-const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+// Ids for new columns/groups (entries inside boards.columns/groups).
+const genId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 
 export function useBoardState(boardId) {
   const router = useRouter();
@@ -51,6 +51,10 @@ export function useBoardState(boardId) {
     );
     return member?.role || null;
   }, [board, currentUser]);
+  // Mirrors RLS: editors create/edit tasks, admins also delete tasks and
+  // change the board layout (columns, groups, automations).
+  const canEdit = userRole === "admin" || userRole === "editor";
+  const canAdmin = userRole === "admin";
 
   // 4. Mutations
   const itemCreate = useMutation({
@@ -66,7 +70,7 @@ export function useBoardState(boardId) {
   });
 
   const itemUpdate = useMutation({
-    mutationFn: ({ id, updates, prevItem, columns }) => itemsApi.update(id, updates, prevItem, columns),
+    mutationFn: ({ id, updates }) => itemsApi.update(id, updates),
     onError: (err) => {
       toast.error(err.message);
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
@@ -81,12 +85,23 @@ export function useBoardState(boardId) {
     onError: (err) => toast.error(err.message),
   });
 
-  const boardUpdate = useMutation({
-    mutationFn: ({ id, updates }) => boardsApi.update(id, updates),
-    onSuccess: () => {
+  // One column/group change at a time, merged by the database against the
+  // latest board — concurrent edits by other people are never overwritten.
+  const listPatch = useMutation({
+    mutationFn: ({ list, op, entryId, value }) =>
+      boardsApi.patchList(boardId, list, op, entryId, value),
+    onSuccess: (updated, { list, op }) => {
+      queryClient.setQueryData(["board", boardId], (old) =>
+        old ? { ...old, columns: updated.columns, groups: updated.groups } : old
+      );
+      if (list === "groups" && op === "delete") {
+        queryClient.invalidateQueries({ queryKey: ["items", boardId] });
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message);
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
     },
-    onError: (err) => toast.error(err.message),
   });
 
   // 5. URL State Management
@@ -121,6 +136,10 @@ export function useBoardState(boardId) {
     return new Set(hideParam ? hideParam.split(",") : []);
   }, [searchParams]);
 
+  // The open task lives in the URL (?task=<id>) so it can be linked to from
+  // notifications and the command palette, and survives a reload.
+  const selectedTaskId = searchParams.get("task");
+
   // Setters that update URL
   const setCurrentView = (view) => updateUrlParams({ view });
   const setSearchQuery = (search) => updateUrlParams({ search });
@@ -148,25 +167,19 @@ export function useBoardState(boardId) {
   const [showNewColumnModal, setShowNewColumnModal] = useState(false);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showIntegrations, setShowIntegrations] = useState(false);
   const [showAutomations, setShowAutomations] = useState(false);
   const [showShare, setShowShare] = useState(false);
 
-  // Selected task state automatically synced with latest items data
-  const [selectedTaskRaw, setSelectedTaskRaw] = useState(null);
-  const selectedTask = useMemo(() => {
-    if (!selectedTaskRaw) return null;
-    const fromItems = items.find((i) => i.id === selectedTaskRaw.id);
-    return fromItems ? { ...selectedTaskRaw, ...fromItems } : selectedTaskRaw;
-  }, [items, selectedTaskRaw]);
+  // Selected task is always the live row from the items cache.
+  const selectedTask = useMemo(
+    () => (selectedTaskId ? items.find((i) => i.id === selectedTaskId) || null : null),
+    [items, selectedTaskId]
+  );
 
-  const setSelectedTask = useCallback((taskOrUpdater) => {
-    if (typeof taskOrUpdater === "function") {
-      setSelectedTaskRaw((prev) => taskOrUpdater(prev));
-    } else {
-      setSelectedTaskRaw(taskOrUpdater);
-    }
-  }, []);
+  const setSelectedTask = useCallback(
+    (task) => updateUrlParams({ task: task?.id || null }),
+    [updateUrlParams]
+  );
 
   // 7. Action Handlers
   const handleAddItem = useCallback(async (groupId, title) => {
@@ -198,16 +211,13 @@ export function useBoardState(boardId) {
     });
   }, [boardId, board, items, itemCreate]);
 
-  const handleUpdateItem = useCallback((itemId, updates, prevItem) => {
-    // Optimistic update locally
+  const handleUpdateItem = useCallback((itemId, updates) => {
+    // Optimistic update locally; the drawer reads from the same cache.
     queryClient.setQueryData(["items", boardId], (old = []) =>
       old.map((i) => (i.id === itemId ? { ...i, ...updates } : i))
     );
-    itemUpdate.mutate({ id: itemId, updates, prevItem, columns: board?.columns });
-    if (selectedTask?.id === itemId) {
-      setSelectedTask((prev) => prev ? { ...prev, ...updates } : prev);
-    }
-  }, [boardId, queryClient, itemUpdate, selectedTask, board?.columns, setSelectedTask]);
+    itemUpdate.mutate({ id: itemId, updates });
+  }, [boardId, queryClient, itemUpdate]);
 
   const handleDeleteItem = useCallback((itemId) => {
     itemDelete.mutate(itemId);
@@ -244,56 +254,64 @@ export function useBoardState(boardId) {
 
   const handleAddColumn = useCallback((colData) => {
     if (!board) return;
-    const newCol = { ...colData, id: colData.id || genId(), width: colData.width || 150 };
-    const updated = [...(board.columns || []), newCol];
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
+    const { id, ...rest } = colData;
+    listPatch.mutate({
+      list: "columns",
+      op: "add",
+      entryId: id || genId(),
+      value: { ...rest, width: rest.width || 150 },
+    });
     setShowNewColumnModal(false);
-  }, [board, boardUpdate]);
+  }, [board, listPatch]);
 
   const handleUpdateColumn = useCallback((colId, data) => {
     if (!board) return;
-    const updated = (board.columns || []).map((c) =>
-      c.id === colId ? { ...c, ...data } : c
-    );
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
-  }, [board, boardUpdate]);
+    listPatch.mutate({ list: "columns", op: "update", entryId: colId, value: data });
+  }, [board, listPatch]);
 
   const handleDeleteColumn = useCallback((colId) => {
     if (!board) return;
-    const updated = (board.columns || []).filter((c) => c.id !== colId);
-    boardUpdate.mutate({ id: board.id, updates: { columns: updated } });
-  }, [board, boardUpdate]);
+    listPatch.mutate({ list: "columns", op: "delete", entryId: colId });
+  }, [board, listPatch]);
 
   const handleAddGroup = useCallback((groupData) => {
     if (!board) return;
-    const newGroup = { ...groupData, id: genId(), collapsed: false };
-    boardUpdate.mutate({ id: board.id, updates: { groups: [...(board.groups || []), newGroup] } });
+    listPatch.mutate({
+      list: "groups",
+      op: "add",
+      entryId: genId(),
+      value: { ...groupData, collapsed: false },
+    });
     setShowNewGroupModal(false);
-  }, [board, boardUpdate]);
+  }, [board, listPatch]);
 
   const handleDeleteGroup = useCallback((groupId) => {
     if (!board || !window.confirm("Hapus group ini beserta semua task di dalamnya?")) return;
-    const updated = (board.groups || []).filter((g) => g.id !== groupId);
-    boardUpdate.mutate({ id: board.id, updates: { groups: updated } });
-    items.filter((i) => i.group_id === String(groupId)).forEach((i) => itemDelete.mutate(i.id));
-  }, [board, boardUpdate, items, itemDelete]);
+    // The RPC deletes the group's tasks in the same transaction.
+    listPatch.mutate({ list: "groups", op: "delete", entryId: String(groupId) });
+  }, [board, listPatch]);
 
   const handleHideColumnFromGroup = useCallback((groupId, colId) => {
     if (!board) return;
-    const updated = (board.groups || []).map((g) => {
-      if (g.id !== groupId) return g;
-      const visible = g.visible_columns || (board.columns || []).map((c) => c.id);
-      return { ...g, visible_columns: visible.filter((id) => id !== colId) };
+    const group = (board.groups || []).find((g) => g.id === groupId);
+    if (!group) return;
+    const visible = group.visible_columns || (board.columns || []).map((c) => c.id);
+    listPatch.mutate({
+      list: "groups",
+      op: "update",
+      entryId: groupId,
+      value: { visible_columns: visible.filter((id) => id !== colId) },
     });
-    boardUpdate.mutate({ id: board.id, updates: { groups: updated } });
-  }, [board, boardUpdate]);
+  }, [board, listPatch]);
 
   return {
     board,
     items,
     isLoading,
     userRole,
-    
+    canEdit,
+    canAdmin,
+
     currentView, setCurrentView,
     searchQuery, setSearchQuery,
     sortBy, sortDirection, setSort,
@@ -310,7 +328,6 @@ export function useBoardState(boardId) {
     showNewColumnModal, setShowNewColumnModal,
     showNewGroupModal, setShowNewGroupModal,
     showAnalytics, setShowAnalytics,
-    showIntegrations, setShowIntegrations,
     showAutomations, setShowAutomations,
     showShare, setShowShare,
     selectedTask, setSelectedTask,

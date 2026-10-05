@@ -9,20 +9,29 @@ export const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const BOARD_ROLES = ["admin", "editor", "viewer"];
-export const BOARD_VISIBILITIES = ["public", "private", "shared"];
 export const SPRINT_STATUSES = ["planning", "active", "completed"];
+// Mirrors the CHECK on board_automations.recipe in supabase/schema.sql.
+export const AUTOMATION_RECIPES = [
+  "notify_status_change",
+  "notify_owner_on_done",
+  "subitems_done_parent",
+  "assign_creator",
+  "due_date_reminder",
+];
+export const MAX_MENTIONS = 20;
 
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 72;
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
+// No image/svg+xml: an SVG can carry script that runs when its signed
+// URL is opened directly. Keep in sync with the bucket in schema.sql.
 export const ALLOWED_UPLOAD_TYPES = [
   "image/png",
   "image/jpeg",
   "image/gif",
   "image/webp",
-  "image/svg+xml",
   "application/pdf",
   "text/plain",
   "text/csv",

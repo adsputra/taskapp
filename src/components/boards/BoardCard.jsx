@@ -49,10 +49,10 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
                   style={{ backgroundColor: boardColor }}
                 />
                 <div className="flex-grow min-w-0">
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 transition-colors text-sm truncate">
+                  <h3 className="font-semibold text-foreground transition-colors text-sm truncate">
                     {board.title}
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 truncate">
+                  <p className="text-muted-foreground text-xs mt-0.5 truncate">
                     {board.description || 'No description'}
                   </p>
                 </div>
@@ -80,7 +80,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:bg-muted rounded-lg" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
                       <MoreHorizontal className="w-3.5 h-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -144,25 +144,25 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
             </Badge>
           </div>
           
-          <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-lg mb-2 transition-colors">
+          <h3 className="font-semibold text-foreground text-lg mb-2 transition-colors">
             {board.title}
           </h3>
           
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-5 line-clamp-2 flex-grow">
+          <p className="text-muted-foreground text-sm mb-5 line-clamp-2 flex-grow">
             {board.description || 'No description provided.'}
           </p>
           
-          <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between text-xs text-subtle-foreground mt-auto pt-4 border-t border-border ">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDistanceToNow(new Date(board.updated_at), { addSuffix: true })}</span>
             </div>
           </div>
         </Link>
-        <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+        <div className="p-2 border-t border-border bg-slate-50/50 dark:bg-slate-800/50">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-full justify-center text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200">
+              <Button variant="ghost" size="sm" className="w-full justify-center text-xs text-muted-foreground hover:bg-slate-200/70 dark:hover:bg-slate-700 hover:text-foreground ">
                 <MoreHorizontal className="w-4 h-4 mr-1.5" /> Options
               </Button>
             </DropdownMenuTrigger>
@@ -171,7 +171,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit, is
                 <Edit3 className="w-3.5 h-3.5 mr-2" />
                 Edit Board
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-600 focus:bg-red-50">
+              <DropdownMenuItem onClick={handleDelete} className="text-red-600 hover:text-red-700 hover:bg-red-500/10 focus:text-red-600 focus:bg-red-50">
                 <Trash2 className="w-3.5 h-3.5 mr-2" />
                 Delete Board
               </DropdownMenuItem>

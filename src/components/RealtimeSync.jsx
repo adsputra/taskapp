@@ -18,14 +18,15 @@ import { createClient } from "@/lib/supabase/client";
 const TABLE_QUERY_KEYS = {
   boards: [["boards"], ["board"], ["profile-boards"], ["analytics"]],
   board_items: [["items"], ["my-tasks"], ["subtasks"], ["analytics"]],
-  board_members: [["boards"], ["board"], ["board-members"]],
+  board_members: [["boards"], ["board"], ["board-members"], ["board-people"]],
   sprints: [["sprints"]],
   notifications: [["notifications"]],
   task_comments: [["comments"]],
   task_activity: [["activity"]],
   task_attachments: [["attachments"]],
   task_time_entries: [["timeEntries"]],
-  profiles: [["user"], ["board-members"], ["comments"], ["activity"], ["attachments"], ["timeEntries"]],
+  board_automations: [["automations"]],
+  profiles: [["user"], ["board-members"], ["board-people"], ["comments"], ["activity"], ["attachments"], ["timeEntries"]],
 };
 
 // Coalesces bursts (a reorder touches many rows) into one refetch per key.

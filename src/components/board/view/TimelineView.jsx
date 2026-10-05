@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Filter, ArrowUpDown, Plus, LayoutGrid, Leaf, Check, Calendar } from "lucide-react";
 import {
   format, differenceInDays, isSameDay,
@@ -147,23 +147,23 @@ const GanttMilestone = ({ item, board, date, timelineStart, dayW, onClick }) => 
   return (
     <div
       onClick={onClick}
-      className="absolute top-[8px] h-[40px] bg-white dark:bg-slate-800 rounded-r-xl rounded-l-sm flex items-center pr-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-none dark:border dark:border-slate-700 cursor-pointer hover:shadow-md transition-shadow whitespace-nowrap"
+      className="absolute top-[8px] h-[40px] bg-card rounded-r-xl rounded-l-sm flex items-center pr-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-none dark:border dark:border-slate-700 cursor-pointer hover:shadow-md transition-shadow whitespace-nowrap"
       style={{ left: `${left + dayW/2}px`, borderLeft: `4px solid ${color}` }}
       title={`${item.title}\n${format(date, "MMM d, yyyy")}`}
     >
       <div className="pl-3 pr-2 flex items-center gap-1.5 h-full">
         <LayoutGrid className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+        <span className="text-xs font-medium text-foreground ">
           {item.title}
         </span>
       </div>
 
       {emails.length > 0 && (
-        <div className="flex items-center -space-x-1.5 ml-2 border-l border-slate-100 dark:border-slate-700 pl-2">
+        <div className="flex items-center -space-x-1.5 ml-2 border-l border-border pl-2">
           {emails.slice(0, 3).map((email, i) => (
             <span
               key={i}
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white border border-white dark:border-slate-800 shrink-0"
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white border border-card shrink-0"
               style={{ backgroundColor: getUserColor(email), zIndex: 10 - i }}
               title={email}
             >
@@ -180,35 +180,26 @@ const GanttMilestone = ({ item, board, date, timelineStart, dayW, onClick }) => 
 export default function TimelineView({ board, items, onSelectTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [zoom, setZoom] = useState("week");
-  const [dateColId, setDateColId] = useState(null);
-  const [endColId, setEndColId] = useState(null);
   const [showDone, setShowDone] = useState(false);
 
   const dayW = ZOOMS[zoom].dayW;
 
-  // Detect date columns
-  useEffect(() => {
-    if (!board?.columns) return;
-    const dCols = board.columns.filter((c) => c.type === "date");
-    if (dCols.length >= 2) {
-      setDateColId(dCols[0].id);
-      setEndColId(dCols[1].id);
-    } else if (dCols.length === 1) {
-      setDateColId(dCols[0].id);
-      setEndColId(null);
-    } else {
-      const s = board.columns.find(
-        (c) => c.id === "startDate" || c.id === "start_date" || c.title?.toLowerCase().includes("start")
-      );
-      const e = board.columns.find(
-        (c) =>
-          c.id === "endDate" || c.id === "end_date" || c.id === "due_date" ||
-          c.title?.toLowerCase().includes("due") || c.title?.toLowerCase().includes("end")
-      );
-      setDateColId(s?.id || e?.id || null);
-      setEndColId(e?.id || null);
-    }
-  }, [board]);
+  // Start/end date columns: the first two date columns, else by name.
+  const { dateColId, endColId } = useMemo(() => {
+    const columns = board?.columns || [];
+    const dCols = columns.filter((c) => c.type === "date");
+    if (dCols.length >= 2) return { dateColId: dCols[0].id, endColId: dCols[1].id };
+    if (dCols.length === 1) return { dateColId: dCols[0].id, endColId: null };
+    const s = columns.find(
+      (c) => c.id === "startDate" || c.id === "start_date" || c.title?.toLowerCase().includes("start")
+    );
+    const e = columns.find(
+      (c) =>
+        c.id === "endDate" || c.id === "end_date" || c.id === "due_date" ||
+        c.title?.toLowerCase().includes("due") || c.title?.toLowerCase().includes("end")
+    );
+    return { dateColId: s?.id || e?.id || null, endColId: e?.id || null };
+  }, [board?.columns]);
 
   // Timeline range
   const { start: tStart, end: tEnd, days } = useMemo(() => {
@@ -300,10 +291,10 @@ export default function TimelineView({ board, items, onSelectTask }) {
 
   if (!dateColId) {
     return (
-      <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div className="p-12 text-center bg-card rounded-xl border border-border ">
         <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-        <p className="text-slate-500 dark:text-slate-400 font-medium">No date column found</p>
-        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+        <p className="text-muted-foreground font-medium">No date column found</p>
+        <p className="text-sm text-subtle-foreground mt-1">
           Add a Date-type column to your board to use the Timeline view.
         </p>
       </div>
@@ -313,14 +304,14 @@ export default function TimelineView({ board, items, onSelectTask }) {
   const totalW = days.length * dayW;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E1E5F3] dark:border-slate-800 overflow-hidden flex flex-col h-full">
+    <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col h-full">
       {/* ── Top Header ── */}
-      <div className="p-5 sm:p-6 pb-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+      <div className="p-5 sm:p-6 pb-4 bg-card border-b border-border ">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">Timeline</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Detailed, visual representation of a project's journey, highlighting key milestones, progress updates, and upcoming tasks.
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground ">Timeline</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Detailed, visual representation of a project&apos;s journey, highlighting key milestones, progress updates, and upcoming tasks.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -334,14 +325,14 @@ export default function TimelineView({ board, items, onSelectTask }) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 gap-4">
           <div className="flex items-center gap-4">
             {/* View Toggles */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
+            <div className="flex bg-muted rounded-full p-1 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
               {Object.entries(ZOOMS).map(([k, z]) => (
                 <button
                   key={k}
                   onClick={() => setZoom(k)}
                   className={`px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${
                     zoom === k
-                      ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                      ? "bg-card text-foreground shadow-sm"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -351,7 +342,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
             </div>
 
             {/* Date Navigator */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm shadow-sm font-medium text-slate-700 dark:text-slate-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-sm shadow-sm font-medium text-foreground ">
               <button onClick={() => nav(-1)} className="p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors">
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -364,14 +355,14 @@ export default function TimelineView({ board, items, onSelectTask }) {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Show done</span>
+              <span className="text-xs font-medium text-muted-foreground ">Show done</span>
               <Switch checked={showDone} onCheckedChange={setShowDone} className="scale-90" />
             </div>
             <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
-            <button className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
               <ArrowUpDown className="w-3.5 h-3.5" /> Sort
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
               <Filter className="w-3.5 h-3.5" /> Filter
             </button>
           </div>
@@ -382,11 +373,11 @@ export default function TimelineView({ board, items, onSelectTask }) {
       <div className="flex-1 overflow-x-auto overflow-y-auto relative bg-[#FAFBFC] dark:bg-slate-900/50">
         <div style={{ minWidth: `${LEFT_W + totalW}px` }} className="pb-12">
           {/* Timeline Headers */}
-          <div className="sticky top-0 z-[5] bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 pt-2 shadow-sm">
+          <div className="sticky top-0 z-[5] bg-card border-b border-slate-100 dark:border-slate-800/80 pt-2 shadow-sm">
             {/* Month/Year Row */}
             <div className="flex pl-[260px]">
               {monthsData.map((m, i) => (
-                <div key={i} className="text-xs font-semibold text-slate-800 dark:text-slate-200 pb-2 pl-4" style={{ width: `${m.count * dayW}px` }}>
+                <div key={i} className="text-xs font-semibold text-foreground pb-2 pl-4" style={{ width: `${m.count * dayW}px` }}>
                   {m.label}
                 </div>
               ))}
@@ -395,7 +386,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
             {/* Days Row */}
             <div className="flex">
               <div
-                className="flex-shrink-0 flex items-end pb-3 px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
+                className="flex-shrink-0 flex items-end pb-3 px-4 text-[11px] font-semibold text-subtle-foreground uppercase tracking-widest border-r border-border bg-card"
                 style={{ width: `${LEFT_W}px` }}
               >
                 Task
@@ -467,7 +458,7 @@ export default function TimelineView({ board, items, onSelectTask }) {
                       style={{ width: `${LEFT_W}px` }}
                       onClick={() => onSelectTask?.(item)}
                     >
-                      <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 truncate">
+                      <span className="text-[13px] font-semibold text-foreground truncate">
                         {item.title}
                       </span>
                       <span className="text-[10px] text-slate-400 truncate mt-0.5 opacity-80 hover:opacity-100">

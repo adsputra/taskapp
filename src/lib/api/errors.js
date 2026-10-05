@@ -29,9 +29,8 @@ export function apiError(error, fallback, knownCodes = {}) {
     (error?.code && knownCodes[error.code]) ||
     (error?.code && DEFAULT_ERROR_MAPPINGS[error.code]);
 
-  if (mapped) return new Error(mapped);
-  if (error?.message) return new Error(`${fallback} (${error.message})`);
-  return new Error(fallback);
+  // Raw database text (constraint names, SQL hints) stays in the log.
+  return new Error(mapped || fallback);
 }
 
 export function validationError(message) {

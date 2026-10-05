@@ -72,7 +72,7 @@ export default function TagsCell({ value, onUpdate, options }) {
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="h-5 w-5 p-0 ml-auto">
-              <Plus size={14} className="text-gray-500 hover:text-gray-700" />
+              <Plus size={14} className="text-muted-foreground hover:text-foreground" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2 space-y-2">
@@ -99,7 +99,7 @@ export default function TagsCell({ value, onUpdate, options }) {
             )}
              {(newTagInput.trim() && !filteredSuggestions.find(s => s.label.toLowerCase() === newTagInput.toLowerCase())) && (
                <Button variant="outline" className="w-full h-8 text-sm" onClick={handleCreateNewTag}>
-                  Create "{newTagInput.trim()}"
+                  Create &ldquo;{newTagInput.trim()}&rdquo;
               </Button>
              )}
           </PopoverContent>

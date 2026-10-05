@@ -18,12 +18,12 @@ export default function HideMenu({ columns, hiddenColumns, onChange, onClose }) 
   const hideableColumns = columns?.filter((col) => col.id !== "task") || [];
 
   return (
-    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-[#E1E5F3] z-50 p-4">
+    <div className="absolute top-full left-0 mt-1 w-56 bg-card rounded-xl shadow-xl border border-border z-50 p-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-[#323338] text-sm">Hide Columns</h4>
+        <h4 className="font-semibold text-foreground text-sm">Hide Columns</h4>
         <button
           onClick={onClose}
-          className="text-[#A0A0A0] hover:text-[#323338]"
+          className="text-subtle-foreground hover:text-foreground"
         >
           <X className="w-4 h-4" />
         </button>
@@ -32,13 +32,13 @@ export default function HideMenu({ columns, hiddenColumns, onChange, onClose }) 
         {hideableColumns.map((col) => (
           <label
             key={col.id}
-            className="flex items-center gap-2 cursor-pointer hover:bg-[#F5F6F8] rounded px-1 py-1"
+            className="flex items-center gap-2 cursor-pointer hover:bg-muted rounded px-1 py-1"
           >
             <Checkbox
               checked={!hiddenColumns?.has(col.id)}
               onCheckedChange={() => toggleColumn(col.id)}
             />
-            <span className="text-sm text-[#323338]">{col.title}</span>
+            <span className="text-sm text-foreground">{col.title}</span>
           </label>
         ))}
       </div>

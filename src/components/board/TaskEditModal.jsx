@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,15 +26,9 @@ export default function TaskEditModal({
   onUpdate,
   onDelete,
 }) {
-  const [title, setTitle] = useState("");
-  const [data, setData] = useState({});
-
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title || "");
-      setData(task.data || {});
-    }
-  }, [task]);
+  // Keyed by task id in the parent, so this initial state is per task.
+  const [title, setTitle] = useState(task?.title || "");
+  const [data, setData] = useState(task?.data || {});
 
   if (!task) return null;
 
@@ -64,7 +58,7 @@ export default function TaskEditModal({
               )
             }
             placeholder={column.title}
-            className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+            className="rounded-lg border-border focus:ring-primary"
           />
         );
       case "status":
@@ -75,7 +69,7 @@ export default function TaskEditModal({
             value={value || ""}
             onValueChange={(v) => handleFieldChange(column.id, v)}
           >
-            <SelectTrigger className="rounded-lg border-[#E1E5F3]">
+            <SelectTrigger className="rounded-lg border-border">
               <SelectValue placeholder={`Select ${column.title}`} />
             </SelectTrigger>
             <SelectContent>
@@ -93,7 +87,7 @@ export default function TaskEditModal({
             type="date"
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
-            className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+            className="rounded-lg border-border focus:ring-primary"
           />
         );
       case "people":
@@ -102,7 +96,7 @@ export default function TaskEditModal({
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             placeholder="Assign person..."
-            className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+            className="rounded-lg border-border focus:ring-primary"
           />
         );
       case "checkbox":
@@ -112,9 +106,9 @@ export default function TaskEditModal({
               type="checkbox"
               checked={!!value}
               onChange={(e) => handleFieldChange(column.id, e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-[#0073EA] focus:ring-[#0073EA]"
+              className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
             />
-            <span className="text-sm text-[#323338]">{column.title}</span>
+            <span className="text-sm text-foreground">{column.title}</span>
           </label>
         );
       default:
@@ -123,7 +117,7 @@ export default function TaskEditModal({
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             placeholder={column.title}
-            className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+            className="rounded-lg border-border focus:ring-primary"
           />
         );
     }
@@ -135,30 +129,30 @@ export default function TaskEditModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[#323338]">Edit Task</DialogTitle>
+          <DialogTitle className="text-foreground">Edit Task</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div>
-            <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
               Task Title
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title..."
-              className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+              className="rounded-lg border-border focus:ring-primary"
               autoFocus
             />
           </div>
           {editableColumns.map((column) => (
             <div key={column.id}>
-              <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
                 {column.title}
               </label>
               {renderField(column)}
             </div>
           ))}
-          <div className="flex items-center justify-between pt-4 border-t border-[#E1E5F3]">
+          <div className="flex items-center justify-between pt-4 border-t border-border">
             <Button
               variant="ghost"
               onClick={() => {
@@ -168,7 +162,7 @@ export default function TaskEditModal({
                   onDelete(task.id);
                 }
               }}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+              className="text-red-600 hover:text-red-700 hover:bg-red-500/10 rounded-lg"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
@@ -177,14 +171,14 @@ export default function TaskEditModal({
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="rounded-lg border-[#E1E5F3]"
+                className="rounded-lg border-border"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={!title.trim()}
-                className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+                className="bg-primary hover:bg-primary/90 text-white rounded-lg"
               >
                 Save Changes
               </Button>

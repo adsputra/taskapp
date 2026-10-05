@@ -8,12 +8,13 @@
  * - lookup/accept invitation lewat RPC SECURITY DEFINER (token tidak
  *   bisa dibaca lewat SELECT langsung)
  * - pesan error client-safe (detail hanya di console)
+ * - kolom & group diubah lewat RPC atomik `board_patch_list` (bukan
+ *   menimpa seluruh array), visibility diturunkan otomatis oleh database
  */
 import { createClient } from "@/lib/supabase/client";
 import { apiError } from "./errors";
 import {
   BOARD_ROLES,
-  BOARD_VISIBILITIES,
   clampLimit,
   isValidEmail,
   parseSort,
@@ -30,7 +31,11 @@ const BOARD_WITH_MEMBERS = `
   board_members(*)
 `;
 const BOARD_SORT_FIELDS = ["updated_at", "created_at", "title"];
-const BOARD_UPDATE_FIELDS = ["title", "description", "color", "visibility", "columns", "groups"];
+// columns/groups: only for whole-board operations such as templates —
+// day-to-day edits go through patchList() so concurrent edits merge.
+const BOARD_UPDATE_FIELDS = ["title", "description", "color", "columns", "groups"];
+const BOARD_LISTS = ["columns", "groups"];
+const BOARD_LIST_OPS = ["add", "update", "delete"];
 
 /**
  * Generate token undangan yang kriptografis aman.
@@ -69,9 +74,6 @@ function buildBoardUpdates(updates) {
         break;
       case "color":
         clean.color = requireBoardColor(value);
-        break;
-      case "visibility":
-        clean.visibility = requireEnum(value, BOARD_VISIBILITIES, "Visibility");
         break;
       case "columns":
       case "groups":
@@ -131,10 +133,9 @@ export const boardsApi = {
   // =============================================
   // CREATE — buat board baru
   // =============================================
-  async create({ title, description = "", color = "#0073EA", visibility = "private", columns = [], groups = [] }) {
+  async create({ title, description = "", color = "#2563EB", columns = [], groups = [] }) {
     const cleanTitle = requireNonEmptyString(title, { field: "Judul", max: 200 });
     requireBoardColor(color);
-    requireEnum(visibility, BOARD_VISIBILITIES, "Visibility");
     assert(typeof description === "string" && description.length <= 2000, "Deskripsi maksimal 2000 karakter.");
     assert(Array.isArray(columns) && columns.length <= 200, "Kolom tidak valid.");
     assert(Array.isArray(groups) && groups.length <= 200, "Group tidak valid.");
@@ -178,7 +179,6 @@ export const boardsApi = {
         title: cleanTitle,
         description,
         color,
-        visibility,
         columns,
         groups,
       })
@@ -215,6 +215,36 @@ export const boardsApi = {
         throw new Error("Board tidak ditemukan atau kamu tidak punya akses.");
       }
       throw apiError(error, "Gagal update board.");
+    }
+    return data;
+  },
+
+  // =============================================
+  // PATCH LIST — tambah/ubah/hapus satu kolom atau group secara atomik.
+  // Mengembalikan board terbaru (kolom & group hasil merge di database).
+  // =============================================
+  async patchList(boardId, list, op, entryId, value) {
+    requireUuid(boardId, "Board ID");
+    requireEnum(list, BOARD_LISTS, "Daftar");
+    requireEnum(op, BOARD_LIST_OPS, "Operasi");
+    assert(typeof entryId === "string" && entryId.length > 0 && entryId.length <= 100, "ID tidak valid.");
+    if (op !== "delete") requirePlainObject(value, "Data");
+
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("board_patch_list", {
+      p_board_id: boardId,
+      p_list: list,
+      p_op: op,
+      p_item_id: entryId,
+      p_value: op === "delete" ? null : value,
+    });
+
+    if (error) {
+      throw apiError(error, list === "columns" ? "Gagal mengubah kolom." : "Gagal mengubah group.", {
+        "42501": "Hanya admin board yang bisa mengubah kolom dan group.",
+        "23505": "ID sudah dipakai. Coba lagi.",
+        P0002: "Data sudah dihapus oleh orang lain.",
+      });
     }
     return data;
   },
@@ -262,13 +292,7 @@ export const boardsApi = {
       });
     }
 
-    // Auto-update visibility board to 'shared'
-    try {
-      await supabase.from("boards").update({ visibility: "shared" }).eq("id", boardId);
-    } catch {
-      // ignore
-    }
-
+    // boards.visibility becomes 'shared' through a database trigger.
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return { ...data, shareLink: `${origin}/join?token=${token}` };
   },
@@ -283,6 +307,7 @@ export const boardsApi = {
 
     if (error) {
       if (error.code === "28000") throw new Error("Harus login untuk membuka undangan.");
+      if (error.message === "mfa_required") throw new Error("Verifikasi kode MFA terlebih dahulu.");
       throw apiError(error, "Gagal memuat undangan.");
     }
     return data || null;
@@ -301,6 +326,7 @@ export const boardsApi = {
 
     if (error) {
       if (error.code === "28000") throw new Error("Harus login untuk menerima undangan.");
+      if (error.message === "mfa_required") throw new Error("Verifikasi kode MFA terlebih dahulu.");
       if (error.code === "42501") {
         throw new Error("Undangan ini untuk email lain. Login dengan akun yang diundang.");
       }
@@ -325,20 +351,7 @@ export const boardsApi = {
       .eq("board_id", boardId);
 
     if (error) throw apiError(error, "Gagal menghapus akses.");
-
-    // Jika sudah tidak ada anggota lain, kembalikan status board ke 'private'
-    const { count } = await supabase
-      .from("board_members")
-      .select("*", { count: "exact", head: true })
-      .eq("board_id", boardId);
-
-    if (count === 0) {
-      try {
-        await supabase.from("boards").update({ visibility: "private" }).eq("id", boardId);
-      } catch {
-        // ignore
-      }
-    }
+    // The database turns the board private again once nobody is left.
   },
 
   // =============================================

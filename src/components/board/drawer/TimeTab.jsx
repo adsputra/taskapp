@@ -100,20 +100,20 @@ export default function TimeTab({ task, userRole }) {
       {/* Total + Timer */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs text-[#676879] dark:text-slate-500 font-medium">Total Time</p>
-          <p className="text-2xl font-bold text-[#323338] dark:text-slate-100">{formatDuration(totalMinutes)}</p>
+          <p className="text-xs text-muted-foreground font-medium">Total Time</p>
+          <p className="text-2xl font-bold text-foreground">{formatDuration(totalMinutes)}</p>
         </div>
 
         {!isViewer && (
           <div className="flex items-center gap-2">
             {isTimerRunning ? (
               <div className="flex items-center gap-2">
-                <span className="text-lg font-mono font-bold text-[#0073EA] tabular-nums">
+                <span className="text-lg font-mono font-bold text-primary tabular-nums">
                   {formatTimer(elapsed)}
                 </span>
                 <button
                   onClick={stopTimer}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[#E2445C] text-white rounded-lg text-sm font-medium hover:bg-[#C73A4E] transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-destructive text-white rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
                 >
                   <Square className="w-3.5 h-3.5" fill="white" />
                   Stop
@@ -122,7 +122,7 @@ export default function TimeTab({ task, userRole }) {
             ) : (
               <button
                 onClick={startTimer}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#0073EA] text-white rounded-lg text-sm font-medium hover:bg-[#0056B3] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 <Play className="w-3.5 h-3.5" fill="white" />
                 Start Timer
@@ -138,7 +138,7 @@ export default function TimeTab({ task, userRole }) {
           {!showManual ? (
             <button
               onClick={() => setShowManual(true)}
-              className="flex items-center gap-2 text-sm text-[#0073EA] hover:text-[#0056B3] font-medium"
+              className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium"
             >
               <Plus className="w-4 h-4" />
               Add manual time entry
@@ -146,37 +146,37 @@ export default function TimeTab({ task, userRole }) {
           ) : (
             <div className="flex gap-2 items-end">
               <div className="flex-1">
-                <label className="text-xs text-[#676879] dark:text-slate-500 mb-1 block">Minutes</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Minutes</label>
                 <input
                   type="number"
                   value={manualMinutes}
                   onChange={(e) => setManualMinutes(e.target.value)}
                   placeholder="30"
                   min="1"
-                  className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
+                  className="w-full rounded-lg border border-border bg-card dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                   autoFocus
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs text-[#676879] dark:text-slate-500 mb-1 block">Description</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Description</label>
                 <input
                   value={manualDesc}
                   onChange={(e) => setManualDesc(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
                   placeholder="What did you work on?"
-                  className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA]"
+                  className="w-full rounded-lg border border-border bg-card dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <button
                 onClick={handleManualAdd}
                 disabled={!manualMinutes || parseInt(manualMinutes) <= 0}
-                className="px-3 py-2 bg-[#0073EA] text-white rounded-lg text-sm hover:bg-[#0056B3] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => { setShowManual(false); setManualMinutes(""); setManualDesc(""); }}
-                className="px-3 py-2 text-[#676879] dark:text-slate-400 hover:bg-[#F5F6F8] dark:hover:bg-slate-800 rounded-lg text-sm"
+                className="px-3 py-2 text-muted-foreground hover:bg-muted rounded-lg text-sm"
               >
                 Cancel
               </button>
@@ -188,11 +188,11 @@ export default function TimeTab({ task, userRole }) {
       {/* Entries List */}
       {entries.length === 0 && !isLoading && (
         <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-            <Timer className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+            <Timer className="w-5 h-5 text-subtle-foreground" />
           </div>
-          <p className="text-sm text-[#676879] dark:text-slate-400">No time entries yet</p>
-          <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Start the timer or add a manual entry</p>
+          <p className="text-sm text-muted-foreground">No time entries yet</p>
+          <p className="text-xs text-subtle-foreground mt-1">Start the timer or add a manual entry</p>
         </div>
       )}
 
@@ -202,18 +202,18 @@ export default function TimeTab({ task, userRole }) {
           return (
             <div
               key={entry.id}
-              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-[#F5F6F8] dark:hover:bg-slate-800 group transition-colors"
+              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted group transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-[#0073EA]/10 dark:bg-[#0073EA]/20 flex items-center justify-center shrink-0">
-                <Clock className="w-4 h-4 text-[#0073EA]" />
+              <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#323338] dark:text-slate-200">{entry.description || "Time entry"}</p>
-                <p className="text-[10px] text-[#A0A0A0]">
+                <p className="text-sm text-foreground">{entry.description || "Time entry"}</p>
+                <p className="text-[10px] text-subtle-foreground">
                   {userName} · {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </p>
               </div>
-              <span className="text-sm font-medium text-[#323338] dark:text-slate-200 shrink-0">
+              <span className="text-sm font-medium text-foreground shrink-0">
                 {formatDuration(entry.duration_minutes)}
               </span>
               {!isViewer && (
@@ -223,7 +223,7 @@ export default function TimeTab({ task, userRole }) {
                       deleteEntry.mutate(entry.id);
                     }
                   }}
-                  className="p-1.5 text-[#A0A0A0] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="p-1.5 text-subtle-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

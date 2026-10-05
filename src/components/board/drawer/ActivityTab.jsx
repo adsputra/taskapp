@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 
 const ACTION_CONFIG = {
-  created: { icon: Plus, color: "text-[#00C875]", bg: "bg-[#00C875]/10", label: "created task" },
-  updated: { icon: Edit3, color: "text-[#0073EA]", bg: "bg-[#0073EA]/10", label: "updated" },
-  deleted: { icon: Trash2, color: "text-[#E2445C]", bg: "bg-[#E2445C]/10", label: "deleted task" },
-  attached: { icon: Paperclip, color: "text-[#FDAB3D]", bg: "bg-[#FDAB3D]/10", label: "attached file" },
-  status_changed: { icon: CircleDot, color: "text-[#FFCB00]", bg: "bg-[#FFCB00]/10", label: "changed status" },
-  assigned: { icon: UserCheck, color: "text-[#0073EA]", bg: "bg-[#0073EA]/10", label: "assigned" },
+  created: { icon: Plus, color: "text-success", bg: "bg-success/10", label: "created task" },
+  updated: { icon: Edit3, color: "text-primary", bg: "bg-primary/10", label: "updated" },
+  deleted: { icon: Trash2, color: "text-destructive", bg: "bg-destructive/10", label: "deleted task" },
+  attached: { icon: Paperclip, color: "text-warning", bg: "bg-warning/10", label: "attached file" },
+  status_changed: { icon: CircleDot, color: "text-warning", bg: "bg-warning/10", label: "changed status" },
+  assigned: { icon: UserCheck, color: "text-primary", bg: "bg-primary/10", label: "assigned" },
 };
 
 const FIELD_LABELS = {
@@ -109,17 +109,17 @@ export default function ActivityTab({ task }) {
     <div className="p-6">
       {activities.length === 0 && !isLoading && (
         <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-            <ArrowRightLeft className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+            <ArrowRightLeft className="w-5 h-5 text-subtle-foreground" />
           </div>
-          <p className="text-sm text-[#676879] dark:text-slate-400">No activity yet</p>
-          <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Changes to this task will appear here</p>
+          <p className="text-sm text-muted-foreground">No activity yet</p>
+          <p className="text-xs text-subtle-foreground mt-1">Changes to this task will appear here</p>
         </div>
       )}
 
       {Object.entries(grouped).map(([dateGroup, items]) => (
         <div key={dateGroup} className="mb-6 last:mb-0">
-          <h4 className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             {dateGroup}
           </h4>
           <div className="space-y-0">
@@ -132,7 +132,7 @@ export default function ActivityTab({ task }) {
                 <div key={activity.id} className="flex gap-3 relative">
                   {/* Timeline line */}
                   {idx < items.length - 1 && (
-                    <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-[#E1E5F3] dark:bg-slate-800" />
+                    <div className="absolute left-[15px] top-8 bottom-0 w-[2px] bg-accent" />
                   )}
 
                   {/* Icon */}
@@ -143,10 +143,10 @@ export default function ActivityTab({ task }) {
                   {/* Content */}
                   <div className="flex-1 min-w-0 pb-4">
                     <div className="flex items-baseline gap-1 flex-wrap">
-                      <span className="text-sm font-medium text-[#323338] dark:text-slate-200">{userName}</span>
-                      <span className="text-xs text-[#676879] dark:text-slate-500">{config.label}</span>
+                      <span className="text-sm font-medium text-foreground">{userName}</span>
+                      <span className="text-xs text-muted-foreground">{config.label}</span>
                       {activity.field_name && (
-                        <span className="text-xs font-medium text-[#323338] dark:text-slate-300">
+                        <span className="text-xs font-medium text-foreground">
                           {formatFieldName(activity.field_name)}
                         </span>
                       )}
@@ -156,22 +156,22 @@ export default function ActivityTab({ task }) {
                     {(activity.old_value || activity.new_value) && (
                       <div className="mt-1 flex items-center gap-2 text-xs">
                         {activity.old_value && (
-                          <span className="px-2 py-0.5 bg-[#E2445C]/10 text-[#E2445C] rounded line-through">
+                          <span className="px-2 py-0.5 bg-destructive/10 text-destructive rounded line-through">
                             {activity.old_value}
                           </span>
                         )}
                         {(activity.old_value && activity.new_value) && (
-                          <ArrowRightLeft className="w-3 h-3 text-[#A0A0A0] shrink-0" />
+                          <ArrowRightLeft className="w-3 h-3 text-subtle-foreground shrink-0" />
                         )}
                         {activity.new_value && (
-                          <span className="px-2 py-0.5 bg-[#00C875]/10 text-[#00C875] rounded">
+                          <span className="px-2 py-0.5 bg-success/10 text-success rounded">
                             {activity.new_value}
                           </span>
                         )}
                       </div>
                     )}
 
-                    <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600 mt-1 block">
+                    <span className="text-[10px] text-subtle-foreground mt-1 block">
                       {formatTime(activity.created_at)}
                     </span>
                   </div>

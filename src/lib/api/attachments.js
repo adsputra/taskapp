@@ -72,14 +72,31 @@ async function signPaths(supabase, paths) {
   return signedByPath;
 }
 
+// Types a browser would render (and run script in) when opened directly.
+// New uploads of these are refused; legacy rows are served as downloads.
+const DOWNLOAD_ONLY_TYPES = new Set(["image/svg+xml", "text/html", "application/xhtml+xml"]);
+
+function isDownloadOnly(row) {
+  return DOWNLOAD_ONLY_TYPES.has(row.file_type) || /\.svgz?$/i.test(row.file_name || "");
+}
+
 async function withSignedUrls(supabase, rows) {
   const paths = rows.map((row) => resolveStoragePath(row.file_url));
-  const signedByPath = await signPaths(supabase, paths);
+  const inlinePaths = paths.filter((path, index) => path && !isDownloadOnly(rows[index]));
+  const signedByPath = await signPaths(supabase, inlinePaths);
 
-  return rows.map((row, index) => ({
-    ...row,
-    file_url: paths[index] ? signedByPath.get(paths[index]) || null : null,
-  }));
+  return Promise.all(
+    rows.map(async (row, index) => {
+      const path = paths[index];
+      if (!path) return { ...row, file_url: null };
+      if (!isDownloadOnly(row)) return { ...row, file_url: signedByPath.get(path) || null };
+
+      const { data } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(path, SIGNED_URL_TTL_SECONDS, { download: row.file_name || true });
+      return { ...row, file_url: data?.signedUrl || null, download_only: true };
+    })
+  );
 }
 
 export const attachmentsApi = {

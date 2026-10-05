@@ -34,18 +34,18 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#323338]">New Task</DialogTitle>
+          <DialogTitle className="text-foreground">New Task</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div>
-            <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
               Task Title
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title..."
-              className="rounded-lg border-[#E1E5F3] focus:ring-[#0073EA]"
+              className="rounded-lg border-border focus:ring-primary"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSubmit();
               }}
@@ -53,11 +53,11 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-[#323338] mb-1.5 block">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
               Group
             </label>
             <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-              <SelectTrigger className="rounded-lg border-[#E1E5F3]">
+              <SelectTrigger className="rounded-lg border-border">
                 <SelectValue placeholder="Select group" />
               </SelectTrigger>
               <SelectContent>
@@ -73,14 +73,14 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
             <Button
               variant="outline"
               onClick={onClose}
-              className="rounded-lg border-[#E1E5F3]"
+              className="rounded-lg border-border"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={!title.trim() || !selectedGroup}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+              className="bg-primary hover:bg-primary/90 text-white rounded-lg"
             >
               Create Task
             </Button>

@@ -37,10 +37,10 @@ export default function RecentBoards({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {board.title}
             </h4>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+            <p className="text-xs text-subtle-foreground mt-0.5">
               {isShared ? "Shared" : "Updated"}{" "}
               {format(new Date(board.updated_at), "MMM d, yyyy")}
             </p>
@@ -51,8 +51,8 @@ export default function RecentBoards({
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border ${
                 board.visibility === "private"
-                  ? "bg-amber-50 text-amber-700 border-amber-200/60"
-                  : "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
               }`}
             >
               {board.visibility === "private" ? (
@@ -72,18 +72,18 @@ export default function RecentBoards({
   return (
     <>
       {/* ── My Boards ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+      <div className="bg-card rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
+        <div className="px-5 py-4 border-b border-border ">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
                 <Folder className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                <h3 className="text-sm font-bold text-foreground ">
                   My Boards
                 </h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="text-xs text-subtle-foreground ">
                   {boards.length} board{boards.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -113,13 +113,13 @@ export default function RecentBoards({
             </div>
           ) : boards.length === 0 ? (
             <div className="text-center py-10 px-4">
-              <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <Folder className="w-7 h-7 text-slate-300 dark:text-slate-600" />
               </div>
-              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <h4 className="text-sm font-semibold text-foreground mb-1">
                 No boards yet
               </h4>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+              <p className="text-xs text-subtle-foreground mb-4">
                 Create your first board to get started
               </p>
               <button
@@ -140,17 +140,17 @@ export default function RecentBoards({
 
       {/* ── Shared With Me ── */}
       {sharedBoards.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
+          <div className="px-5 py-4 border-b border-border ">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm">
                 <Users className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                <h3 className="text-sm font-bold text-foreground ">
                   Shared With Me
                 </h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="text-xs text-subtle-foreground ">
                   {sharedBoards.length} board
                   {sharedBoards.length !== 1 ? "s" : ""}
                 </p>

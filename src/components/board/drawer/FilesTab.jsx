@@ -82,15 +82,15 @@ export default function FilesTab({ task, boardId, userRole }) {
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors mb-6 ${
             isDragging
-              ? "border-[#0073EA] bg-[#0073EA]/5"
-              : "border-[#E1E5F3] dark:border-slate-700 hover:border-[#0073EA] hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-primary hover:bg-muted dark:hover:bg-slate-800"
           }`}
         >
-          <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? "text-[#0073EA]" : "text-[#A0A0A0]"}`} />
-          <p className="text-sm text-[#323338] dark:text-slate-200 font-medium">
+          <Upload className={`w-8 h-8 mx-auto mb-2 ${isDragging ? "text-primary" : "text-subtle-foreground"}`} />
+          <p className="text-sm text-foreground font-medium">
             {uploadFile.isPending ? "Uploading..." : "Drop files here or click to upload"}
           </p>
-          <p className="text-xs text-[#A0A0A0] mt-1">Any file type supported</p>
+          <p className="text-xs text-subtle-foreground mt-1">Any file type supported</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -104,11 +104,11 @@ export default function FilesTab({ task, boardId, userRole }) {
       {/* File List */}
       {attachments.length === 0 && !isLoading && (
         <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-            <File className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+            <File className="w-5 h-5 text-subtle-foreground" />
           </div>
-          <p className="text-sm text-[#676879] dark:text-slate-400">No files attached</p>
-          <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Upload files to share with your team</p>
+          <p className="text-sm text-muted-foreground">No files attached</p>
+          <p className="text-xs text-subtle-foreground mt-1">Upload files to share with your team</p>
         </div>
       )}
 
@@ -121,18 +121,20 @@ export default function FilesTab({ task, boardId, userRole }) {
           return (
             <div
               key={att.id}
-              className="flex items-center gap-3 p-3 rounded-lg border border-[#E1E5F3] dark:border-slate-700 hover:bg-[#F5F6F8] dark:hover:bg-slate-800 group transition-colors"
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted group transition-colors"
             >
               {/* Thumbnail or Icon */}
               {isImage ? (
+                // Short-lived signed URL: next/image would cache it past expiry.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={att.file_url}
                   alt={att.file_name}
                   className="w-10 h-10 rounded object-cover shrink-0"
                 />
               ) : (
-                <div className="w-10 h-10 rounded bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-[#676879] dark:text-slate-500" />
+                <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-muted-foreground" />
                 </div>
               )}
 
@@ -142,11 +144,11 @@ export default function FilesTab({ task, boardId, userRole }) {
                   href={att.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-[#323338] dark:text-slate-200 hover:text-[#0073EA] dark:hover:text-blue-400 truncate block"
+                  className="text-sm font-medium text-foreground hover:text-primary truncate block"
                 >
                   {att.file_name}
                 </a>
-                <p className="text-[10px] text-[#A0A0A0]">
+                <p className="text-[10px] text-subtle-foreground">
                   {formatFileSize(att.file_size)} · {userName} · {new Date(att.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </p>
               </div>
@@ -157,7 +159,7 @@ export default function FilesTab({ task, boardId, userRole }) {
                   href={att.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 text-[#A0A0A0] hover:text-[#0073EA] rounded"
+                  className="p-1.5 text-subtle-foreground hover:text-primary rounded"
                   title="Download"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -169,7 +171,7 @@ export default function FilesTab({ task, boardId, userRole }) {
                         deleteFile.mutate(att.id);
                       }
                     }}
-                    className="p-1.5 text-[#A0A0A0] hover:text-red-500 rounded"
+                    className="p-1.5 text-subtle-foreground hover:text-red-500 rounded"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

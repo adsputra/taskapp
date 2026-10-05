@@ -44,8 +44,8 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border border-[#E1E5F3] dark:border-slate-700 rounded-xl mb-2 hover:shadow-sm transition-all cursor-pointer group ${
-            snapshot.isDragging ? "shadow-lg ring-2 ring-[#0073EA]/30" : ""
+          className={`flex items-center gap-3 px-4 py-3 bg-card border border-border rounded-xl mb-2 hover:shadow-sm transition-all cursor-pointer group ${
+            snapshot.isDragging ? "shadow-lg ring-2 ring-primary/30" : ""
           }`}
           style={provided.draggableProps.style}
           onClick={() => onSelect?.(item)}
@@ -54,7 +54,7 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
             {...provided.dragHandleProps}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <GripVertical className="w-4 h-4 text-[#676879] dark:text-slate-500" />
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
           </div>
 
           {/* Status dot */}
@@ -65,7 +65,7 @@ const SprintItemRow = ({ item, index, board, onSelect }) => {
           />
 
           {/* Title */}
-          <span className="text-sm font-medium text-[#323338] dark:text-slate-200 truncate flex-1">{item.title}</span>
+          <span className="text-sm font-medium text-foreground truncate flex-1">{item.title}</span>
 
           {/* Priority badge */}
           {priorityOption && (
@@ -126,17 +126,17 @@ const SprintSection = ({
     <div className="mb-6">
       {/* Sprint Header */}
       <div className="flex items-center gap-3 mb-3 px-2">
-        <button onClick={onToggle} className="p-0.5 hover:bg-[#E1E5F3] dark:hover:bg-slate-700 rounded">
+        <button onClick={onToggle} className="p-0.5 hover:bg-accent rounded">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-[#676879] dark:text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-[#676879] dark:text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
           )}
         </button>
 
         <Target className="w-5 h-5" style={{ color: statusColor }} />
 
-        <h3 className="text-base font-bold text-[#323338] dark:text-slate-100">{sprint.title}</h3>
+        <h3 className="text-base font-bold text-foreground">{sprint.title}</h3>
 
         <Badge
           className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -149,12 +149,12 @@ const SprintSection = ({
           {statusLabel}
         </Badge>
 
-        <span className="text-xs text-[#676879] dark:text-slate-400">
+        <span className="text-xs text-muted-foreground">
           {items.length} items · {progress}% done
         </span>
 
         {sprint.start_date && (
-          <span className="text-xs text-[#676879] dark:text-slate-400 flex items-center gap-1">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
             <CalendarDays className="w-3 h-3" />
             {format(new Date(sprint.start_date), "MMM d")}
             {sprint.end_date && ` – ${format(new Date(sprint.end_date), "MMM d")}`}
@@ -167,7 +167,7 @@ const SprintSection = ({
             <>
               <Button
                 size="sm"
-                className="h-7 text-xs bg-[#00C875] hover:bg-[#00A86B] text-white rounded-lg"
+                className="h-7 text-xs bg-success hover:bg-success/90 text-white rounded-lg"
                 onClick={(e) => {
                   e.stopPropagation();
                   onStartSprint?.(sprint.id);
@@ -178,7 +178,7 @@ const SprintSection = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 p-0 text-[#E2445C] hover:bg-[#E2445C]/10 rounded-lg"
+                className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10 rounded-lg"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteSprint?.(sprint.id);
@@ -191,7 +191,7 @@ const SprintSection = ({
           {isActive && userRole === "admin" && (
             <Button
               size="sm"
-              className="h-7 text-xs bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+              className="h-7 text-xs bg-primary hover:bg-primary/90 text-white rounded-lg"
               onClick={(e) => {
                 e.stopPropagation();
                 onCompleteSprint?.(sprint.id);
@@ -205,9 +205,9 @@ const SprintSection = ({
 
       {/* Progress bar */}
       {items.length > 0 && (
-        <div className="h-1.5 bg-[#E1E5F3] dark:bg-slate-700 rounded-full mx-2 mb-3 overflow-hidden">
+        <div className="h-1.5 bg-accent rounded-full mx-2 mb-3 overflow-hidden">
           <div
-            className="h-full bg-[#00C875] rounded-full transition-all duration-300"
+            className="h-full bg-success rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -221,11 +221,11 @@ const SprintSection = ({
               ref={provided.innerRef}
               {...provided.droppableProps}
               className={`min-h-[60px] rounded-xl p-2 transition-colors ${
-                snapshot.isDraggingOver ? "bg-[#0073EA]/5 border-2 border-dashed border-[#0073EA]/30" : ""
+                snapshot.isDraggingOver ? "bg-primary/5 border-2 border-dashed border-primary/30" : ""
               }`}
             >
               {items.length === 0 && !snapshot.isDraggingOver && (
-                <p className="text-sm text-[#676879] dark:text-slate-400 text-center py-4">No items in this sprint</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No items in this sprint</p>
               )}
               {items.map((item, idx) => (
                 <SprintItemRow
@@ -255,17 +255,19 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
     enabled: !!boardId,
   });
 
-  const [expandedSprints, setExpandedSprints] = useState(new Set());
+  // Explicit open/closed choices; anything not chosen yet uses the default
+  // (backlog and the active sprint open).
+  const [toggledSprints, setToggledSprints] = useState(() => new Map());
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSprintTitle, setNewSprintTitle] = useState("");
   const [newSprintEnd, setNewSprintEnd] = useState("");
 
+  const isOpenByDefault = (id) => id === "backlog" || id === activeSprint?.id;
+  const expandedSprints = {
+    has: (id) => (toggledSprints.has(id) ? toggledSprints.get(id) : isOpenByDefault(id)),
+  };
   const toggleExpanded = (id) => {
-    setExpandedSprints((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setToggledSprints((prev) => new Map(prev).set(id, !expandedSprints.has(id)));
   };
 
   // Mutations
@@ -358,22 +360,11 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
     }
   };
 
-  // Expand backlog + active sprint by default
-  React.useEffect(() => {
-    if (sprints.length > 0) {
-      setExpandedSprints((prev) => {
-        const next = new Set(prev);
-        next.add("backlog");
-        if (activeSprint) next.add(activeSprint.id);
-        return next;
-      });
-    }
-  }, [sprints.length, activeSprint?.id]);
 
   if (isLoading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0073EA]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -387,14 +378,14 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
             <Target className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Sprint Board</h2>
-            <p className="text-sm text-gray-600 dark:text-slate-400">Manage sprints and track progress</p>
+            <h2 className="text-xl font-bold text-foreground">Sprint Board</h2>
+            <p className="text-sm text-muted-foreground">Manage sprints and track progress</p>
           </div>
         </div>
 
         {userRole === "admin" && (
           <Button
-            className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+            className="bg-primary hover:bg-primary/90 text-white rounded-lg"
             onClick={() => setShowCreateForm(true)}
           >
             <Plus className="w-4 h-4 mr-2" /> New Sprint
@@ -404,7 +395,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
 
       {/* Create sprint form */}
       {showCreateForm && (
-        <div className="mb-6 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#E1E5F3] dark:border-slate-700 shadow-sm">
+        <div className="mb-6 p-4 bg-card rounded-xl border border-border shadow-sm">
           <div className="flex items-center gap-3">
             <Input
               placeholder="Sprint name (e.g., Sprint 1)"
@@ -420,7 +411,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
               placeholder="End date"
             />
             <Button
-              className="h-10 bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+              className="h-10 bg-primary hover:bg-primary/90 text-white rounded-lg"
               disabled={!newSprintTitle.trim()}
               onClick={() =>
                 createSprint.mutate({
@@ -452,18 +443,18 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
             <div className="flex items-center gap-3 mb-3 px-2">
               <button
                 onClick={() => toggleExpanded("backlog")}
-                className="p-0.5 hover:bg-[#E1E5F3] dark:hover:bg-slate-700 rounded"
+                className="p-0.5 hover:bg-accent rounded"
               >
                 {expandedSprints.has("backlog") ? (
-                  <ChevronDown className="w-4 h-4 text-[#676879] dark:text-slate-400" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 ) : (
-                  <ChevronRight className="w-4 h-4 text-[#676879] dark:text-slate-400" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 )}
               </button>
-              <Inbox className="w-5 h-5 text-[#676879] dark:text-slate-400" />
-              <h3 className="text-base font-bold text-[#323338] dark:text-slate-100">Backlog</h3>
-              <span className="text-xs text-[#676879] dark:text-slate-400">{backlogItems.length} items</span>
-              <span className="text-xs text-[#676879] dark:text-slate-400 ml-2">
+              <Inbox className="w-5 h-5 text-muted-foreground" />
+              <h3 className="text-base font-bold text-foreground">Backlog</h3>
+              <span className="text-xs text-muted-foreground">{backlogItems.length} items</span>
+              <span className="text-xs text-muted-foreground ml-2">
                 Drag items here or to a sprint below
               </span>
             </div>
@@ -476,12 +467,12 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
                     {...provided.droppableProps}
                     className={`min-h-[60px] rounded-xl p-2 transition-colors ${
                       snapshot.isDraggingOver
-                        ? "bg-[#676879]/5 border-2 border-dashed border-[#676879]/30"
+                        ? "bg-muted-foreground/5 border-2 border-dashed border-muted-foreground/30"
                         : ""
                     }`}
                   >
                     {backlogItems.length === 0 && !snapshot.isDraggingOver && (
-                      <p className="text-sm text-[#676879] dark:text-slate-400 text-center py-4">
+                      <p className="text-sm text-muted-foreground text-center py-4">
                         All items are assigned to sprints
                       </p>
                     )}
@@ -545,7 +536,7 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
           {/* Completed Sprints */}
           {completedSprints.length > 0 && (
             <div className="mt-8">
-              <h4 className="text-sm font-semibold text-[#676879] dark:text-slate-400 uppercase tracking-wider mb-3 px-2">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
                 Completed Sprints
               </h4>
               {completedSprints.map((sprint) => (
@@ -566,14 +557,14 @@ export default function SprintView({ board, items, boardId, userRole, onSelectTa
           {/* Empty state */}
           {sprints.length === 0 && (
             <div className="text-center py-16">
-              <Target className="w-16 h-16 text-[#E1E5F3] dark:text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-[#323338] dark:text-slate-100 mb-2">No sprints yet</h3>
-              <p className="text-sm text-[#676879] dark:text-slate-400 mb-4">
+              <Target className="w-16 h-16 text-border mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No sprints yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
                 Create your first sprint to start organizing work
               </p>
               {userRole === "admin" && (
                 <Button
-                  className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg"
+                  className="bg-primary hover:bg-primary/90 text-white rounded-lg"
                   onClick={() => setShowCreateForm(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" /> Create Sprint

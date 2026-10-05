@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
+import { readableTextOn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -63,14 +64,14 @@ export default function PriorityCell({ value, onUpdate, column }) {
     >
       {currentChoice ? (
         <Badge
-          className={`border-none text-white font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
-          style={{ backgroundColor: currentChoice.color }}
+          className={`border-none font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
+          style={{ backgroundColor: currentChoice.color, color: readableTextOn(currentChoice.color) }}
         >
           {currentChoice.label}
         </Badge>
       ) : (
         <Badge
-          className={`border-none text-white font-medium px-3 py-1 rounded-full text-xs bg-[#C4C4C4] ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
+          className={`border-none bg-muted text-muted-foreground font-medium px-3 py-1 rounded-full text-xs ${onUpdate ? 'hover:opacity-80 transition-opacity' : ''}`}
         >
           Set priority...
         </Badge>

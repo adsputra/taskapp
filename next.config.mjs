@@ -1,33 +1,8 @@
 /** @type {import('next').NextConfig} */
 
-const supabaseOrigin = (() => {
-  try {
-    const value = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return value ? new URL(value).origin : "https://*.supabase.co";
-  } catch {
-    return "https://*.supabase.co";
-  }
-})();
-
-const isDevelopment = process.env.NODE_ENV === "development";
-
-// Note: 'unsafe-inline' for scripts is required by Next.js inline bootstrap
-// scripts without a nonce setup. Everything else is locked down.
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  `connect-src 'self' ${supabaseOrigin} wss://*.supabase.co`,
-  "font-src 'self' data:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join("; ");
-
+// Content-Security-Policy is NOT set here: it needs a fresh nonce per
+// request, so src/proxy.js builds it (see src/lib/csp.js).
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

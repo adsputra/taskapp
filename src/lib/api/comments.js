@@ -3,8 +3,9 @@
  * Joins with profiles to get user display info.
  */
 import { createClient } from "@/lib/supabase/client";
+import { notifyActivityChanged } from "./activity";
 import { apiError } from "./errors";
-import { assert, clampLimit, requireUuid } from "@/lib/validation";
+import { MAX_MENTIONS, assert, clampLimit, requireUuid } from "@/lib/validation";
 
 const MAX_COMMENT_LENGTH = 5000;
 const COMMENT_SELECT = "*, profiles(id, full_name, email, avatar_url)";
@@ -66,11 +67,14 @@ export const commentsApi = {
   },
 
   /**
-   * Create a new comment.
+   * Create a new comment. `mentioned_user_ids` are the people tagged with
+   * @ — the database notifies the ones who can read the board.
    */
-  async create({ item_id, content }) {
+  async create({ item_id, content, mentioned_user_ids = [] }) {
     requireUuid(item_id, "Item ID");
     const cleanContent = requireContent(content);
+    assert(Array.isArray(mentioned_user_ids) && mentioned_user_ids.length <= MAX_MENTIONS, "Terlalu banyak mention.");
+    mentioned_user_ids.forEach((id) => requireUuid(id, "Mention"));
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -78,11 +82,17 @@ export const commentsApi = {
 
     const { data, error } = await supabase
       .from("task_comments")
-      .insert({ item_id, user_id: user.id, content: cleanContent })
+      .insert({
+        item_id,
+        user_id: user.id,
+        content: cleanContent,
+        mentioned_user_ids: [...new Set(mentioned_user_ids)],
+      })
       .select(COMMENT_SELECT)
       .single();
 
     if (error) throw apiError(error, "Failed to create comment.");
+    notifyActivityChanged(item_id);
     return data;
   },
 

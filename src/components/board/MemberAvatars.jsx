@@ -61,7 +61,7 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
             return (
               <span
                 key={m.id}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white ring-1 ring-[#E1E5F3] shrink-0"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-card ring-1 ring-border shrink-0"
                 style={{
                   backgroundColor: isOwner
                     ? ROLE_COLOR.admin
@@ -79,7 +79,7 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
             );
           })}
           {overflow > 0 && (
-            <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#F5F6F8] text-[#676879] border-2 border-white ring-1 ring-[#E1E5F3] shrink-0"
+            <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-muted text-muted-foreground border-2 border-card ring-1 ring-border shrink-0"
               style={{ zIndex: 0 }}>
               +{overflow}
             </span>
@@ -87,8 +87,8 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="end" sideOffset={8}>
-        <div className="p-3 border-b border-[#E1E5F3]">
-          <p className="text-xs font-semibold text-[#323338]">
+        <div className="p-3 border-b border-border">
+          <p className="text-xs font-semibold text-foreground">
             Board Members ({members.length})
           </p>
         </div>
@@ -98,7 +98,7 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
             return (
               <div
                 key={m.id}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-[#F5F6F8]"
+                className="flex items-center gap-3 px-3 py-2 hover:bg-muted"
               >
                 <span
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
@@ -115,7 +115,7 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-[#323338] truncate">{m.email}</p>
+                  <p className="text-sm text-foreground truncate">{m.email}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge
                       className="text-[10px] px-1.5 py-0 h-4"
@@ -130,8 +130,8 @@ export default function MemberAvatars({ members = [], boardOwnerId }) {
                     <span
                       className={`text-[10px] ${
                         m.status === "active"
-                          ? "text-[#00C875]"
-                          : "text-[#FF9900]"
+                          ? "text-success"
+                          : "text-warning"
                       }`}
                     >
                       {m.status === "active"

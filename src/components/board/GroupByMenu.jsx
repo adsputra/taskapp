@@ -25,12 +25,12 @@ export default function GroupByMenu({ groupBy, columns, onChange, onClose }) {
   });
 
   return (
-    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-[#E1E5F3] z-50 p-2">
+    <div className="absolute top-full left-0 mt-1 w-48 bg-card rounded-xl shadow-xl border border-border z-50 p-2">
       <div className="flex items-center justify-between px-2 py-1 mb-1">
-        <h4 className="font-semibold text-[#323338] text-sm">Group by</h4>
+        <h4 className="font-semibold text-foreground text-sm">Group by</h4>
         <button
           onClick={onClose}
-          className="text-[#A0A0A0] hover:text-[#323338]"
+          className="text-subtle-foreground hover:text-foreground"
         >
           <X className="w-4 h-4" />
         </button>
@@ -47,8 +47,8 @@ export default function GroupByMenu({ groupBy, columns, onChange, onClose }) {
               }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? "bg-[#0073EA]/10 text-[#0073EA] font-medium"
-                  : "text-[#323338] hover:bg-[#F5F6F8]"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-foreground hover:bg-muted"
               }`}
             >
               {opt.label}

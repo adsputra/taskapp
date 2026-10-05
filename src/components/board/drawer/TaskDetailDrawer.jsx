@@ -1,17 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { itemsApi } from "@/lib/api/items";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { X, Trash2, FileText, MessageSquare, History, Paperclip, Clock } from "lucide-react";
 import { commentsApi } from "@/lib/api/comments";
-import { activityApi } from "@/lib/api/activity";
-import { attachmentsApi } from "@/lib/api/attachments";
-import { timeApi } from "@/lib/api/time";
-import { toast } from "sonner";
-import {
-  X, Trash2, FileText, MessageSquare, History,
-  Paperclip, Clock, ChevronDown,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
 import DetailsTab from "./DetailsTab";
 import CommentsTab from "./CommentsTab";
 import ActivityTab from "./ActivityTab";
@@ -26,6 +19,28 @@ const TABS = [
   { id: "time", label: "Time", icon: Clock },
 ];
 
+// How many comments of a task this browser has seen (unread dot).
+function readSeen(key) {
+  try {
+    return parseInt(localStorage.getItem(key) || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+function writeSeen(key, count) {
+  try {
+    localStorage.setItem(key, String(count));
+  } catch {
+    // storage unavailable: the dot just stays
+  }
+}
+
+/**
+ * Side panel for one task. Sits at z-50 like Radix overlays, so menus and
+ * popovers portalled from inside it (rendered later in <body>) stay on top. The parent renders it with key={task.id}, so
+ * local state (tab, title draft) starts fresh for every task.
+ */
 export default function TaskDetailDrawer({
   task,
   board,
@@ -37,156 +52,167 @@ export default function TaskDetailDrawer({
   allItems,
 }) {
   const [activeTab, setActiveTab] = useState("details");
-  const [title, setTitle] = useState("");
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const queryClient = useQueryClient();
+  const [titleDraft, setTitleDraft] = useState(null); // null = not editing
+  const [, markSeen] = useReducer((n) => n + 1, 0);
+  const panelRef = useRef(null);
 
-  // ── Unread comments tracking ──
-  const storageKey = task?.id ? `comments_read_${task.id}` : null;
-  const getSeenCount = () => {
-    if (!storageKey) return 0;
-    return parseInt(localStorage.getItem(storageKey) || "0", 10);
-  };
-  const [seenCount, setSeenCount] = useState(getSeenCount);
+  const canEdit = userRole === "admin" || userRole === "editor";
+  const canDelete = userRole === "admin";
+  const seenKey = `comments_read_${task?.id}`;
 
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", task?.id],
     queryFn: () => commentsApi.listByItem(task.id),
-    enabled: !!task?.id,
+    enabled: Boolean(task?.id),
     staleTime: 30_000,
   });
+  const hasUnread = activeTab !== "comments" && comments.length > readSeen(seenKey);
 
-  const totalComments = comments.length;
-  const hasUnread = totalComments > seenCount;
-
-  // Mark as read when user opens comments tab
-  useEffect(() => {
-    if (activeTab === "comments" && storageKey) {
-      const current = comments.length;
-      localStorage.setItem(storageKey, String(current));
-      setSeenCount(current);
+  const selectTab = (tabId) => {
+    // Opening or leaving the comments tab counts as having read them.
+    if (tabId === "comments" || activeTab === "comments") {
+      writeSeen(seenKey, comments.length);
+      markSeen();
     }
-  }, [activeTab, comments.length, storageKey]);
+    setActiveTab(tabId);
+  };
 
-  // Reset seen count when task changes
+  // Move focus into the panel; Escape closes it.
   useEffect(() => {
-    setSeenCount(getSeenCount());
-  }, [task?.id]);
+    panelRef.current?.focus();
+  }, []);
 
   useEffect(() => {
-    if (task) setTitle(task.title || "");
-  }, [task?.id]);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape" && !isEditingTitle) onClose();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && titleDraft === null) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, isEditingTitle]);
-
-  const handleTitleBlur = () => {
-    setIsEditingTitle(false);
-    if (title.trim() && title !== task.title) {
-      onUpdate(task.id, { title: title.trim() }, task);
-    } else {
-      setTitle(task.title || "");
-    }
-  };
-
-  const isViewer = userRole === "viewer";
+  }, [onClose, titleDraft]);
 
   if (!task) return null;
 
+  const commitTitle = () => {
+    const next = (titleDraft || "").trim();
+    if (next && next !== task.title) onUpdate(task.id, { title: next });
+    setTitleDraft(null);
+  };
+
   return (
     <>
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 z-[60] transition-opacity"
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px] animate-in fade-in-0 duration-200"
         onClick={onClose}
+        aria-hidden
       />
 
-      {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-[520px] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-200">
-        {/* Header */}
-        <div className="shrink-0 border-b border-[#E1E5F3] dark:border-slate-800 px-6 py-4">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-drawer-title"
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[520px] flex-col bg-card shadow-2xl outline-none animate-in slide-in-from-right duration-300 ease-out"
+      >
+        <div className="shrink-0 border-b border-border px-6 py-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              {isEditingTitle && !isViewer ? (
+            <div className="min-w-0 flex-1">
+              {titleDraft !== null ? (
                 <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={handleTitleBlur}
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={commitTitle}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleTitleBlur();
-                    if (e.key === "Escape") {
-                      setTitle(task.title || "");
-                      setIsEditingTitle(false);
-                    }
+                    if (e.key === "Enter") commitTitle();
+                    if (e.key === "Escape") setTitleDraft(null);
                   }}
-                  className="w-full text-lg font-semibold text-[#323338] dark:text-slate-100 border border-[#0073EA] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#0073EA] bg-white dark:bg-slate-800"
+                  aria-label="Task title"
+                  className="w-full rounded border border-primary bg-card px-2 py-1 text-lg font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
                   autoFocus
                 />
               ) : (
-                <h2
-                  className={`text-lg font-semibold text-[#323338] dark:text-slate-100 truncate ${!isViewer ? "cursor-pointer hover:text-[#0073EA] dark:hover:text-blue-400" : ""}`}
-                  onClick={() => !isViewer && setIsEditingTitle(true)}
-                  title={!isViewer ? "Click to edit" : ""}
-                >
-                  {task.title}
+                <h2 id="task-drawer-title" className="text-lg font-semibold text-foreground">
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => setTitleDraft(task.title || "")}
+                      title="Click to edit"
+                      className="block max-w-full truncate text-left transition-colors hover:text-primary"
+                    >
+                      {task.title}
+                    </button>
+                  ) : (
+                    <span className="block truncate">{task.title}</span>
+                  )}
                 </h2>
               )}
-              <p className="text-xs text-[#676879] dark:text-slate-500 mt-1">
-                Created {new Date(task.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Created{" "}
+                {new Date(task.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </p>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              {!isViewer && (
+            <div className="flex shrink-0 items-center gap-1">
+              {canDelete && (
                 <button
+                  type="button"
                   onClick={() => {
                     if (window.confirm("Delete this task?")) {
                       onDelete(task.id);
                       onClose();
                     }
                   }}
-                  className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-subtle-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   title="Delete task"
+                  aria-label="Delete task"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               )}
               <button
+                type="button"
                 onClick={onClose}
-                className="p-2 text-[#A0A0A0] dark:text-slate-500 hover:text-[#323338] dark:hover:text-slate-200 hover:bg-[#F5F6F8] dark:hover:bg-slate-800 rounded-lg transition-colors"
+                className="rounded-lg p-2 text-subtle-foreground transition-colors hover:bg-muted hover:text-foreground"
                 title="Close"
+                aria-label="Close task details"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex gap-1 mt-4 -mb-[1px]">
+          <div role="tablist" aria-label="Task sections" className="-mb-[1px] mt-4 flex gap-1 overflow-x-auto scrollbar-hide">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg border-b-2 transition-colors ${
+                  type="button"
+                  role="tab"
+                  id={`task-tab-${tab.id}`}
+                  aria-selected={isActive}
+                  aria-controls="task-tab-panel"
+                  onClick={() => selectTab(tab.id)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 py-2 text-xs font-medium transition-colors",
                     isActive
-                      ? "text-[#0073EA] border-[#0073EA] bg-[#0073EA]/5 dark:bg-[#0073EA]/10"
-                      : "text-[#676879] dark:text-slate-500 border-transparent hover:text-[#323338] dark:hover:text-slate-300 hover:bg-[#F5F6F8] dark:hover:bg-slate-800"
-                  }`}
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
                 >
-                  <div className="relative">
-                    <Icon className="w-3.5 h-3.5" />
-                    {tab.id === "comments" && hasUnread && activeTab !== "comments" && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900" />
+                  <span className="relative">
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.id === "comments" && hasUnread && (
+                      <span
+                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-warning ring-2 ring-card"
+                        aria-label="Unread comments"
+                      />
                     )}
-                  </div>
+                  </span>
                   {tab.label}
                 </button>
               );
@@ -194,8 +220,12 @@ export default function TaskDetailDrawer({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto dark:bg-slate-900">
+        <div
+          id="task-tab-panel"
+          role="tabpanel"
+          aria-labelledby={`task-tab-${activeTab}`}
+          className="flex-1 overflow-y-auto scroll-themed"
+        >
           {activeTab === "details" && (
             <DetailsTab
               task={task}
@@ -206,29 +236,10 @@ export default function TaskDetailDrawer({
               allItems={allItems}
             />
           )}
-          {activeTab === "comments" && (
-            <CommentsTab
-              task={task}
-              userRole={userRole}
-              board={board}
-            />
-          )}
-          {activeTab === "activity" && (
-            <ActivityTab task={task} />
-          )}
-          {activeTab === "files" && (
-            <FilesTab
-              task={task}
-              boardId={boardId}
-              userRole={userRole}
-            />
-          )}
-          {activeTab === "time" && (
-            <TimeTab
-              task={task}
-              userRole={userRole}
-            />
-          )}
+          {activeTab === "comments" && <CommentsTab task={task} userRole={userRole} board={board} />}
+          {activeTab === "activity" && <ActivityTab task={task} />}
+          {activeTab === "files" && <FilesTab task={task} boardId={boardId} userRole={userRole} />}
+          {activeTab === "time" && <TimeTab task={task} userRole={userRole} />}
         </div>
       </div>
     </>

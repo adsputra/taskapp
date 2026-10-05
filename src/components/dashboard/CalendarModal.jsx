@@ -72,8 +72,8 @@ export default function CalendarModal({ isOpen, onClose }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338] flex items-center gap-2">
-            <CalendarIcon className="w-6 h-6 text-[#0073EA]" />
+          <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-primary" />
             Calendar Overview
           </DialogTitle>
         </DialogHeader>
@@ -81,7 +81,7 @@ export default function CalendarModal({ isOpen, onClose }) {
         <div className="py-4">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-[#323338]">
+            <h3 className="text-xl font-bold text-foreground">
               {format(currentDate, 'MMMM yyyy')}
             </h3>
             <div className="flex gap-2">
@@ -107,7 +107,7 @@ export default function CalendarModal({ isOpen, onClose }) {
           <div className="grid grid-cols-7 gap-2">
             {/* Calendar Grid */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-[#676879]">
+              <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
                 {day}
               </div>
             ))}
@@ -125,14 +125,14 @@ export default function CalendarModal({ isOpen, onClose }) {
                   transition={{ delay: index * 0.01 }}
                   className={`
                     relative p-2 min-h-[60px] border rounded-lg cursor-pointer transition-all hover:shadow-md
-                    ${isSameMonth(date, currentDate) ? 'bg-white border-[#E1E5F3]' : 'bg-gray-50 border-gray-200'}
-                    ${isToday(date) ? 'ring-2 ring-[#0073EA] ring-opacity-50' : ''}
-                    ${isSelected ? 'bg-[#0073EA] text-white' : ''}
+                    ${isSameMonth(date, currentDate) ? 'bg-card border-border' : 'bg-muted border-border'}
+                    ${isToday(date) ? 'ring-2 ring-primary ring-opacity-50' : ''}
+                    ${isSelected ? 'bg-primary text-white' : ''}
                     ${hasOverdue ? 'border-red-300 bg-red-50' : ''}
                   `}
                   onClick={() => setSelectedDate(date)}
                 >
-                  <div className={`text-sm font-medium mb-1 ${isSelected ? 'text-white' : isToday(date) ? 'text-[#0073EA]' : 'text-[#323338]'}`}>
+                  <div className={`text-sm font-medium mb-1 ${isSelected ? 'text-white' : isToday(date) ? 'text-primary' : 'text-foreground'}`}>
                     {format(date, 'd')}
                   </div>
                   
@@ -151,7 +151,7 @@ export default function CalendarModal({ isOpen, onClose }) {
                                 ? 'bg-white/20 text-white' 
                                 : isItemOverdue 
                                 ? 'bg-red-100 text-red-800' 
-                                : 'bg-[#F5F6F8] text-[#323338]'
+                                : 'bg-muted text-foreground'
                             }`}
                             title={item.title}
                           >
@@ -160,7 +160,7 @@ export default function CalendarModal({ isOpen, onClose }) {
                         );
                       })}
                       {dayItems.length > 2 && (
-                        <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-[#676879]'}`}>
+                        <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
                           +{dayItems.length - 2} more
                         </div>
                       )}
@@ -177,8 +177,8 @@ export default function CalendarModal({ isOpen, onClose }) {
 
           {/* Selected Date Details */}
           {selectedDate && selectedDateItems.length > 0 && (
-            <div className="mt-6 p-4 bg-[#F5F6F8] rounded-xl">
-              <h4 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
+            <div className="mt-6 p-4 bg-muted rounded-xl">
+              <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 {format(selectedDate, 'EEEE, MMMM d, yyyy')} ({selectedDateItems.length} tasks)
               </h4>
@@ -189,20 +189,20 @@ export default function CalendarModal({ isOpen, onClose }) {
                   const isItemOverdue = isOverdue(item, selectedDate);
                   
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-card rounded-lg">
                       <div className="flex items-center gap-3">
                         <div 
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: board?.color || '#0073EA' }}
                         />
                         <div>
-                          <p className="font-medium text-[#323338]">{item.title}</p>
-                          <p className="text-sm text-[#676879]">{board?.title}</p>
+                          <p className="font-medium text-foreground">{item.title}</p>
+                          <p className="text-sm text-muted-foreground">{board?.title}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {isItemOverdue && (
-                          <Badge className="bg-red-100 text-red-800 border-red-200">
+                          <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             Overdue
                           </Badge>
@@ -222,7 +222,7 @@ export default function CalendarModal({ isOpen, onClose }) {
         <div className="flex justify-end pt-4">
           <Button
             onClick={onClose}
-            className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6"
+            className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6"
           >
             Close
           </Button>

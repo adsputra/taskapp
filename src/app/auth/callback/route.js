@@ -1,72 +1,39 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
+import { safeRedirectPath } from "@/lib/validation";
 
+/**
+ * Landing point for every Supabase email/OAuth link (signup confirmation,
+ * password recovery, Google/GitHub sign-in). Exchanges the one-time code
+ * for a session cookie, then continues to a same-origin `next` path.
+ * Profiles are created by the handle_new_user trigger.
+ */
 export async function GET(request) {
   const requestUrl = new URL(request.url);
+  const { origin } = requestUrl;
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/";
-  const origin = requestUrl.origin;
+  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/boards");
 
-  if (!code) {
-    return NextResponse.redirect(
-      `${origin}/auth/login?error=${encodeURIComponent("Kode verifikasi tidak ditemukan.")}`
-    );
-  }
+  const loginWithError = (message) =>
+    NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent(message)}`);
+
+  const providerError = requestUrl.searchParams.get("error_description");
+  if (providerError) return loginWithError("Login dibatalkan atau ditolak penyedia.");
+  if (!code) return loginWithError("Kode verifikasi tidak ditemukan.");
 
   try {
     const supabase = await createClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    // Tukar code dengan session
-    const { error: exchangeError } =
-      await supabase.auth.exchangeCodeForSession(code);
-
-    if (exchangeError) {
-      console.error("Exchange error:", exchangeError);
-      return NextResponse.redirect(
-        `${origin}/auth/login?error=auth_callback_error`
-      );
+    if (error) {
+      logger.warn("auth callback exchange failed", { code: error.code });
+      return loginWithError("Link sudah kedaluwarsa atau tidak valid. Coba lagi.");
     }
 
-    // Ambil user dari session yang baru
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      // Buat profile jika belum ada
-      const fullName =
-        user.user_metadata?.full_name ||
-        user.email?.split("@")[0] ||
-        "User";
-
-      // Cek dulu — hindari insert kalau sudah ada
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!existing) {
-        await supabase.from("profiles").insert({
-          id: user.id,
-          full_name: fullName,
-          email: user.email,
-          avatar_url: user.user_metadata?.avatar_url || null,
-        });
-      }
-    }
-
-    // Redirect
-    const redirectUrl = new URL(next, origin);
-    if (redirectUrl.origin !== origin) {
-      return NextResponse.redirect(`${origin}/`);
-    }
-
-    return NextResponse.redirect(redirectUrl.toString());
+    return NextResponse.redirect(`${origin}${next}`);
   } catch (err) {
-    console.error("Callback error:", err);
-    return NextResponse.redirect(
-      `${origin}/auth/login?error=${encodeURIComponent("Terjadi kesalahan server.")}`
-    );
+    logger.error("auth callback failed", { detail: err?.message });
+    return loginWithError("Terjadi kesalahan server.");
   }
 }

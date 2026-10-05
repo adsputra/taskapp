@@ -52,18 +52,18 @@ export default function QuickActions({ onCreateBoard }) {
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
+      <div className="bg-card rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="px-4 py-3 border-b border-border ">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-sm shadow-rose-200/50">
               <Zap className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              <h3 className="text-xs font-bold text-foreground ">
                 Quick Actions
               </h3>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">Get things done</p>
+              <p className="text-[11px] text-subtle-foreground ">Get things done</p>
             </div>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function QuickActions({ onCreateBoard }) {
             <div
               key={a.title}
               onClick={() => handleClick(a)}
-              className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted cursor-pointer"
             >
               {a.link ? (
                 <Link href={a.link} className="contents">
@@ -118,10 +118,10 @@ function ActionItemContent({ a }) {
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+        <p className="text-[13px] font-semibold text-foreground ">
           {a.title}
         </p>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+        <p className="text-[11px] text-subtle-foreground truncate">
           {a.desc}
         </p>
       </div>

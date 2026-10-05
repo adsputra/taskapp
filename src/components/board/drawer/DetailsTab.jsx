@@ -1,21 +1,39 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { itemsApi } from "@/lib/api/items";
-import { activityApi } from "@/lib/api/activity";
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Check, Circle, ChevronDown, ChevronRight, Link2, Unlink } from "lucide-react";
 import { toast } from "sonner";
+import PeopleCell from "@/components/board/cells/PeopleCell";
+
+/**
+ * Text input that saves once — on blur or Enter — instead of on every
+ * keystroke (each save is an audited database write). Remount it with a
+ * new key to pick up a changed value from elsewhere.
+ */
+function CommitInput({ value, onCommit, type = "text", ...props }) {
+  const initial = value === null || value === undefined ? "" : String(value);
+  const [draft, setDraft] = useState(initial);
+  const commit = () => {
+    if (draft !== initial) onCommit(draft);
+  };
+  return (
+    <input
+      {...props}
+      type={type}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") setDraft(initial);
+      }}
+    />
+  );
+}
 
 export default function DetailsTab({
   task,
@@ -57,34 +75,23 @@ export default function DetailsTab({
             })
         ) : {},
       }),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
       setNewSubtaskTitle("");
-      // Log subtask addition to parent task's activity
-      activityApi.log({
-        item_id: task.id,
-        action: "updated",
-        field_name: "subtask",
-        old_value: "",
-        new_value: `Added: ${data.title}`,
-      }).catch(() => {});
+      // The database records "Added: <title>" on the parent's activity.
     },
     onError: (err) => toast.error(err.message),
   });
 
   const toggleSubtask = useMutation({
-    mutationFn: ({ id, data, prevData }) => itemsApi.update(id, { data }, { ...task, data: prevData, id }, board?.columns),
+    mutationFn: ({ id, data }) => itemsApi.update(id, { data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", task.id] });
       queryClient.invalidateQueries({ queryKey: ["items", boardId] });
     },
     onError: (err) => toast.error(err.message),
   });
-
-  useEffect(() => {
-    setDescription(task?.description || "");
-  }, [task?.id]);
 
   const handleDescriptionBlur = () => {
     if (description !== (task?.description || "") && !isViewer) {
@@ -120,18 +127,31 @@ export default function DetailsTab({
       case "text":
       case "number":
         return (
-          <input
-            value={value || ""}
-            onChange={(e) =>
-              handleFieldChange(
-                column.id,
-                column.type === "number" ? Number(e.target.value) : e.target.value
-              )
-            }
+          <CommitInput
+            key={`${column.id}:${value ?? ""}`}
+            id={`field-${column.id}`}
+            type={column.type === "number" ? "number" : "text"}
+            value={value}
             placeholder={column.title}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
+            onCommit={(next) =>
+              handleFieldChange(
+                column.id,
+                column.type === "number" ? (next === "" ? null : Number(next)) : next
+              )
+            }
           />
+        );
+      case "people":
+        return (
+          <div id={`field-${column.id}`} className="h-10 rounded-lg border border-input bg-card">
+            <PeopleCell
+              value={value}
+              boardId={boardId}
+              onUpdate={isViewer ? undefined : (next) => handleFieldChange(column.id, next)}
+            />
+          </div>
         );
       case "status":
       case "priority":
@@ -159,10 +179,11 @@ export default function DetailsTab({
         const choices = getChoices();
         return (
           <select
+            id={`field-${column.id}`}
             value={value || ""}
             onChange={(e) => handleFieldChange(column.id, e.target.value)}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option value="">{`Select ${column.title}`}</option>
             {choices.map((choice) => (
@@ -175,11 +196,12 @@ export default function DetailsTab({
       case "date":
         return (
           <input
+            id={`field-${column.id}`}
             type="date"
             value={value || ""}
-            onChange={(e) => handleFieldChange(column.id, e.target.value)}
+            onChange={(e) => handleFieldChange(column.id, e.target.value || null)}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
           />
         );
       case "checkbox":
@@ -190,19 +212,21 @@ export default function DetailsTab({
               checked={!!value}
               onChange={(e) => handleFieldChange(column.id, e.target.checked)}
               disabled={isViewer}
-              className="w-4 h-4 rounded border-gray-300 text-[#0073EA] focus:ring-[#0073EA]"
+              className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
             />
-            <span className="text-sm text-[#323338] dark:text-slate-300">{column.title}</span>
+            <span className="text-sm text-foreground">{column.title}</span>
           </label>
         );
       default:
         return (
-          <input
-            value={value || ""}
-            onChange={(e) => handleFieldChange(column.id, e.target.value)}
+          <CommitInput
+            key={`${column.id}:${typeof value === "string" ? value : ""}`}
+            id={`field-${column.id}`}
+            value={typeof value === "string" ? value : ""}
             placeholder={column.title}
             disabled={isViewer}
-            className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
+            onCommit={(next) => handleFieldChange(column.id, next)}
           />
         );
     }
@@ -212,7 +236,7 @@ export default function DetailsTab({
     <div className="p-6 space-y-6">
       {/* Description */}
       <div>
-        <label className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-2 block">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
           Description
         </label>
         <textarea
@@ -222,7 +246,7 @@ export default function DetailsTab({
           placeholder="Add a description..."
           disabled={isViewer}
           rows={4}
-          className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm text-[#323338] dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] disabled:opacity-60 disabled:cursor-not-allowed resize-none"
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed resize-none"
         />
       </div>
 
@@ -230,12 +254,12 @@ export default function DetailsTab({
       <div>
         <button
           onClick={() => setShowSubtasks(!showSubtasks)}
-          className="flex items-center gap-2 text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-2 hover:text-[#323338] dark:hover:text-slate-300"
+          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 hover:text-foreground"
         >
           {showSubtasks ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           Subtasks
           {totalSubtasks > 0 && (
-            <span className="text-[#0073EA] normal-case font-medium">
+            <span className="text-primary normal-case font-medium">
               {completedSubtasks}/{totalSubtasks}
             </span>
           )}
@@ -246,7 +270,7 @@ export default function DetailsTab({
             {totalSubtasks > 0 && (
               <div className="mb-2">
                 <Progress value={subtaskProgress} className="h-1.5" />
-                <p className="text-[10px] text-[#676879] mt-1">{subtaskProgress}% complete</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{subtaskProgress}% complete</p>
               </div>
             )}
 
@@ -256,7 +280,7 @@ export default function DetailsTab({
               return (
                 <div
                   key={subtask.id}
-                  className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[#F5F6F8] dark:hover:bg-slate-800 group"
+                  className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted group"
                 >
                   <button
                     onClick={() => {
@@ -274,13 +298,13 @@ export default function DetailsTab({
                     disabled={isViewer}
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                       isDone
-                        ? "bg-[#00C875] border-[#00C875] text-white"
-                        : "border-[#C4C4C4] dark:border-slate-600 hover:border-[#0073EA]"
+                        ? "bg-success border-success text-white"
+                        : "border-border hover:border-primary"
                     }`}
                   >
                     {isDone && <Check className="w-2.5 h-2.5" />}
                   </button>
-                  <span className={`text-sm ${isDone ? "text-[#676879] dark:text-slate-500 line-through" : "text-[#323338] dark:text-slate-200"}`}>
+                  <span className={`text-sm ${isDone ? "text-muted-foreground line-through" : "text-foreground dark:text-slate-200"}`}>
                     {subtask.title}
                   </span>
                 </div>
@@ -298,13 +322,13 @@ export default function DetailsTab({
                     }
                   }}
                   placeholder="Add subtask..."
-                  className="flex-1 rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA]"
+                  className="flex-1 rounded-lg border border-border bg-card dark:text-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
                 <Button
                   onClick={() => newSubtaskTitle.trim() && createSubtask.mutate(newSubtaskTitle.trim())}
                   disabled={!newSubtaskTitle.trim()}
                   size="sm"
-                  className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-8 px-3 text-xs"
+                  className="bg-primary hover:bg-primary/90 text-white rounded-lg h-8 px-3 text-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </Button>
@@ -316,13 +340,13 @@ export default function DetailsTab({
 
       {/* Fields */}
       <div>
-        <label className="text-xs font-semibold text-[#676879] dark:text-slate-500 uppercase tracking-wide mb-3 block">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
           Fields
         </label>
         <div className="space-y-3">
           {editableColumns.map((column) => (
             <div key={column.id}>
-              <label className="text-xs font-medium text-[#676879] dark:text-slate-500 mb-1 block">
+              <label htmlFor={`field-${column.id}`} className="text-xs font-medium text-muted-foreground mb-1 block">
                 {column.title}
               </label>
               {renderField(column)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -24,10 +24,43 @@ import {
   Clock,
   ChevronRight,
   Sparkles,
-  LayoutTemplate
+  LayoutTemplate,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/board/NotificationBell";
+import { openCommandPalette } from "@/components/CommandPalette";
+
+// Desktop collapse preference, persisted per browser.
+const COLLAPSED_KEY = "taskapp_sidebar_collapsed";
+const collapsedListeners = new Set();
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(value) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, String(value));
+  } catch {
+    // storage unavailable: the toggle still works for this page view
+  }
+  collapsedListeners.forEach((listener) => listener());
+}
+
+function subscribeCollapsed(listener) {
+  collapsedListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    collapsedListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -35,26 +68,16 @@ export default function Sidebar() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false); // New state for desktop collapse
+  const collapsedPreference = useSyncExternalStore(
+    subscribeCollapsed,
+    readCollapsed,
+    () => false
+  );
+  // The mobile drawer always shows the full sidebar.
+  const isCollapsed = collapsedPreference && !mobileMenuOpen;
   const [signingOut, setSigningOut] = useState(false);
 
-  // Load collapsed state from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("taskapp_sidebar_collapsed");
-      if (saved !== null) {
-        setIsCollapsed(saved === "true");
-      }
-    }
-  }, []);
-
-  const toggleCollapse = () => {
-    setIsCollapsed(prev => {
-      const newState = !prev;
-      localStorage.setItem("taskapp_sidebar_collapsed", String(newState));
-      return newState;
-    });
-  };
+  const toggleCollapse = () => writeCollapsed(!collapsedPreference);
 
   // Own key: the Boards page caches the full list under ["boards"], and a
   // shared key let this 5-item list overwrite it.
@@ -111,7 +134,7 @@ export default function Sidebar() {
   if (signingOut) {
     return (
       <div className="fixed inset-0 z-[100] backdrop-blur-md bg-white/50 dark:bg-slate-900/50 flex items-center justify-center transition-all duration-500">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl px-10 py-12 flex flex-col items-center gap-5 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 fade-in duration-300">
+        <div className="bg-card rounded-2xl shadow-2xl px-10 py-12 flex flex-col items-center gap-5 border border-border animate-in zoom-in-95 fade-in duration-300">
           <div className="relative">
             <svg className="w-14 h-14 animate-spin" viewBox="0 0 56 56" fill="none">
               <circle cx="28" cy="28" r="24" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="3" fill="none" />
@@ -122,8 +145,8 @@ export default function Sidebar() {
             </svg>
           </div>
           <div className="text-center">
-            <p className="text-slate-800 dark:text-slate-100 font-bold text-lg tracking-tight">Signing Out</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">See you next time!</p>
+            <p className="text-foreground font-bold text-lg tracking-tight">Signing Out</p>
+            <p className="text-muted-foreground text-sm mt-1">See you next time!</p>
           </div>
         </div>
       </div>
@@ -175,22 +198,32 @@ export default function Sidebar() {
   );
 
   const sidebarContent = (
-    <div className={`flex flex-col h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-r border-slate-200/70 dark:border-slate-800/70 flex-shrink-0 transition-all duration-300 ease-in-out shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${isCollapsed ? 'w-[80px]' : 'w-64'}`}>
+    <div className={`flex flex-col h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-r border-border flex-shrink-0 transition-all duration-300 ease-in-out shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)] ${isCollapsed ? 'w-[80px]' : 'w-64'}`}>
       {/* Header */}
-      <div className={`p-4 border-b border-slate-200/70 dark:border-slate-800/70 flex flex-col transition-all duration-300`}>
+      <div className={`p-4 border-b border-border flex flex-col transition-all duration-300`}>
         <div className={`flex mb-6 transition-all duration-300 ${isCollapsed ? 'flex-col-reverse items-center gap-5 w-full mt-2' : 'flex-row items-center justify-between px-1'}`}>
           <Link href="/" className={`flex items-center group overflow-hidden transition-all duration-300 ${isCollapsed ? 'justify-center' : 'gap-3'}`} onClick={() => setMobileMenuOpen(false)}>
             <div className="relative flex items-center justify-center w-8 h-8 bg-blue-600 rounded-xl transition-shadow flex-shrink-0">
               <Briefcase className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className={`font-bold text-slate-800 dark:text-slate-100 tracking-tight transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 overflow-hidden absolute' : 'text-xl w-auto opacity-100 relative'}`}>
+            <span className={`font-bold text-foreground tracking-tight transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 overflow-hidden absolute' : 'text-xl w-auto opacity-100 relative'}`}>
               Tuesday
             </span>
           </Link>
           
-          <Button variant="ghost" size="icon" className={`hidden md:flex flex-shrink-0 w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 ${isCollapsed ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' : ''}`} onClick={toggleCollapse}>
-            <Menu className="w-5 h-5" />
-          </Button>
+          <div className={`flex items-center ${isCollapsed ? 'flex-col gap-2' : 'gap-1'}`}>
+            <NotificationBell align="start" className="hidden md:flex" />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!isCollapsed}
+              className={`hidden md:flex flex-shrink-0 w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-300 ${isCollapsed ? 'bg-accent text-foreground' : ''}`}
+              onClick={toggleCollapse}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
         
         <Link href="/boards" onClick={() => setMobileMenuOpen(false)} className={`flex w-full transition-all duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
@@ -200,26 +233,45 @@ export default function Sidebar() {
             <span className={`relative z-10 whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 absolute overflow-hidden' : 'w-auto opacity-100 relative'}`}>Create Board</span>
           </Button>
         </Link>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMobileMenuOpen(false);
+            openCommandPalette();
+          }}
+          aria-label="Search (Ctrl+K)"
+          title={isCollapsed ? "Search (Ctrl+K)" : undefined}
+          className={`mt-3 flex items-center rounded-xl border border-border bg-muted/60 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground ${isCollapsed ? 'mx-auto h-9 w-9 justify-center' : 'h-9 w-full gap-2 px-3'}`}
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          {!isCollapsed && (
+            <>
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="rounded border border-border bg-card px-1.5 text-[10px] font-medium">Ctrl K</kbd>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-5 space-y-6 custom-scrollbar">
         <div>
-          <p className={`font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
+          <p className={`font-bold text-subtle-foreground uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
             <Sparkles className="w-3.5 h-3.5" /> Workspace
           </p>
           {renderNavItems(mainNavigation)}
         </div>
 
         <div>
-          <p className={`font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
+          <p className={`font-bold text-subtle-foreground uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
             <Folder className="w-3.5 h-3.5" /> Projects
           </p>
           {renderNavItems(projectsNavigation)}
         </div>
 
         <div>
-          <p className={`font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
+          <p className={`font-bold text-subtle-foreground uppercase tracking-widest mb-3 flex items-center gap-2 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0' : 'text-[11px] px-6 w-full opacity-100 h-auto'}`}>
             <Clock className="w-3.5 h-3.5" /> Recent
           </p>
           <div className="space-y-1 px-3">
@@ -236,10 +288,10 @@ export default function Sidebar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`group relative flex items-center px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-300 overflow-hidden ${
                     isCollapsed ? "justify-center w-11 h-11 mx-auto" : "justify-between"
-                  } text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200`}
+                  } text-muted-foreground hover:bg-slate-100/80 dark:hover:bg-slate-800/50 hover:text-foreground `}
                 >
                 <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center' : 'gap-3 truncate w-full'}`}>
-                  <div className="w-3 h-3 flex-shrink-0 rounded-full shadow-sm" style={{ backgroundColor: board.color || "#0073EA" }} />
+                  <div className="w-3 h-3 flex-shrink-0 rounded-full shadow-sm" style={{ backgroundColor: board.color || "#2563EB" }} />
                   <span className={`truncate transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 absolute' : 'w-auto opacity-100 relative'}`}>{board.title}</span>
                 </div>
                 <ChevronRight className={`w-4 h-4 flex-shrink-0 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ${isCollapsed ? 'hidden' : 'block'}`} />
@@ -247,16 +299,16 @@ export default function Sidebar() {
               );
             })}
             {boards.length === 0 && (
-              <p className={`py-2 text-xs text-slate-400 dark:text-slate-600 italic transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0 overflow-hidden' : 'px-6 w-auto opacity-100'}`}>No recent boards</p>
+              <p className={`py-2 text-xs text-subtle-foreground italic transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 h-0 m-0 overflow-hidden' : 'px-6 w-auto opacity-100'}`}>No recent boards</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className={`p-4 border-t border-slate-200/70 dark:border-slate-800/70 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col transition-all duration-300 ${isCollapsed ? 'items-center gap-6 py-6' : 'space-y-4'}`}>
+      <div className={`p-4 border-t border-border bg-slate-50/50 dark:bg-slate-900/30 flex flex-col transition-all duration-300 ${isCollapsed ? 'items-center gap-6 py-6' : 'space-y-4'}`}>
         <div className={`flex items-center transition-all duration-300 w-full ${isCollapsed ? 'justify-center' : 'justify-between px-2'}`}>
-          <span className={`text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 absolute overflow-hidden' : 'w-auto opacity-100 relative'}`}>Appearance</span>
+          <span className={`text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${isCollapsed ? 'w-0 opacity-0 absolute overflow-hidden' : 'w-auto opacity-100 relative'}`}>Appearance</span>
           <ThemeToggle />
         </div>
         
@@ -276,8 +328,8 @@ export default function Sidebar() {
                     <span className="text-white font-bold text-xs">{userInitial}</span>
                   </div>
                   <div className={`flex flex-col items-start min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 absolute' : 'flex-1 opacity-100 relative'}`}>
-                    <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200 w-full text-left">{userName}</span>
-                    <span className="truncate text-[11px] text-slate-500 dark:text-slate-400 w-full text-left">{userEmail}</span>
+                    <span className="truncate text-sm font-semibold text-foreground w-full text-left">{userName}</span>
+                    <span className="truncate text-[11px] text-muted-foreground w-full text-left">{userEmail}</span>
                   </div>
                 </div>
               </Button>
@@ -300,16 +352,22 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800/70 sticky top-0 z-40 shadow-sm">
+      <div className="md:hidden flex items-center justify-between p-4 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-border sticky top-0 z-40 shadow-sm">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <Briefcase className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-slate-800 dark:text-slate-100 text-xl tracking-tight">Tuesday</span>
+          <span className="font-bold text-foreground text-xl tracking-tight">Tuesday</span>
         </Link>
-        <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setMobileMenuOpen(true)}>
-          <Menu className="w-6 h-6" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Search" onClick={openCommandPalette}>
+            <Search className="w-5 h-5" />
+          </Button>
+          <NotificationBell />
+          <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Open menu" onClick={() => setMobileMenuOpen(true)}>
+            <Menu className="w-6 h-6" />
+          </Button>
+        </div>
       </div>
 
       {/* Mobile Drawer (Always expanded view) */}
@@ -317,10 +375,9 @@ export default function Sidebar() {
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative w-72 max-w-[80vw] h-full animate-in slide-in-from-left duration-300 ease-out shadow-2xl">
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 z-50 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-full" onClick={() => setMobileMenuOpen(false)}>
+            <Button variant="ghost" size="icon" aria-label="Close menu" className="absolute top-4 right-4 z-50 text-muted-foreground hover:bg-accent rounded-full" onClick={() => setMobileMenuOpen(false)}>
               <X className="w-5 h-5" />
             </Button>
-            {/* Note: In mobile, we could force isCollapsed to false, but since isCollapsed is only toggled by desktop button, it naturally stays false initially. However, if user collapsed it on desktop and resized, it would be collapsed on mobile. Let's fix that by either using a separate mobile sidebar or overriding classes. For simplicity, we just use the same sidebarContent but we can reset isCollapsed to false on mount if width is small, but a CSS override is harder. Since it's a responsive site, let's let it be for now. */}
             {sidebarContent}
           </div>
         </div>

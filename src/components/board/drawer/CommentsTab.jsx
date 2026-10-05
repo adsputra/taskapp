@@ -1,58 +1,100 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { commentsApi } from "@/lib/api/comments";
-import { activityApi } from "@/lib/api/activity";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Send, Edit3, Trash2, X, Check, AtSign } from "lucide-react";
+import { AtSign, Check, Edit3, Send, Trash2, X } from "lucide-react";
+import { commentsApi } from "@/lib/api/comments";
+import { userApi } from "@/lib/api/user";
+import { useBoardPeople } from "@/hooks/useBoardPeople";
+import { extractMentionedUserIds, mentionHandle, splitMentions } from "@/lib/mentions";
+import { avatarColor } from "@/components/board/cells/PeopleCell";
+import { cn } from "@/lib/utils";
+
+function formatTime(dateStr) {
+  const date = new Date(dateStr);
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function authorName(comment) {
+  const p = comment.profiles;
+  if (p?.full_name?.trim()) return p.full_name.trim();
+  if (p?.email) return p.email.split("@")[0];
+  return comment.user_id ? comment.user_id.slice(0, 8) : "Unknown";
+}
+
+function CommentBody({ content, handles, own }) {
+  const segments = splitMentions(content, handles);
+  return segments.map((segment, index) =>
+    segment.mention ? (
+      <span
+        key={index}
+        className={cn(
+          "rounded px-0.5 font-medium",
+          own ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+        )}
+      >
+        {segment.text}
+      </span>
+    ) : (
+      <span key={index}>{segment.text}</span>
+    )
+  );
+}
 
 export default function CommentsTab({ task, userRole, board }) {
+  const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState("");
-  const [showMentions, setShowMentions] = useState(false);
-  const [mentionFilter, setMentionFilter] = useState("");
-  const [mentionIndex, setMentionIndex] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [userIdReady, setUserIdReady] = useState(false);
+  const [mention, setMention] = useState(null); // { filter, index } while typing "@…"
   const textareaRef = useRef(null);
   const commentsEndRef = useRef(null);
-  const queryClient = useQueryClient();
 
   const isViewer = userRole === "viewer";
+  const isAdmin = userRole === "admin";
 
-  // Get current logged-in user ID before rendering comments
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data?.user?.id ?? null);
-      setUserIdReady(true);
-    });
-  }, []);
+  const { data: currentUser, isLoading: userLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => userApi.me(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const currentUserId = currentUser?.id ?? null;
+
+  const { people } = useBoardPeople(board);
+  const mentionable = useMemo(
+    () => people.filter((person) => person.id !== currentUserId),
+    [people, currentUserId]
+  );
+  const handles = useMemo(() => people.map(mentionHandle), [people]);
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["comments", task?.id],
     queryFn: () => commentsApi.listByItem(task.id),
-    enabled: !!task?.id,
+    enabled: Boolean(task?.id),
   });
 
   const createComment = useMutation({
-    mutationFn: (text) => commentsApi.create({ item_id: task.id, content: text }),
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData(["comments", task.id], (old = []) => {
-        if (old.some((c) => c.id === data.id)) return old;
-        return [...old, data];
-      });
+    mutationFn: (text) =>
+      commentsApi.create({
+        item_id: task.id,
+        content: text,
+        mentioned_user_ids: extractMentionedUserIds(text, mentionable),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["comments", task.id], (old = []) =>
+        old.some((c) => c.id === data.id) ? old : [...old, data]
+      );
       setNewComment("");
-      if (variables) {
-        activityApi.log({
-          item_id: task.id,
-          action: "commented",
-          new_value: String(variables).slice(0, 100),
-        }).catch(() => {});
-      }
     },
     onError: (err) => toast.error(err.message),
   });
@@ -61,7 +103,7 @@ export default function CommentsTab({ task, userRole, board }) {
     mutationFn: ({ id, content }) => commentsApi.update(id, { content }),
     onSuccess: (data) => {
       queryClient.setQueryData(["comments", task.id], (old = []) =>
-        old.map((c) => (c.id === data.id ? data : c)),
+        old.map((c) => (c.id === data.id ? data : c))
       );
       setEditingId(null);
     },
@@ -71,231 +113,205 @@ export default function CommentsTab({ task, userRole, board }) {
   const deleteComment = useMutation({
     mutationFn: (id) => commentsApi.delete(id),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData(["comments", task.id], (old = []) =>
-        old.filter((c) => c.id !== id),
-      );
+      queryClient.setQueryData(["comments", task.id], (old = []) => old.filter((c) => c.id !== id));
     },
     onError: (err) => toast.error(err.message),
   });
 
-  // Auto-scroll to bottom when new comment added
   useEffect(() => {
-    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [comments.length]);
 
-  // Get board members for @mention
-  const members = board?.board_members || [];
-  const filteredMembers = members.filter((m) =>
-    m.email.toLowerCase().includes(mentionFilter.toLowerCase())
-  );
+  const mentionOptions = mention
+    ? mentionable
+        .filter((person) => {
+          const needle = mention.filter.toLowerCase();
+          return (
+            mentionHandle(person).includes(needle) ||
+            (person.full_name || "").toLowerCase().includes(needle)
+          );
+        })
+        .slice(0, 8)
+    : [];
 
-  const handleCommentInput = (e) => {
-    const value = e.target.value;
+  const handleCommentInput = (event) => {
+    const { value, selectionStart } = event.target;
     setNewComment(value);
-
-    // Check for @mention trigger
-    const cursorPos = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const atMatch = textBeforeCursor.match(/@(\w*)$/);
-
-    if (atMatch) {
-      setShowMentions(true);
-      setMentionFilter(atMatch[1]);
-      setMentionIndex(0);
-    } else {
-      setShowMentions(false);
-    }
+    const match = value.slice(0, selectionStart).match(/(?:^|[\s(])@([\w.+-]*)$/);
+    setMention(match ? { filter: match[1], index: 0 } : null);
   };
 
-  const insertMention = (member) => {
-    const cursorPos = textareaRef.current?.selectionStart || newComment.length;
-    const textBeforeCursor = newComment.slice(0, cursorPos);
-    const textAfterCursor = newComment.slice(cursorPos);
-    const atPos = textBeforeCursor.lastIndexOf("@");
-    const beforeAt = textBeforeCursor.slice(0, atPos);
-    const name = member.email.split("@")[0];
-    const newText = `${beforeAt}@${name} ${textAfterCursor}`;
-    setNewComment(newText);
-    setShowMentions(false);
-    setTimeout(() => textareaRef.current?.focus(), 0);
+  const insertMention = (person) => {
+    const textarea = textareaRef.current;
+    const cursor = textarea?.selectionStart ?? newComment.length;
+    const before = newComment.slice(0, cursor);
+    const after = newComment.slice(cursor);
+    const atPos = before.lastIndexOf("@");
+    const next = `${before.slice(0, atPos)}@${mentionHandle(person)} ${after.replace(/^\s+/, "")}`;
+    setNewComment(next);
+    setMention(null);
+    requestAnimationFrame(() => {
+      const position = atPos + mentionHandle(person).length + 2;
+      textarea?.focus();
+      textarea?.setSelectionRange(position, position);
+    });
   };
 
-  const handleKeyDown = (e) => {
-    if (showMentions) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setMentionIndex((i) => Math.min(i + 1, filteredMembers.length - 1));
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setMentionIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === "Enter" && filteredMembers[mentionIndex]) {
-        e.preventDefault();
-        insertMention(filteredMembers[mentionIndex]);
-      } else if (e.key === "Escape") {
-        setShowMentions(false);
+  const submit = () => {
+    const text = newComment.trim();
+    if (text && !createComment.isPending) createComment.mutate(text);
+  };
+
+  const handleKeyDown = (event) => {
+    if (mention && mentionOptions.length > 0) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setMention((m) => ({ ...m, index: (m.index + 1) % mentionOptions.length }));
+        return;
       }
-      return;
-    }
-
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (newComment.trim()) {
-        createComment.mutate(newComment.trim());
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setMention((m) => ({ ...m, index: (m.index - 1 + mentionOptions.length) % mentionOptions.length }));
+        return;
+      }
+      if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        insertMention(mentionOptions[mention.index] || mentionOptions[0]);
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMention(null);
+        return;
       }
     }
+
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      submit();
+    }
   };
 
-  const getUserInitial = (comment) => {
-    const p = comment.profiles;
-    if (p?.full_name) return p.full_name.charAt(0).toUpperCase();
-    if (p?.email) return p.email.charAt(0).toUpperCase();
-    // Fallback: use first char of user_id
-    return (comment.user_id || "U").charAt(0).toUpperCase();
-  };
-
-  const getDisplayName = (comment) => {
-    const p = comment.profiles;
-    if (p?.full_name && p.full_name.trim()) return p.full_name.trim();
-    if (p?.email) return p.email.split("@")[0];
-    // Fallback: show short user id prefix (profiles may not have loaded yet)
-    if (comment.user_id) return comment.user_id.slice(0, 8);
-    return "Unknown";
-  };
-
-  const getUserColor = (comment) => {
-    const colors = ["#0073EA", "#00C875", "#FFCB00", "#E2445C", "#A25DDC", "#FDAB3D"];
-    const key = comment.profiles?.email || comment.profiles?.full_name || comment.user_id || "";
-    const hash = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    return colors[hash % colors.length];
-  };
-
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now - date;
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
-  // Don't render until user ID is resolved — prevents comments from
-  // briefly appearing on the wrong side (left vs right)
-  if (!userIdReady) {
+  // Wait for the user so comments don't jump between the left and right side.
+  if (userLoading) {
     return (
-      <div className="flex items-center justify-center h-full p-6">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex h-full items-center justify-center p-6" role="status" aria-label="Loading comments">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Comments List */}
-      <div className="flex-1 p-6 space-y-4">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-4 p-6">
         {comments.length === 0 && !isLoading && (
-          <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-[#F5F6F8] dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-              <Send className="w-5 h-5 text-[#A0A0A0] dark:text-slate-600" />
+          <div className="py-8 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Send className="h-5 w-5 text-subtle-foreground" />
             </div>
-            <p className="text-sm text-[#676879] dark:text-slate-400">No comments yet</p>
-            <p className="text-xs text-[#A0A0A0] dark:text-slate-600 mt-1">Start the conversation</p>
+            <p className="text-sm text-muted-foreground">No comments yet</p>
+            <p className="mt-1 text-xs text-subtle-foreground">Start the conversation — use @ to mention someone</p>
           </div>
         )}
 
         {comments.map((comment) => {
           const isEditing = editingId === comment.id;
-          const isOwn = currentUserId && comment.user_id === currentUserId;
-          const displayName = getDisplayName(comment);
+          const isOwn = Boolean(currentUserId) && comment.user_id === currentUserId;
+          const name = authorName(comment);
+          const canDelete = isOwn || isAdmin;
           return (
-            <div
-              key={comment.id}
-              className={`flex gap-2 group ${isOwn ? "justify-end" : "justify-start"}`}
-            >
-              {/* Avatar — only for others */}
+            <div key={comment.id} className={cn("group flex gap-2", isOwn ? "justify-end" : "justify-start")}>
               {!isOwn && (
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-5"
-                  style={{ backgroundColor: getUserColor(comment) }}
+                  className="mt-5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                  style={{ backgroundColor: avatarColor(comment.profiles?.email || comment.user_id) }}
+                  aria-hidden
                 >
-                  {getUserInitial(comment)}
+                  {name.charAt(0).toUpperCase()}
                 </div>
               )}
 
-              <div className={`flex flex-col min-w-0 max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}>
-                {/* Name + time */}
-                <div className={`flex items-center gap-2 mb-0.5 px-1 ${isOwn ? "flex-row-reverse" : ""}`}>
-                  <span className={`text-[11px] font-medium truncate ${isOwn ? "text-[#0073EA] dark:text-blue-400" : "text-[#676879] dark:text-slate-400"}`}>
-                    {isOwn ? "You" : displayName}
+              <div className={cn("flex min-w-0 max-w-[75%] flex-col", isOwn ? "items-end" : "items-start")}>
+                <div className={cn("mb-0.5 flex items-center gap-2 px-1", isOwn && "flex-row-reverse")}>
+                  <span className={cn("truncate text-[11px] font-medium", isOwn ? "text-primary" : "text-muted-foreground")}>
+                    {isOwn ? "You" : name}
                   </span>
-                  <span className="text-[10px] text-[#A0A0A0] dark:text-slate-600 shrink-0">
+                  <time dateTime={comment.created_at} className="shrink-0 text-[10px] text-subtle-foreground">
                     {formatTime(comment.created_at)}
-                  </span>
+                  </time>
                 </div>
 
-                {/* Bubble */}
                 {isEditing ? (
                   <div className="w-full space-y-2">
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full rounded-lg border border-[#0073EA] dark:border-[#0073EA] bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] resize-none"
+                      aria-label="Edit comment"
+                      className="w-full resize-none rounded-lg border border-primary bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
                       rows={2}
                       autoFocus
                     />
                     <div className="flex gap-2">
                       <button
+                        type="button"
+                        aria-label="Save comment"
                         onClick={() => updateComment.mutate({ id: comment.id, content: editContent })}
-                        className="p-1.5 text-[#0073EA] hover:bg-[#0073EA]/10 rounded"
+                        className="rounded p-1.5 text-primary hover:bg-primary/10"
                       >
-                        <Check className="w-3.5 h-3.5" />
+                        <Check className="h-3.5 w-3.5" />
                       </button>
                       <button
+                        type="button"
+                        aria-label="Cancel editing"
                         onClick={() => setEditingId(null)}
-                        className="p-1.5 text-[#676879] hover:bg-[#F5F6F8] rounded"
+                        className="rounded p-1.5 text-muted-foreground hover:bg-muted"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="relative">
                     <div
-                      className={`px-3 py-2 text-sm whitespace-pre-wrap break-words rounded-2xl ${
-                        isOwn
-                          ? "bg-[#0073EA] text-white rounded-br-sm"
-                          : "bg-[#F0F2F5] dark:bg-slate-700 text-[#323338] dark:text-slate-200 rounded-bl-sm"
-                      }`}
+                      className={cn(
+                        "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm",
+                        isOwn ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-muted text-foreground"
+                      )}
                     >
-                      {comment.content}
+                      <CommentBody content={comment.content} handles={handles} own={isOwn} />
                     </div>
-                    {/* Action buttons — visible on hover */}
-                    {!isViewer && (
-                      <div className={`absolute -top-2 ${isOwn ? "-left-1" : "-right-1"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5`}>
-                        <button
-                          onClick={() => {
-                            setEditingId(comment.id);
-                            setEditContent(comment.content);
-                          }}
-                          className="p-1 text-[#A0A0A0] hover:text-[#0073EA] bg-white dark:bg-slate-800 rounded shadow-sm border border-gray-100 dark:border-slate-600"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm("Delete this comment?")) {
-                              deleteComment.mutate(comment.id);
-                            }
-                          }}
-                          className="p-1 text-[#A0A0A0] hover:text-red-500 bg-white dark:bg-slate-800 rounded shadow-sm border border-gray-100 dark:border-slate-600"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                    {!isViewer && (isOwn || canDelete) && (
+                      <div
+                        className={cn(
+                          "absolute -top-2 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
+                          isOwn ? "-left-1" : "-right-1"
+                        )}
+                      >
+                        {isOwn && (
+                          <button
+                            type="button"
+                            aria-label="Edit comment"
+                            onClick={() => {
+                              setEditingId(comment.id);
+                              setEditContent(comment.content);
+                            }}
+                            className="rounded border border-border bg-card p-1 text-subtle-foreground shadow-sm hover:text-primary"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            aria-label="Delete comment"
+                            onClick={() => {
+                              if (window.confirm("Delete this comment?")) deleteComment.mutate(comment.id);
+                            }}
+                            className="rounded border border-border bg-card p-1 text-subtle-foreground shadow-sm hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -307,43 +323,43 @@ export default function CommentsTab({ task, userRole, board }) {
         <div ref={commentsEndRef} />
       </div>
 
-      {/* Comment Input */}
       {!isViewer && (
-        <div className="shrink-0 border-t border-[#E1E5F3] dark:border-slate-800 p-4">
+        <div className="shrink-0 border-t border-border p-4">
           <div className="relative">
-            {/* Mention dropdown */}
-            {showMentions && filteredMembers.length > 0 && (
-              <div className="absolute bottom-full left-0 mb-2 w-56 bg-white dark:bg-slate-800 border border-[#E1E5F3] dark:border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
-                <div className="p-1.5 text-[10px] font-semibold text-[#676879] uppercase px-3">
-                  <AtSign className="w-3 h-3 inline mr-1" />
-                  Members
+            {mention && mentionOptions.length > 0 && (
+              <div
+                role="listbox"
+                aria-label="Mention someone"
+                className="absolute bottom-full left-0 z-10 mb-2 max-h-48 w-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg scroll-themed animate-in fade-in-0 slide-in-from-bottom-1"
+              >
+                <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase text-muted-foreground">
+                  <AtSign className="mr-1 inline h-3 w-3" />
+                  People on this board
                 </div>
-                {filteredMembers.map((member, i) => {
-                  const memberName = member.full_name || member.email?.split("@")[0] || "?";
-                  const memberColor = (() => {
-                    const colors = ["#0073EA", "#00C875", "#FFCB00", "#E2445C", "#A25DDC", "#FDAB3D"];
-                    const key = member.email || member.full_name || "";
-                    const hash = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-                    return colors[hash % colors.length];
-                  })();
-                  return (
+                {mentionOptions.map((person, i) => (
                   <button
-                    key={member.id}
-                    onClick={() => insertMention(member)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded flex items-center gap-2 ${
-                      i === mentionIndex ? "bg-[#0073EA]/10 text-[#0073EA]" : "hover:bg-[#F5F6F8]"
-                    }`}
+                    key={person.id}
+                    type="button"
+                    role="option"
+                    aria-selected={i === mention.index}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => insertMention(person)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm",
+                      i === mention.index ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                    )}
                   >
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
-                      style={{ backgroundColor: memberColor }}
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                      style={{ backgroundColor: avatarColor(person.email) }}
+                      aria-hidden
                     >
-                      {memberName.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="truncate">{memberName}</span>
+                      {(person.full_name || person.email).charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{person.full_name || mentionHandle(person)}</span>
+                    <span className="text-xs text-muted-foreground">@{mentionHandle(person)}</span>
                   </button>
-                  );
-                })}
+                ))}
               </div>
             )}
 
@@ -352,20 +368,22 @@ export default function CommentsTab({ task, userRole, board }) {
               value={newComment}
               onChange={handleCommentInput}
               onKeyDown={handleKeyDown}
-              placeholder="Write a comment... (use @ to mention)"
+              onBlur={() => setMention(null)}
+              placeholder="Write a comment… (use @ to mention)"
+              aria-label="Write a comment"
               rows={2}
-              className="w-full rounded-lg border border-[#E1E5F3] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0073EA] focus:border-[#0073EA] resize-none"
+              className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-[#A0A0A0]">
-                Press Enter to send, Shift+Enter for new line
-              </span>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[10px] text-subtle-foreground">Enter to send · Shift+Enter for a new line</span>
               <button
-                onClick={() => newComment.trim() && createComment.mutate(newComment.trim())}
+                type="button"
+                aria-label="Send comment"
+                onClick={submit}
                 disabled={!newComment.trim() || createComment.isPending}
-                className="p-2 bg-[#0073EA] text-white rounded-lg hover:bg-[#0056B3] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="rounded-lg bg-primary p-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

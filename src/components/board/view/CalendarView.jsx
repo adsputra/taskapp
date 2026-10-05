@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,7 +11,7 @@ const CalendarEvent = ({ item, board, onSelect }) => {
   
   return (
     <div 
-      className="p-1.5 mb-1 bg-white dark:bg-slate-700 rounded-md shadow-sm border border-[#E1E5F3] dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
+      className="p-1.5 mb-1 bg-card rounded-md shadow-sm border border-border hover:bg-muted cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
       title={item.title}
       onClick={(e) => {
         e.stopPropagation();
@@ -25,7 +25,7 @@ const CalendarEvent = ({ item, board, onSelect }) => {
             style={{ backgroundColor: priorityOption.color || '#ccc' }}
           />
         )}
-        <p className="text-xs font-medium text-[#323338] dark:text-slate-200 truncate">{item.title}</p>
+        <p className="text-xs font-medium text-foreground truncate">{item.title}</p>
       </div>
     </div>
   );
@@ -33,21 +33,8 @@ const CalendarEvent = ({ item, board, onSelect }) => {
 
 export default function CalendarView({ board, items, onUpdateItem, onDeleteItem, onSelectTask }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [dateColumnId, setDateColumnId] = useState(null);
-
-  useEffect(() => {
-    // Try to find a 'date' type column to use for events
-    const dateCol = board?.columns?.find(col => col.type === 'date');
-    if (dateCol) {
-      setDateColumnId(dateCol.id);
-    } else {
-      // If no 'date' column, try to find 'due_date' (common default)
-      const dueDateCol = board?.columns?.find(col => col.id === 'due_date');
-      if (dueDateCol && dueDateCol.type === 'date') {
-         setDateColumnId(dueDateCol.id);
-      }
-    }
-  }, [board]);
+  // First date column drives the calendar.
+  const dateColumnId = board?.columns?.find((col) => col.type === 'date')?.id ?? null;
 
   const handleSelectTask = (task) => {
     if (onSelectTask) onSelectTask(task);
@@ -59,7 +46,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem,
         <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h2 className="text-xl font-semibold text-[#323338] dark:text-slate-100">
+        <h2 className="text-xl font-semibold text-foreground">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
         <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
@@ -72,7 +59,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem,
   const renderDays = () => {
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return (
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-[#676879] dark:text-slate-400 mb-2">
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-muted-foreground mb-2">
         {daysOfWeek.map(day => <div key={day} className="py-2 border-b dark:border-slate-700">{day}</div>)}
       </div>
     );
@@ -92,12 +79,12 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem,
         {days.map(day => (
           <div
             key={day.toString()}
-            className={`p-2 border border-[#E1E5F3] dark:border-slate-700 min-h-[100px] relative transition-colors hover:bg-[#F9FAFB] dark:hover:bg-slate-800
-              ${!isSameMonth(day, monthStart) ? 'bg-[#F9FAFB] dark:bg-slate-900 text-gray-400 dark:text-slate-600' : 'bg-white dark:bg-slate-800'}
-              ${isSameDay(day, today) ? 'ring-2 ring-[#0073EA] ring-inset' : ''}
+            className={`p-2 border border-border min-h-[100px] relative transition-colors hover:bg-muted 
+              ${!isSameMonth(day, monthStart) ? 'bg-muted text-subtle-foreground dark:text-slate-600' : 'bg-card dark:bg-slate-800'}
+              ${isSameDay(day, today) ? 'ring-2 ring-primary ring-inset' : ''}
             `}
           >
-            <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-[#0073EA] dark:text-blue-400' : 'text-gray-700 dark:text-slate-300'}`}>
+            <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-primary dark:text-blue-400' : 'text-foreground dark:text-slate-300'}`}>
               {format(day, 'd')}
             </span>
             <div className="mt-1 space-y-1 overflow-y-auto max-h-[70px]">
@@ -118,14 +105,14 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem,
     );
   };
 
-  if (!board) return <div className="p-4 text-center text-gray-500">Board data not available.</div>;
+  if (!board) return <div className="p-4 text-center text-muted-foreground">Board data not available.</div>;
   
   if (!dateColumnId) {
-    return <div className="p-8 text-center text-gray-500">No suitable date column found for Calendar view. Please add a 'Date' type column to your board.</div>;
+    return <div className="p-8 text-center text-muted-foreground">No suitable date column found for Calendar view. Please add a &ldquo;Date&rdquo; type column to your board.</div>;
   }
 
   return (
-    <Card className="shadow-lg border-[#E1E5F3] dark:border-slate-700 dark:bg-slate-900">
+    <Card className="shadow-lg border-border dark:bg-slate-900">
       <CardContent className="p-4">
         {renderHeader()}
         {renderDays()}

@@ -15,12 +15,12 @@ export default function SortMenu({
   ) || [];
 
   return (
-    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-[#E1E5F3] z-50 p-3">
+    <div className="absolute top-full left-0 mt-1 w-56 bg-card rounded-xl shadow-xl border border-border z-50 p-3">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-[#323338] text-sm">Sort by</h4>
+        <h4 className="font-semibold text-foreground text-sm">Sort by</h4>
         <button
           onClick={onClose}
-          className="text-[#A0A0A0] hover:text-[#323338]"
+          className="text-subtle-foreground hover:text-foreground"
         >
           <X className="w-4 h-4" />
         </button>
@@ -38,8 +38,8 @@ export default function SortMenu({
               }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? "bg-[#0073EA]/10 text-[#0073EA] font-medium"
-                  : "text-[#323338] hover:bg-[#F5F6F8]"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-foreground hover:bg-muted"
               }`}
             >
               <span>{col.title}</span>

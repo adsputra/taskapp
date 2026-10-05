@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, CalendarDays, MoreHorizontal, Users, List, Sparkles } from "lucide-react";
@@ -100,7 +100,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`relative p-4 mb-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-l-4 hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer ${snapshot.isDragging ? 'shadow-2xl ring-4 ring-blue-500/30 scale-105' : ''}`}
+          className={`relative p-4 mb-4 bg-card rounded-2xl shadow-lg border-l-4 hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer ${snapshot.isDragging ? 'shadow-2xl ring-4 ring-blue-500/30 scale-105' : ''}`}
           style={{ 
             borderLeftColor: getCardAccentColor(),
             ...provided.draggableProps.style
@@ -122,11 +122,11 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           )}
 
           <div className="flex justify-between items-start mb-3">
-            <h4 className="font-bold text-lg text-gray-800 dark:text-slate-100 leading-tight pr-2">{item.title}</h4>
+            <h4 className="font-bold text-lg text-foreground leading-tight pr-2">{item.title}</h4>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-8 w-8 text-subtle-foreground hover:text-muted-foreground hover:bg-muted rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(item);
@@ -166,7 +166,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
           </div>
           
           {/* Footer */}
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mt-4 pt-3 border-t border-gray-100 dark:border-slate-700">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-4 pt-3 border-t border-border">
             <div className="flex items-center gap-3">
               {dueDateValue && (
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-full">
@@ -193,7 +193,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
 };
 
 export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, onReorderItems, onSelectTask }) {
-  const [groupBy, setGroupBy] = useState('status');
+  const [groupByChoice, setGroupBy] = useState('status');
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -204,27 +204,26 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   const canGroupByStatus = statusColumnsDef.length > 0;
   const canGroupByPeople = peopleColumnsDef.length > 0;
 
-  // Derive effective groupBy — fallback when chosen grouping isn't available
-  useEffect(() => {
-    if (groupBy === 'status' && !canGroupByStatus && canGroupByPeople) {
-      setGroupBy('people');
-    } else if (groupBy === 'people' && !canGroupByPeople && canGroupByStatus) {
-      setGroupBy('status');
-    }
-  }, [groupBy, canGroupByStatus, canGroupByPeople]);
+  // Fall back when the chosen grouping isn't available on this board.
+  const groupBy =
+    groupByChoice === 'status' && !canGroupByStatus && canGroupByPeople
+      ? 'people'
+      : groupByChoice === 'people' && !canGroupByPeople && canGroupByStatus
+        ? 'status'
+        : groupByChoice;
 
   if (!board) return (
-    <div className="p-8 text-center text-gray-500">
+    <div className="p-8 text-center text-muted-foreground">
       <div className="animate-pulse">Board data not available.</div>
     </div>
   );
 
   if (!canGroupByStatus && !canGroupByPeople) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-muted-foreground">
         <div className="max-w-md mx-auto">
           <h3 className="text-xl font-semibold mb-2">Kanban view requires grouping columns</h3>
-          <p>Please add either a 'Status' or 'People' type column to enable Kanban view.</p>
+          <p>Please add either a &ldquo;Status&rdquo; or &ldquo;People&rdquo; type column to enable Kanban view.</p>
         </div>
       </div>
     );
@@ -234,7 +233,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
     ? statusColumnsDef[0] 
     : peopleColumnsDef[0];
 
-  if (!activeColumnDefinition) return <div className="p-4 text-center text-gray-500">No suitable column definition found for grouping.</div>;
+  if (!activeColumnDefinition) return <div className="p-4 text-center text-muted-foreground">No suitable column definition found for grouping.</div>;
 
   let columnsData = [];
 
@@ -398,21 +397,21 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   return (
     <div className="h-full">
       {/* Header with grouping selector */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-4 bg-card rounded-2xl border border-border shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center">
             <MoreHorizontal className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100">Kanban Board</h2>
-            <p className="text-sm text-gray-600 dark:text-slate-400">Drag and drop to manage your tasks</p>
+            <h2 className="text-xl font-bold text-foreground">Kanban Board</h2>
+            <p className="text-sm text-muted-foreground">Drag and drop to manage your tasks</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Group by:</span>
+          <span className="text-sm font-medium text-foreground">Group by:</span>
           <Select value={groupBy} onValueChange={setGroupBy}>
-            <SelectTrigger className="w-32 bg-white dark:bg-slate-700 border-2 border-gray-200 dark:border-slate-600 rounded-xl dark:text-slate-200">
+            <SelectTrigger className="w-32 bg-card border-2 border-border rounded-xl dark:text-slate-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -446,7 +445,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex-1 basis-0 min-w-[272px] max-w-[420px] rounded-2xl p-2 transition-all duration-300 bg-white dark:bg-slate-800/50 ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
+                  className={`flex-1 basis-0 min-w-[272px] max-w-[420px] rounded-2xl p-2 transition-all duration-300 bg-card ${snapshot.isDraggingOver ? 'shadow-2xl scale-105' : 'shadow-lg'}`}
                   style={{ 
                     background: snapshot.isDraggingOver 
                       ? `linear-gradient(135deg, ${column.color}20 0%, ${column.color}10 100%)`
@@ -457,10 +456,10 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                   <div className="px-4 py-3 mb-2">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">
+                        <h3 className="font-bold text-lg text-foreground">
                           {column.title}
                           {column.id === 'people-unassigned' && (
-                            <span className="text-sm font-normal text-gray-500 dark:text-slate-400 ml-1">(No one assigned)</span>
+                            <span className="text-sm font-normal text-muted-foreground ml-1">(No one assigned)</span>
                           )}
                         </h3>
                         <span 
@@ -500,7 +499,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
                           <p className="text-sm font-medium" style={{ color: column.color }}>
                             {column.id === 'people-unassigned' ? 'Drag unassigned tasks here' : 'Drag tasks here'}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">or click + to add new</p>
+                          <p className="text-xs text-muted-foreground mt-1">or click + to add new</p>
                         </div>
                       </div>
                     )}
@@ -525,6 +524,7 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
 
       {/* Task Edit Modal */}
       <TaskEditModal
+        key={editingTask?.id ?? "none"}
         isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
@@ -536,35 +536,6 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
         onDelete={handleDeleteTask}
       />
 
-      {/* Custom Scrollbar Styles */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
-          border-radius: 10px;
-          border: 1px solid #e2e8f0;
-        }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(135deg, #475569 0%, #334155 100%);
-          border: 1px solid #334155;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-        }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-        }
-        .group:hover .group-hover\\:opacity-100 {
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 }

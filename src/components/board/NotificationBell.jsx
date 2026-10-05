@@ -1,188 +1,182 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationsApi } from "@/lib/api/notifications";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
 import {
+  AlarmClock,
+  ArrowRightLeft,
+  AtSign,
   Bell,
   CheckCheck,
+  CheckCircle2,
   MessageSquare,
-  UserPlus,
-  AtSign,
-  Target,
-  ArrowRightLeft,
-  Trash2,
   Share2,
+  UserPlus,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { notificationsApi } from "@/lib/api/notifications";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
+// Types written by the database triggers (supabase/schema.sql §9b).
 const TYPE_CONFIG = {
-  assigned: { icon: UserPlus, color: "#6C5CE7", label: "Assigned" },
-  comment: { icon: MessageSquare, color: "#0073EA", label: "Comment" },
-  mention: { icon: AtSign, color: "#FFCB00", label: "Mention" },
-  sprint_start: { icon: Target, color: "#00C875", label: "Sprint Started" },
-  sprint_complete: { icon: Target, color: "#0073EA", label: "Sprint Complete" },
-  status_change: { icon: ArrowRightLeft, color: "#FFCB00", label: "Status Changed" },
-  share_accepted: { icon: Share2, color: "#00C875", label: "Board Shared" },
+  assigned: { icon: UserPlus, tone: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+  comment: { icon: MessageSquare, tone: "bg-primary/10 text-primary" },
+  mention: { icon: AtSign, tone: "bg-warning/15 text-warning" },
+  status_changed: { icon: ArrowRightLeft, tone: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
+  task_done: { icon: CheckCircle2, tone: "bg-success/10 text-success" },
+  due_soon: { icon: AlarmClock, tone: "bg-destructive/10 text-destructive" },
+  invite_accepted: { icon: Share2, tone: "bg-success/10 text-success" },
+  share_accepted: { icon: Share2, tone: "bg-success/10 text-success" },
 };
+const DEFAULT_CONFIG = { icon: Bell, tone: "bg-muted text-muted-foreground" };
 
-const DEFAULT_CONFIG = { icon: Bell, color: "#676879", label: "Notification" };
+function notificationHref(notification) {
+  if (!notification.board_id) return null;
+  const base = `/boards/${notification.board_id}`;
+  return notification.item_id ? `${base}?task=${notification.item_id}` : base;
+}
 
-export default function NotificationBell({ onSelectTask, boardId }) {
+export default function NotificationBell({ className, align = "end" }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const bellRef = useRef(null);
+  const [open, setOpen] = useState(false);
 
-  // Fetch notifications
+  // Realtime (RealtimeSync) refreshes this on every new row; the slow
+  // poll only covers a dropped socket.
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => notificationsApi.list({ limit: 30 }),
-    refetchInterval: 30000, // poll every 30s
+    refetchInterval: 120000,
   });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Close on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target) &&
-        bellRef.current &&
-        !bellRef.current.contains(e.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isOpen]);
-
-  // Mutations
   const markRead = useMutation({
     mutationFn: (id) => notificationsApi.markRead(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: (id) =>
+      queryClient.setQueryData(["notifications"], (old = []) =>
+        old.map((n) => (n.id === id ? { ...n, read: true } : n))
+      ),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllRead = useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: () =>
+      queryClient.setQueryData(["notifications"], (old = []) => old.map((n) => ({ ...n, read: true }))),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
-  const handleNotificationClick = (notification) => {
-    // Mark as read
-    if (!notification.read) {
-      markRead.mutate(notification.id);
-    }
-
-    // Close dropdown
-    setIsOpen(false);
+  const handleSelect = (notification) => {
+    if (!notification.read) markRead.mutate(notification.id);
+    setOpen(false);
+    const href = notificationHref(notification);
+    if (href) router.push(href);
   };
 
   return (
-    <div className="relative">
-      {/* Bell Button */}
-      <button
-        ref={bellRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-[#E1E5F3] transition-colors"
-      >
-        <Bell className="w-5 h-5 text-[#676879]" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#E2445C] text-white text-xs font-bold rounded-full flex items-center justify-center">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {/* Dropdown */}
-      {isOpen && (
-        <div
-          ref={dropdownRef}
-          className="absolute right-0 top-full mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-[#E1E5F3] z-50 overflow-hidden"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+          className={cn(
+            "relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+            className
+          )}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E1E5F3]">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-[#323338]">Notifications</h3>
-              {unreadCount > 0 && (
-                <Badge className="bg-[#0073EA] text-white text-xs rounded-full px-2 py-0.5">
-                  {unreadCount}
-                </Badge>
-              )}
-            </div>
-            {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg"
-                onClick={() => markAllRead.mutate()}
-              >
-                <CheckCheck className="w-3.5 h-3.5 mr-1" />
-                Mark all read
-              </Button>
-            )}
-          </div>
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-background">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
 
-          {/* Notification List */}
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="text-center py-8">
-                <Bell className="w-10 h-10 text-[#E1E5F3] mx-auto mb-2" />
-                <p className="text-sm text-[#676879]">No notifications yet</p>
-              </div>
-            ) : (
-              notifications.map((notification) => {
+      <PopoverContent
+        align={align}
+        sideOffset={8}
+        className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl p-0 shadow-xl"
+      >
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h3 className="text-sm font-semibold text-foreground">
+            Notifications
+            {unreadCount > 0 && (
+              <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
+          </h3>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 rounded-lg text-xs text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => markAllRead.mutate()}
+            >
+              <CheckCheck className="mr-1 h-3.5 w-3.5" />
+              Mark all read
+            </Button>
+          )}
+        </div>
+
+        <div className="max-h-[min(24rem,60vh)] overflow-y-auto scroll-themed">
+          {notifications.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <Bell className="mx-auto mb-2 h-9 w-9 text-subtle-foreground" />
+              <p className="text-sm font-medium text-foreground">You&apos;re all caught up</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Assignments, comments and mentions show up here.
+              </p>
+            </div>
+          ) : (
+            <ul role="list">
+              {notifications.map((notification) => {
                 const config = TYPE_CONFIG[notification.type] || DEFAULT_CONFIG;
                 const Icon = config.icon;
-
+                const actor = notification.actor?.full_name;
                 return (
-                  <div
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-[#F5F6F8] ${
-                      !notification.read ? "bg-[#0073EA]/5" : ""
-                    }`}
-                  >
-                    {/* Icon */}
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${config.color}20` }}
-                    >
-                      <Icon className="w-4 h-4" style={{ color: config.color }} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#323338] leading-tight">
-                        <span className="font-medium">{notification.title}</span>
-                      </p>
-                      {notification.message && (
-                        <p className="text-xs text-[#676879] mt-0.5 truncate">
-                          {notification.message}
-                        </p>
+                  <li key={notification.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(notification)}
+                      className={cn(
+                        "flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
+                        !notification.read && "bg-primary/5"
                       )}
-                      <p className="text-xs text-[#676879] mt-1">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-
-                    {/* Unread indicator */}
-                    {!notification.read && (
-                      <div className="w-2 h-2 bg-[#0073EA] rounded-full mt-2 flex-shrink-0" />
-                    )}
-                  </div>
+                    >
+                      <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full", config.tone)}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium leading-tight text-foreground">
+                          {notification.title}
+                        </span>
+                        {notification.message && (
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                            {notification.message}
+                          </span>
+                        )}
+                        <span className="mt-1 block text-xs text-subtle-foreground">
+                          {actor ? `${actor} · ` : ""}
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </span>
+                      </span>
+                      {!notification.read && (
+                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+                      )}
+                    </button>
+                  </li>
                 );
-              })
-            )}
-          </div>
+              })}
+            </ul>
+          )}
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

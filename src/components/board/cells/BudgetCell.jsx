@@ -1,101 +1,69 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
-// Format number with dots as thousand separator (Indonesian style)
-const formatRupiah = (num) => {
-  if (!num && num !== 0) return '0';
-  return Number(num).toLocaleString('id-ID', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
+const CURRENCIES = {
+  ILS: { prefix: "₪", decimals: 2, locale: undefined },
+  USD: { prefix: "$", decimals: 2, locale: undefined },
+  IDR: { prefix: "Rp ", decimals: 0, locale: "id-ID" },
 };
 
-// Strip non-digits and return clean number
-const stripDots = (str) => str.replace(/\./g, '').replace(/[^0-9]/g, '');
+// Indonesian style while typing: 1.250.000
+const formatGrouped = (num) => Number(num || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 });
+const digitsOnly = (str) => String(str).replace(/[^0-9]/g, "");
 
 export default function BudgetCell({ value, onUpdate, options }) {
-  const [currentValue, setCurrentValue] = useState(value || 0);
-  const [isEditing, setIsEditing] = useState(false);
-  const [displayValue, setDisplayValue] = useState('');
-  const inputRef = useRef(null);
+  const [draft, setDraft] = useState(null); // formatted string while editing
+  const { prefix, decimals, locale } = CURRENCIES[options?.currency] || CURRENCIES.IDR;
+  const current = Number(value) || 0;
 
-  const getCurrencyConfig = () => {
-    const c = options?.currency;
-    if (c === 'ILS') return { prefix: '₪', decimals: 2, locale: undefined };
-    if (c === 'USD') return { prefix: '$', decimals: 2, locale: undefined };
-    // Default to IDR (Rupiah)
-    return { prefix: 'Rp ', decimals: 0, locale: 'id-ID' };
-  };
-  const { prefix, decimals, locale } = getCurrencyConfig();
-
-  useEffect(() => {
-    setCurrentValue(value || 0);
-  }, [value]);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      // Set initial display to formatted value
-      setDisplayValue(formatRupiah(value || 0));
-    }
-  }, [isEditing]);
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    const numericValue = parseInt(stripDots(displayValue)) || 0;
-    if (numericValue !== parseFloat(value) && onUpdate) {
-      onUpdate(numericValue);
-    }
-    setCurrentValue(numericValue);
+  const save = () => {
+    if (draft === null) return;
+    const numeric = parseInt(digitsOnly(draft), 10) || 0;
+    if (numeric !== current) onUpdate?.(numeric);
+    setDraft(null);
   };
 
-  const handleChange = (e) => {
-    const raw = stripDots(e.target.value);
-    // Limit to reasonable number
-    const num = parseInt(raw) || 0;
-    setDisplayValue(formatRupiah(num));
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleBlur();
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      setCurrentValue(value || 0);
-    }
-  };
-
-  if (isEditing) {
+  if (draft !== null) {
     return (
       <Input
-        ref={inputRef}
         type="text"
         inputMode="numeric"
-        value={displayValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className="h-full w-full p-1 border-none focus:ring-1 focus:ring-blue-500 bg-transparent text-sm text-center"
+        value={draft}
+        onChange={(e) => setDraft(formatGrouped(parseInt(digitsOnly(e.target.value), 10) || 0))}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setDraft(null);
+        }}
+        aria-label="Edit amount"
+        autoFocus
+        className="h-full w-full border-none bg-transparent p-1 text-center text-sm text-foreground focus-visible:ring-1 focus-visible:ring-ring"
       />
     );
   }
 
-  const formattedValue = locale
-    ? Number(currentValue).toLocaleString(locale, {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })
-    : Number(currentValue).toLocaleString(undefined, {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      });
+  const formatted = current.toLocaleString(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+
+  if (!onUpdate) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-sm text-foreground">
+        {prefix}
+        {formatted}
+      </div>
+    );
+  }
 
   return (
-    <div 
-      onClick={() => onUpdate && setIsEditing(true)} 
-      className={`w-full h-full flex items-center justify-center text-sm text-[#323338] dark:text-slate-200 rounded ${onUpdate ? 'cursor-pointer hover:bg-[#E1E5F3]/50 dark:hover:bg-slate-700' : ''}`}
+    <button
+      type="button"
+      onClick={() => setDraft(formatGrouped(current))}
+      className="flex h-full w-full items-center justify-center rounded text-sm text-foreground transition-colors hover:bg-accent/60"
     >
-      {prefix}{formattedValue}
-    </div>
+      {prefix}
+      {formatted}
+    </button>
   );
 }

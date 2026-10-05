@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import "./globals.css";
 
+/**
+ * Last-resort boundary: replaces the root layout, so it brings its own
+ * <html>/<body> and stylesheet. The raw error message is not shown — it
+ * can contain internals; the digest lets support find it in the logs.
+ */
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
     console.error("Critical root error caught:", error);
@@ -10,32 +15,36 @@ export default function GlobalError({ error, reset }) {
 
   return (
     <html lang="id">
-      <body className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans text-slate-800">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-red-100 font-bold text-2xl">
+      <body className="flex min-h-screen items-center justify-center bg-background p-6 font-sans text-foreground">
+        <main className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/10 text-2xl font-bold text-destructive">
             !
           </div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">
-            Terjadi Kesalahan Sistem
-          </h2>
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-            {error?.message || "Aplikasi mengalami kendala kritis. Silakan muat ulang halaman."}
+          <h1 className="mb-2 text-xl font-bold">Terjadi Kesalahan Sistem</h1>
+          <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+            Aplikasi mengalami kendala kritis. Silakan muat ulang halaman.
+            {error?.digest && (
+              <span className="mt-2 block font-mono text-xs text-subtle-foreground">Kode: {error.digest}</span>
+            )}
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex justify-center gap-3">
             <button
+              type="button"
               onClick={() => reset()}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-11 px-5 font-medium shadow-md shadow-blue-500/20 cursor-pointer"
+              className="h-11 cursor-pointer rounded-xl bg-primary px-5 font-medium text-primary-foreground shadow-md hover:bg-primary/90"
             >
               Muat Ulang
             </button>
-            <Link
+            {/* A plain link: the router may be what crashed. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
               href="/boards"
-              className="inline-flex items-center justify-center rounded-xl h-11 px-5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-5 font-medium text-foreground hover:bg-muted"
             >
               Dashboard
-            </Link>
+            </a>
           </div>
-        </div>
+        </main>
       </body>
     </html>
   );

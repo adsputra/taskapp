@@ -122,3 +122,11 @@ test("safeRedirectPath keeps same-origin paths and rejects every off-site form",
   }
   assert.equal(safeRedirectPath("//evil.com", "/"), "/");
 });
+
+test("validateUploadFile refuses SVG (script-capable when opened directly)", () => {
+  assert.equal(
+    validateUploadFile({ name: "logo.svg", size: 100, type: "image/svg+xml" }),
+    "Tipe file tidak diizinkan."
+  );
+  assert.equal(validateUploadFile({ name: "logo.png", size: 100, type: "image/png" }), null);
+});

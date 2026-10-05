@@ -24,8 +24,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    color: '#0073EA',
-    visibility: 'private'
+    color: '#2563EB',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,7 +95,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
       };
 
       await onSubmit(boardData);
-      setFormData({ title: '', description: '', color: '#0073EA', visibility: 'private' });
+      setFormData({ title: '', description: '', color: '#2563EB' });
       if (onClose) onClose();
     } catch (error) {
       console.error('Error creating board:', error);
@@ -109,14 +108,14 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Create New Board
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-[#323338] font-medium">
+            <Label htmlFor="title" className="text-foreground font-medium">
               Board Title *
             </Label>
             <Input
@@ -124,13 +123,13 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Enter board title..."
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border h-12 focus:ring-2 focus:ring-primary/20"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#323338] font-medium">
+            <Label htmlFor="description" className="text-foreground font-medium">
               Description
             </Label>
             <Textarea
@@ -138,12 +137,12 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="What's this board about?"
-              className="rounded-xl border-[#E1E5F3] min-h-20 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border min-h-20 focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Board Color</Label>
+            <Label className="text-foreground font-medium">Board Color</Label>
             <div className="flex gap-2 flex-wrap">
               {colorOptions.map((color) => (
                 <button
@@ -152,7 +151,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
                   onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
                   className={`w-8 h-8 rounded-lg border-2 transition-all ${
                     formData.color === color.value 
-                      ? 'border-[#323338] scale-110' 
+                      ? 'border-foreground scale-110' 
                       : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: color.value }}
@@ -174,7 +173,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
             <Button
               type="submit"
               disabled={!formData.title.trim() || isSubmitting}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-6 font-medium"
             >
               {isSubmitting ? 'Creating...' : 'Create Board'}
             </Button>
