@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 export const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-export const MAILPIT_URL = process.env.E2E_MAILPIT_URL;
 export const hasBackend = Boolean(SUPABASE_URL && ANON_KEY);
 export const PASSWORD = "Correct-Horse-42";
 
@@ -65,22 +64,6 @@ export async function freshTotp(secret) {
   const msIntoWindow = Date.now() % 30_000;
   await new Promise((resolve) => setTimeout(resolve, 30_000 - msIntoWindow + 500));
   return totp(secret);
-}
-
-/** First link in the newest email to `to` whose URL contains `needle`. */
-export async function linkFromEmail(to, needle) {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const res = await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`);
-    const { messages = [] } = await res.json();
-    if (messages.length > 0) {
-      const message = await (await fetch(`${MAILPIT_URL}/api/v1/message/${messages[0].ID}`)).json();
-      const body = `${message.HTML || ""} ${message.Text || ""}`.replace(/&amp;/g, "&");
-      const link = body.match(new RegExp(`https?://[^\\s"'<>]*${needle}[^\\s"'<>]*`));
-      if (link) return link[0];
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error(`No email with a ${needle} link for ${to}`);
 }
 
 /** Access token of the signed-in browser session (from the auth cookie). */

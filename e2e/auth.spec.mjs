@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { MAILPIT_URL, PASSWORD, hasBackend, linkFromEmail, logIn, signUp, uniqueEmail } from "./helpers.mjs";
+import { PASSWORD, hasBackend, logIn, signUp, uniqueEmail } from "./helpers.mjs";
 
 test.describe("authentication", () => {
   test.skip(!hasBackend, "needs NEXT_PUBLIC_SUPABASE_URL / ANON_KEY");
@@ -19,29 +19,27 @@ test.describe("authentication", () => {
     await expect(page).toHaveURL(/\/boards/);
   });
 
-  test("forgot password sends a working reset link", async ({ page }) => {
-    test.skip(!MAILPIT_URL, "needs E2E_MAILPIT_URL to read the email");
-    const email = uniqueEmail("reset");
-    await signUp(page, { name: "Reset Tester", email });
+  test("change password in settings requires the current password", async ({ page }) => {
+    const email = uniqueEmail("pw");
+    await signUp(page, { name: "Pat Password", email });
     await expect(page).toHaveURL(/\/boards/);
+
+    await page.goto("/profile");
+    await page.getByRole("button", { name: "Settings & security" }).click();
+    const newPassword = `${PASSWORD}-new`;
+
+    await page.getByLabel("Current password", { exact: true }).fill("not-my-password");
+    await page.getByLabel("New password", { exact: true }).fill(newPassword);
+    await page.getByLabel("Confirm new password", { exact: true }).fill(newPassword);
+    await page.getByRole("button", { name: "Change password" }).click();
+    await expect(page.getByText("Password saat ini salah.")).toBeVisible();
+
+    await page.getByLabel("Current password", { exact: true }).fill(PASSWORD);
+    await page.getByRole("button", { name: "Change password" }).click();
+    await expect(page.getByText("Password changed")).toBeVisible();
+
     await page.getByRole("button", { name: "Sign Out" }).first().click();
     await expect(page).toHaveURL(/\/auth\/login/);
-
-    await page.getByRole("link", { name: "Lupa password?" }).click();
-    await page.getByLabel("Email").fill(email);
-    await page.getByRole("button", { name: "Kirim link reset" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "link reset sudah dikirim" })).toBeVisible();
-
-    await page.goto(await linkFromEmail(email, "/auth/v1/verify"));
-    await expect(page).toHaveURL(/\/auth\/reset-password/);
-
-    const newPassword = `${PASSWORD}-new`;
-    await page.getByLabel("Password baru", { exact: true }).fill(newPassword);
-    await page.getByLabel("Ulangi password baru").fill(newPassword);
-    await page.getByRole("button", { name: "Simpan password" }).click();
-    await expect(page).toHaveURL(/\/auth\/login\?reset=1/);
-    await expect(page.getByRole("status").filter({ hasText: "Password berhasil diubah" })).toBeVisible();
-
     await logIn(page, { email, password: PASSWORD });
     await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toBeVisible();
     await logIn(page, { email, password: newPassword });

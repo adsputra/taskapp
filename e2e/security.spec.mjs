@@ -30,7 +30,7 @@ test.describe("security headers and routing", () => {
   });
 
   test("private pages, including the dashboard, require a session", async ({ page }) => {
-    for (const path of ["/", "/boards", "/profile", "/auth/reset-password", "/auth/mfa"]) {
+    for (const path of ["/", "/boards", "/profile", "/auth/mfa"]) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/auth\/login\?redirect=/);
     }

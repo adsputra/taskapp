@@ -25,7 +25,6 @@ function LoginForm() {
   const redirectTo = safeRedirectPath(searchParams.get("redirect"));
   const hasCustomRedirect = redirectTo !== "/boards";
   const errorParam = searchParams.get("error");
-  const resetDone = searchParams.get("reset") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +81,6 @@ function LoginForm() {
         </>
       }
     >
-      {resetDone && !error && <AuthAlert tone="success">Password berhasil diubah. Silakan masuk.</AuthAlert>}
       <AuthAlert>{error}</AuthAlert>
 
       <div className="mb-5">
@@ -107,14 +105,9 @@ function LoginForm() {
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-foreground">
-              Password
-            </label>
-            <Link href="/auth/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80">
-              Lupa password?
-            </Link>
-          </div>
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-foreground">
+            Password
+          </label>
           <Input
             id="password"
             type="password"

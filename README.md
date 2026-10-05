@@ -16,7 +16,7 @@ Stack utama: **Next.js 16 (App Router) + React 19 + Supabase (PostgreSQL, Auth, 
 - **Board sharing** — undang lewat email (Resend, opsional) atau link bertoken dengan role **admin / editor / viewer**. Editor bisa membuat dan mengubah task; admin juga bisa menghapus task serta mengubah kolom, group, dan automations.
 - **Pencarian global** — command palette `Ctrl/⌘ + K` untuk mencari board & task dan berpindah halaman.
 - **Dashboard & analytics** — ringkasan board, status task, dan statistik.
-- **Auth** — email/password, lupa password, Google/GitHub (opsional), dan **verifikasi dua langkah (TOTP)**.
+- **Auth** — email/password, Google/GitHub (opsional), dan **verifikasi dua langkah (TOTP)**. Fitur lupa password sengaja belum diaktifkan (butuh SMTP sendiri; email bawaan Supabase hanya untuk uji coba).
 - **Tema** — Light / Dark / System dengan transisi halus (View Transitions API). Semua warna lewat token semantik di `src/app/globals.css`.
 
 ---
@@ -29,7 +29,7 @@ src/
 │   ├── (app)/                  # Halaman privat (dashboard, boards, my-tasks, profile, analytics)
 │   ├── actions/                # Server Actions (auth, password, email undangan)
 │   ├── api/                    # Health check + metrics endpoint
-│   ├── auth/                   # login, signup, forgot/reset password, mfa, callback
+│   ├── auth/                   # login, signup, mfa, callback
 │   ├── join/                   # Halaman menerima undangan board
 │   └── layout.jsx
 ├── components/
@@ -98,7 +98,7 @@ tests/                          # Unit test (node:test)
 
    Pengaturan di dashboard Supabase:
    - **Authentication → Multi-Factor**: aktifkan **TOTP** (enroll + verify).
-   - **Authentication → URL Configuration**: tambahkan `https://<domain>/auth/callback` ke Redirect URLs (dipakai reset password & OAuth).
+   - **Authentication → URL Configuration**: tambahkan `https://<domain>/auth/callback` ke Redirect URLs (dipakai konfirmasi email & OAuth).
    - **Authentication → Providers**: aktifkan Google/GitHub bila dipakai, lalu set `NEXT_PUBLIC_AUTH_PROVIDERS`.
    - **Database → Extensions**: aktifkan **pg_cron** untuk automation pengingat due date, lalu jalankan ulang `schema.sql` (job dijadwalkan per jam). `schema.sql` juga mencoba mengaktifkannya sendiri.
 
@@ -142,7 +142,7 @@ npx supabase stop
 ### Autentikasi
 
 - Sesi disimpan di cookie dan di-refresh oleh `src/proxy.js` pada setiap request. Semua halaman aplikasi (termasuk dashboard `/`) butuh sesi; yang belum login diarahkan ke `/auth/login?redirect=<path>` (divalidasi agar tetap same-origin).
-- Login/signup/reset/ganti password adalah Server Actions dengan rate limit per IP dan per akun. Ganti password memverifikasi password lama di server.
+- Login/signup/ganti password adalah Server Actions dengan rate limit per IP dan per akun. Ganti password memverifikasi password lama di server.
 - **MFA (TOTP)**: setelah authenticator terverifikasi, sesi aal1 (baru memasukkan password) ditolak oleh **database** lewat policy `RESTRICTIVE` + `mfa_satisfied()` di setiap tabel, storage, dan RPC `SECURITY DEFINER`. Proxy mengarahkan sesi seperti itu ke `/auth/mfa`.
 
 ### Otorisasi (RLS)
@@ -198,11 +198,12 @@ npm run build       # verifikasi build production
 export NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55421
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key dari `supabase status`>
 export NEXT_PUBLIC_SITE_URL=http://localhost:3100
-export E2E_MAILPIT_URL=http://127.0.0.1:55424   # untuk test reset password
 npm run build && npm run test:e2e
 ```
 
-Skenario: header CSP & redirect, signup/login/logout, alur lupa password lewat email, undangan → editor bergabung → @mention → notifikasi owner, MFA (termasuk database menolak sesi aal1), tema, command palette, dan tampilan tabel di layar ponsel.
+Rate limit login/signup aplikasi (10/menit per IP, in-memory) ikut berlaku saat test. Bila suite diulang berturut-turut, restart server (`npm start`) dulu agar limiter ter-reset.
+
+Skenario: header CSP & redirect, signup/login/logout, undangan → editor bergabung → @mention → notifikasi owner, MFA (termasuk database menolak sesi aal1), tema, command palette, dan tampilan tabel di layar ponsel.
 
 ---
 
@@ -210,7 +211,7 @@ Skenario: header CSP & redirect, signup/login/logout, alur lupa password lewat e
 
 1. Set environment variable di platform hosting (`NEXT_PUBLIC_*`, `TRUSTED_IP_HEADER`, `UPSTASH_REDIS_REST_*`, `METRICS_TOKEN`, dan `RESEND_API_KEY`/`INVITE_EMAIL_FROM` bila memakai email undangan).
 2. Jalankan `supabase/schema.sql` terbaru di SQL Editor.
-3. Di Supabase: aktifkan TOTP MFA, tambahkan `/auth/callback` ke Redirect URLs, konfigurasikan SMTP (email reset password), aktifkan pg_cron.
+3. Di Supabase: aktifkan TOTP MFA, tambahkan `/auth/callback` ke Redirect URLs, aktifkan pg_cron.
 4. Aplikasi tidak memakai `SUPABASE_SERVICE_ROLE_KEY` — hapus dari environment hosting.
 5. Arahkan health check load balancer ke `/api/health`; scrape `/api/metrics` dengan header `Authorization: Bearer $METRICS_TOKEN`.
 

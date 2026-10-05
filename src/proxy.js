@@ -5,9 +5,9 @@ import { incrementCounter, observeHistogram } from '@/lib/metrics';
 import { buildContentSecurityPolicy, createNonce } from '@/lib/csp';
 
 // Signed-out pages: a signed-in user is sent on to the app. Every other
-// page needs a session — including /auth/reset-password and /auth/mfa,
-// which act on the signed-in (recovery or aal1) session.
-const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/signup', '/auth/forgot-password'];
+// page needs a session — including /auth/mfa, which acts on the aal1
+// session that still needs its second step.
+const GUEST_ONLY_ROUTES = ['/auth/login', '/auth/signup'];
 const PUBLIC_ROUTES = ['/api/health', '/api/metrics'];
 
 function matches(pathname, routes) {

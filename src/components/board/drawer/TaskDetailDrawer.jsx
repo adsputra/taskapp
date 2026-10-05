@@ -84,7 +84,9 @@ export default function TaskDetailDrawer({
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape" && titleDraft === null) onClose();
+      // A menu, popover or dialog on top already used this Escape
+      // (Radix marks it with preventDefault) — only close the drawer when not.
+      if (event.key === "Escape" && !event.defaultPrevented && titleDraft === null) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

@@ -3,7 +3,6 @@
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { getSiteOrigin } from "@/lib/site-url";
 import { logger } from "@/lib/logger";
 import { incrementCounter } from "@/lib/metrics";
 import { getClientIp, authRateLimiter, authAccountRateLimiter } from "@/lib/rate-limit";
@@ -167,53 +166,18 @@ export async function signOut() {
 }
 
 /**
- * Forgot password — sends a recovery link. Always answers the same way so
- * the form cannot be used to discover which emails have an account.
+ * Set a new password for the signed-in user. Not exported: every export of
+ * a "use server" file is a callable endpoint, and the password must never
+ * change without changePassword() checking the current one first.
  */
-export async function requestPasswordReset(email) {
-  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-  const genericOk = { ok: true };
-
-  try {
-    if (!isValidEmail(cleanEmail)) return { error: "Email tidak valid." };
-
-    const rateLimitError = await enforceAuthRateLimit("reset", cleanEmail);
-    if (rateLimitError) return { error: rateLimitError };
-
-    const origin = await getSiteOrigin({ allowRequestOrigin: true });
-    if (!origin) return { error: "Server tidak dikonfigurasi." };
-
-    const supabase = await createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`,
-    });
-
-    if (error) {
-      incrementCounter("taskapp_auth_reset_total", { result: "rejected" });
-      logger.warn("password reset rejected", { requestId: await getRequestId(), code: error.code });
-      if (error.status === 429) return { error: RATE_LIMIT_MESSAGE };
-      return genericOk;
-    }
-
-    incrementCounter("taskapp_auth_reset_total", { result: "ok" });
-    return genericOk;
-  } catch (err) {
-    logger.error("password reset failed", { requestId: await getRequestId(), detail: err?.message });
-    return { error: "Terjadi kesalahan server." };
-  }
-}
-
-/**
- * Set a new password for the signed-in user (recovery link or settings).
- */
-export async function updatePassword(newPassword) {
+async function updatePassword(newPassword) {
   try {
     const passwordIssue = passwordError(newPassword);
     if (passwordIssue) return { error: passwordIssue };
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "Sesi tidak valid. Minta link reset baru." };
+    if (!user) return { error: "Sesi tidak valid. Silakan login ulang." };
 
     const rateLimitError = await enforceAuthRateLimit("update_password", user.id);
     if (rateLimitError) return { error: rateLimitError };
